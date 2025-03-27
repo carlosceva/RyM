@@ -194,7 +194,7 @@
               <li class="nav-item">
                 <a href="{{route('solicitudes.index')}}" class="nav-link">
                   <i class="fas fa-copy nav-icon"></i>
-                  <p>Solicitudes generales</p>
+                  <p>S. Precio Especial</p>
                 </a>
               </li>
               @endrole

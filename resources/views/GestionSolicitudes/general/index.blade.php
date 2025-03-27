@@ -6,7 +6,7 @@
 <div class="card-header">
     <h1 class="card-title" style="font-size: 1.8rem;">
         <i class="fas fa-copy mr-1"></i>
-        <span>Solicitudes</span>
+        <span>Solicitud de Precio Especial</span>
     </h1>
     
     <div class="float-right d-sm-block"> 
@@ -67,12 +67,12 @@
                             <div class="d-flex flex-column flex-sm-row justify-content-center align-items-center">
                               <!-- Botón Aceptar -->
                               <button class="btn btn-success mb-2 mb-sm-0 me-sm-2">
-                                  Aceptar
+                                <i class="fa fa-check"></i>&nbsp; Aceptar
                               </button>
 
                               <!-- Botón Rechazar -->
                               <button class="btn btn-danger">
-                                  Rechazar
+                                <i class="fa fa-times"></i>&nbsp; Rechazar
                               </button>
                           </div>
                         </td>
