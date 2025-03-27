@@ -25,20 +25,20 @@
         
         <div class="flex items-center justify-center w-full transition-opacity opacity-100 duration-750 lg:grow starting:opacity-0">
             <main class="flex max-w-[335px] w-full flex-col-reverse lg:max-w-4xl lg:flex-row">
-                <div class="text-[13px] leading-[20px] flex-1 p-6 pb-12 lg:p-20 bg-white dark:bg-[#161615] dark:text-[#EDEDEC] shadow-[inset_0px_0px_0px_1px_rgba(26,26,0,0.16)] dark:shadow-[inset_0px_0px_0px_1px_#fffaed2d] rounded-bl-lg rounded-br-lg lg:rounded-tl-lg lg:rounded-br-none">
+                <div class="text-[13px] leading-[20px] flex-1 p-6 pb-12 lg:p-20 bg-white dark:bg-[#161615]  shadow-[inset_0px_0px_0px_1px_rgba(26,26,0,0.16)] dark:shadow-[inset_0px_0px_0px_1px_#fffaed2d] rounded-bl-lg rounded-br-lg lg:rounded-tl-lg lg:rounded-br-none">
                     <form method="POST" action="{{ route('login') }}">
                         @csrf
 
                         <!-- Email Address -->
                         <div>
-                            <x-input-label for="email" :value="__('Email')" />
+                            <label for="email" class="block text-sm font-medium text-white">Email</label>
                             <x-text-input id="email" class="block mt-1 w-full" type="email" name="email" :value="old('email')" required autofocus autocomplete="username" />
                             <x-input-error :messages="$errors->get('email')" class="mt-2" />
                         </div>
 
                         <!-- Password -->
                         <div class="mt-4">
-                            <x-input-label for="password" :value="__('Password')" />
+                            <label for="password" class="block text-sm font-medium text-white">Password</label>
 
                             <x-text-input id="password" class="block mt-1 w-full"
                                             type="password"
