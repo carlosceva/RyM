@@ -64,6 +64,16 @@
                                 </form>
                             @endif
                             @endcan
+                            <div class="flex space-x-2">
+                              <button class="btn btn-success">
+                                  Aceptar
+                              </button>
+
+                              <!-- Botón Rechazar -->
+                              <button class="btn btn-danger">
+                                  Rechazar
+                              </button>
+                          </div>
                         </td>
                     </tr>
                     @endforeach
