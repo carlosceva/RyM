@@ -64,8 +64,9 @@
                                 </form>
                             @endif
                             @endcan
-                            <div class="flex space-x-2">
-                              <button class="btn btn-success">
+                            <div class="d-flex flex-column flex-sm-row justify-content-center align-items-center">
+                              <!-- Botón Aceptar -->
+                              <button class="btn btn-success mb-2 mb-sm-0 me-sm-2">
                                   Aceptar
                               </button>
 
