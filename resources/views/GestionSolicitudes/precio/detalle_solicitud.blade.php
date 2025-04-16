@@ -23,8 +23,7 @@
             <div class="row">
                 <!-- Columna izquierda -->
                 <div class="col-12 col-md-6">
-                    <p class="mb-1"><strong>Solicitante:</strong></p>
-                    <p class="mb-2">{{ $solicitud->usuario->name ?? 'N/D' }}</p>
+                    <p class="mb-1"><strong>Solicitante:</strong> {{ $solicitud->usuario->name ?? 'N/D' }}</p>
 
                     <p><strong>Motivo:</strong></p>
                     <div class="border p-2 rounded bg-light small">
@@ -77,7 +76,7 @@
             <div class="row mt-3">
                 <div class="col-12 border-top pt-2">
                     <div class="d-flex justify-content-between flex-wrap small">
-                        <span><strong>{{ $solicitud->autorizador->name ?? 'Sin autorizar' }}</strong></span>
+                        <span><strong>Autorizado por:</strong> {{ $solicitud->autorizador->name ?? 'Sin autorizar' }}</span>
                         <span class="badge bg-{{ $solicitud->estado === 'aprobada' ? 'success' : ($solicitud->estado === 'rechazada' ? 'danger' : 'warning') }}">
                             {{ ucfirst($solicitud->estado) }}
                         </span>

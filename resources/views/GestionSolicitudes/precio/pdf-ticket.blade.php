@@ -82,7 +82,7 @@
             @endif
 
             <div class="mt-3">
-                <p><strong>Autorizador:</strong> {{ $solicitud->autorizador->name ?? 'Sin autorizar' }}</p>
+                <p><strong>Autorizado por:</strong> {{ $solicitud->autorizador->name ?? 'Sin autorizar' }}</p>
                 <p><strong>Estado:</strong> {{ ucfirst($solicitud->estado) }}</p>
                 <p><strong>Fecha Autorización:</strong> {{ $solicitud->fecha_autorizacion ?? 'N/D' }}</p>
             </div>

@@ -6,6 +6,8 @@ use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Spatie\Permission\Models\Role;
+use App\Models\User;
 
 class UserSeeder extends Seeder
 {
@@ -14,17 +16,26 @@ class UserSeeder extends Seeder
      */
     public function run(): void
     {
+        // Borrar todos los datos de la tabla users antes de insertar
+        DB::table('users')->truncate();
 
-        DB::table('users')->insert([
-            [
-                'email' => 'admin@rym.com',
-                'name' => 'Administrador',
-                'telefono' => 77012345,
-                'codigo' => 'admin',
-                'password' => Hash::make('secret'),
-                'estado' => 'a'
-            ],
-
+        // Crear el usuario
+        $user = DB::table('users')->insertGetId([
+            'email' => 'admin@rym.com',
+            'name' => 'Administrador',
+            'telefono' => 77012345,
+            'codigo' => 'admin',
+            'password' => Hash::make('secret'),
+            'estado' => 'a'
         ]);
+
+        // Obtener el rol de Administrador
+        $adminRole = Role::firstOrCreate(['name' => 'Administrador', 'estado' => 'a']);
+
+        // Encontrar el usuario recién creado
+        $user = User::find($user);
+
+        // Asignar el rol al usuario
+        $user->assignRole($adminRole);
     }
 }

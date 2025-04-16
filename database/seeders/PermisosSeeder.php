@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
 
 class PermisosSeeder extends Seeder
@@ -13,15 +14,20 @@ class PermisosSeeder extends Seeder
      */
     public function run()
     {
-        // $solicitudes = ['Precio_especial', 'Anulacion', 'Devolucion', 'Sobregiro', 'Baja', 'Muestra'];
-        // $acciones = ['ver', 'crear', 'editar', 'borrar', 'aprobar', 'reprobar'];
+        $adminRole = Role::firstOrCreate(['name' => 'Administrador', 'estado' => 'a']);
+
+        $solicitudes = ['Precio_especial', 'Anulacion', 'Devolucion', 'Sobregiro', 'Baja', 'Muestra'];
+        $acciones = ['ver', 'crear', 'editar', 'borrar', 'aprobar', 'reprobar'];
         
-        // foreach ($solicitudes as $solicitud) {
-        //     foreach ($acciones as $accion) {
-        //         $permiso = "{$solicitud}_{$accion}";
-        //         Permission::firstOrCreate(['name' => $permiso]);
-        //     }
-        // }
+        foreach ($solicitudes as $solicitud) {
+            foreach ($acciones as $accion) {
+                $permiso = "{$solicitud}_{$accion}";
+                $permisoObj = Permission::firstOrCreate(['name' => $permiso]);
+
+                // Asigna el permiso al rol "Administrador"
+                $adminRole->givePermissionTo($permisoObj);
+            }
+        }
 
         $permisosAdmin = [
             // Usuarios
@@ -42,7 +48,10 @@ class PermisosSeeder extends Seeder
 
         // Crear los permisos si no existen
         foreach ($permisosAdmin as $permisoAdmin) {
-            Permission::firstOrCreate(['name' => $permisoAdmin]);
+            $permisoObj = Permission::firstOrCreate(['name' => $permisoAdmin]);
+
+            // Asigna el permiso al rol "Administrador"
+            $adminRole->givePermissionTo($permisoObj);
         }
 
         // 🧑‍💼 Crear el rol de administrador si no existe
@@ -50,7 +59,5 @@ class PermisosSeeder extends Seeder
 
         // Asignar todos los permisos al rol de administrador
         //$adminRole->syncPermissions(Permission::all());
-
-
     }
 }

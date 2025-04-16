@@ -22,12 +22,5 @@ class RolePermissionSeeder extends Seeder
         $admin = Role::create(['name' => 'Administrador']);
         $vendedor = Role::create(['name' => 'Vendedor']);
 
-        // Creamos los permisos
-        $crearSolicitud = Permission::create(['name' => 'crear solicitud']);
-        $verSolicitud = Permission::create(['name' => 'ver solicitud']);
-
-        // Asignamos permisos a los roles
-        $admin->givePermissionTo([$crearSolicitud, $verSolicitud]);
-        $vendedor->givePermissionTo($crearSolicitud);
     }
 }
