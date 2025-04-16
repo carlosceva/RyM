@@ -5,15 +5,9 @@
 @section('content')
 <div class="card-header">
     <h1 class="card-title" style="font-size: 1.8rem;">
-        <i class="fas fa-copy mr-1"></i>
-        <span>Solicitud de Precio Especial</span>
+        <i class="far fa-file-alt mr-1"></i>
+        <span>Solicitudes</span>
     </h1>
-    
-    <div class="float-right d-sm-block"> 
-        <div class="btn-group" role="group" aria-label="Basic mixed styles example">
-            <a href="#" data-toggle="modal" data-target="#modalNuevaSolicitud" class="btn btn-success"><i class="fa fa-plus"></i>&nbsp; Agregar</a>
-        </div> 
-    </div>
                 
 </div>
     
@@ -32,114 +26,192 @@
         </ul>
     </div>
 @endif
-    <div class="card table-responsive">
-        <div class="card-body">
-            <table class="table table-hover table-bordered" id="solicitud">
-                <thead class="table-dark">
-                    <tr>
-                      <th>#</th>
-                      <th>Cliente</th>
-                      <th>Productos</th>
-                      <th>Estado</th>
-                      <th>Fecha Solicitud</th>
-                      <th>Acciones</th>
-                    </tr>
-                </thead>
-                <tbody class="table-group-divider">
-                  
-                    @foreach($solicitudes as $solicitud)
-                    <tr>
-                        <td>{{ $solicitud->id }}</td>
-                        <td>{{ $solicitud->precioEspecial?->cliente?->name ?? 'Sin cliente asignado' }}</td>
-                        <td>{{ $solicitud->precioEspecial?->detalle_productos ?? 'Sin detalle de productos' }}</td>
-                        <td>{{ ucfirst($solicitud->estado) }}</td>
-                        <td>{{ $solicitud->fecha_solicitud }}</td>
-                        <td>
-                            @can('approve-solicitud')
-                            @if($solicitud->estado == 'pendiente')
-                                <form action="{{ route('solicitudes.aprobar', $solicitud->id) }}" method="POST" class="d-inline">
-                                    @csrf
-                                    @method('PATCH')
-                                    <button type="submit" class="btn btn-success">Aprobar</button>
-                                </form>
-                            @endif
-                            @endcan
-                            <div class="d-flex flex-column flex-sm-row justify-content-center align-items-center">
-                              <!-- Botón Aceptar -->
-                              <button class="btn btn-success mb-2 mb-sm-0 me-sm-2">
-                                <i class="fa fa-check"></i>&nbsp; Aceptar
-                              </button>
-
-                              <!-- Botón Rechazar -->
-                              <button class="btn btn-danger">
-                                <i class="fa fa-times"></i>&nbsp; Rechazar
-                              </button>
+<div class="card table-responsive">
+    <div class="card-body">
+        <div class="container py-4">
+            <!-- Responsive ticket layout -->
+            <div class="row row-cols-1 row-cols-md-2 g-4">
+                @forelse ($solicitudes as $solicitud)
+                <!-- Ticket -->
+                <div class="col">
+                    <div class="card shadow-sm h-100 ">
+                        <!-- Header -->
+                        <div class="card-header @if($solicitud->estado === 'aprobada') 
+                                bg-success 
+                            @elseif($solicitud->estado === 'rechazada') 
+                                bg-danger 
+                            @endif">
+                          <!-- Fila 1: ID y Fecha -->
+                          <div class="d-flex justify-content-between">
+                              <span>#{{ $solicitud->id }}</span>
+                              <span>{{ $solicitud->fecha_solicitud }}</span>
                           </div>
-                        </td>
-                    </tr>
-                    @endforeach
-                </tbody>
-            </table>
+                          <!-- Fila 2: Tipo de solicitud centrado -->
+                          <div class="text-center mt-1">
+                              <strong>{{ ucfirst($solicitud->tipo) }}</strong>
+                          </div>
+                      </div>
+
+                        <!-- Cuerpo -->
+                        <div class="card-body">
+                            <div class="row">
+                                <!-- Columna izquierda -->
+                                <div class="col-12 col-md-6">
+                                    <p class="mb-1"><strong>Solicitante:</strong></p>
+                                    <p class="mb-2">{{ $solicitud->usuario->name ?? 'N/D' }}</p>
+
+                                    <p><strong>Motivo:</strong></p>
+                                    <div class="border p-2 rounded bg-light small">
+                                        {{ $solicitud->glosa ?? 'Sin glosa' }}
+                                    </div>
+                                </div>
+
+                                <!-- Columna derecha -->
+                                <div class="col-12 col-md-6 mt-3 mt-md-0">
+                                    @if($solicitud->precioEspecial)
+                                    <p class="mb-2"><strong>{{ $solicitud->precioEspecial->cliente ?? 'Sin cliente' }}</strong></p>
+                                    <div class="border p-2 rounded bg-light small">
+                                        <table class="table table-borderless table-sm mb-0">
+                                            <thead>
+                                                <tr>
+                                                    <th scope="col">#</th>
+                                                    <th scope="col">Producto</th>
+                                                    <th scope="col">Cantidad</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @if(!empty($solicitud->precioEspecial->detalle_productos))
+                                                    @php $productos = explode(',', $solicitud->precioEspecial->detalle_productos); @endphp
+                                                    @foreach($productos as $index => $item)
+                                                        @php
+                                                            $partes = explode('-', $item);
+                                                            $producto = trim($partes[0] ?? '');
+                                                            $cantidad = trim($partes[1] ?? '');
+                                                        @endphp
+                                                        <tr>
+                                                            <td>{{ $index + 1 }}</td>
+                                                            <td>{{ $producto }}</td>
+                                                            <td>{{ $cantidad }}</td>
+                                                        </tr>
+                                                    @endforeach
+                                                @else
+                                                    <tr>
+                                                        <td colspan="3">No hay productos registrados.</td>
+                                                    </tr>
+                                                @endif
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    @endif
+                                </div>
+
+                            </div>
+
+                            <!-- Autorización -->
+                            <div class="row mt-3">
+                                <div class="col-12 border-top pt-2">
+                                    <div class="d-flex justify-content-between flex-wrap small">
+                                        <span><strong>{{ $solicitud->autorizador->name ?? 'Sin autorizar' }}</strong></span>
+                                        <span class="badge bg-{{ $solicitud->estado === 'aprobada' ? 'success' : ($solicitud->estado === 'rechazada' ? 'danger' : 'warning') }}">
+                                            {{ ucfirst($solicitud->estado) }}
+                                        </span>
+                                        <span>{{ $solicitud->fecha_autorizacion ?? 'N/D' }}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Observación -->
+                            <div class="row mt-2">
+                                <div class="col-12">
+                                    
+                                    <div class="border p-2 rounded bg-light small">
+                                        {{ $solicitud->observacion ?? 'Sin observación' }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                            
+                            <!-- Footer con acciones -->
+                                <div class="card-footer text-end 
+                                    @if($solicitud->estado === 'aprobada') 
+                                        bg-success 
+                                    @elseif($solicitud->estado === 'rechazada') 
+                                        bg-danger 
+                                    @endif">
+                                    @if($solicitud->estado == 'pendiente')
+                                        <div class="card-footer text-end">
+                                            <!-- Aprobar con modal -->
+                                            <button class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#observacionModal"
+                                                    onclick="setAccionAndSolicitudId('aprobar', {{ $solicitud->id }})">
+                                                Aprobar
+                                            </button>
+
+                                            <!-- Rechazar con modal -->
+                                            <button class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#observacionModal"
+                                                    onclick="setAccionAndSolicitudId('rechazar', {{ $solicitud->id }})">
+                                                Rechazar
+                                            </button>
+                                        </div>
+                                    @endif
+                                </div>
+                                  
+                    </div>
+                </div>
+                @empty
+                    <div class="col">
+                        <p class="text-center">No hay solicitudes registradas.</p>
+                    </div>
+                @endforelse
+
+            </div>
         </div>
     </div>
- 
-    <!-- Modal para Nueva Solicitud -->
-    <!-- Vista para crear solicitud -->
-<div class="modal fade" id="modalNuevaSolicitud" tabindex="-1" aria-labelledby="modalCrearSolicitudLabel" aria-hidden="true">
+</div>
+
+
+
+<!-- Modal para Agregar Observación -->
+<div class="modal fade" id="observacionModal" tabindex="-1" aria-labelledby="observacionModalLabel" aria-hidden="true">
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title" id="modalCrearSolicitudLabel">Crear Solicitud de Precio Especial</h5>
-        <button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"></button>
+        <h5 class="modal-title" id="observacionModalLabel">Agregar Observación</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
-        <form action="{{ route('solicitudes.store') }}" method="POST">
+        <form id="formObservacion" action="{{ route('general.aprobar_o_rechazar') }}" method="POST">
           @csrf
-          <!-- Tipo de Solicitud -->
-          <input type="hidden" name="tipo" value="precio_especial">
+          <!-- Campo oculto para la solicitud_id -->
+          <input type="hidden" name="solicitud_id" id="solicitud_id" value="">
+          <input type="hidden" name="accion" id="accion" value="">
 
-          <!-- Usuario que solicita (Oculto porque es el usuario autenticado) -->
-        <input type="hidden" name="id_usuario" value="{{ auth()->id() }}">
-
-          <!-- Fecha de solicitud (Generada automáticamente) -->
-        <div class="mb-3">
-            <label for="fecha_solicitud" class="form-label">Fecha de Solicitud</label>
-            <input type="text" class="form-control" id="fecha_solicitud" value="{{ now()->format('Y-m-d H:i:s') }}" disabled>
-        </div>
-
-          <!-- Estado (Se define automáticamente como pendiente) -->
-        <input type="hidden" name="estado" value="pendiente">
-
-          <!-- Glosa (Descripción o motivo de la solicitud) -->
-        <div class="mb-3">
-            <label for="glosa" class="form-label">Motivo de la solicitud</label>
-            <textarea class="form-control" id="glosa" name="glosa" rows="3" required></textarea>
-        </div>
-
-          <!-- Cliente -->
-        <div class="mb-3">
-            <label for="id_cliente" class="form-label">Cliente</label>
-            <select class="form-control" id="id_cliente" name="id_cliente" required>
-                <option value="">Seleccione un cliente</option>
-                @foreach ($clientes as $cliente)
-                    <option value="{{ $cliente->id }}">{{ $cliente->name }}</option>
-                @endforeach
-            </select>
-        </div>
-
-          <!-- Detalle Productos (puede ser un campo JSON o similar) -->
           <div class="mb-3">
-            <label for="detalle_productos" class="form-label">Detalle de Productos</label>
-            <textarea name="detalle_productos" id="detalle_productos" class="form-control" rows="3" required></textarea>
+            <label for="observacion" class="form-label">Observación</label>
+            <textarea name="observacion" class="form-control" rows="3"></textarea>
           </div>
 
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
-            <button type="submit" class="btn btn-primary">Crear Solicitud</button>
+          <div class="d-flex justify-content-end">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+            <button type="submit" class="btn btn-primary ms-2">Aceptar</button>
           </div>
         </form>
       </div>
     </div>
   </div>
 </div>
+
+
+
+
+<script>
+    function setAccionAndSolicitudId(accion, solicitudId) {
+        // Asigna la acción al campo oculto 'accion'
+        document.getElementById('accion').value = accion;
+        // Asigna la ID de la solicitud al campo oculto 'solicitud_id'
+        document.getElementById('solicitud_id').value = solicitudId;
+    }
+</script>
+
+
+
 @endsection

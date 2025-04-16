@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('id_usuario')->constrained('users');
             $table->string('tipo'); // 'devolucion', 'anulacion', etc.
+            $table->string('observacion')->nullable(); 
             $table->timestamp('fecha_solicitud')->useCurrent();
             $table->enum('estado', ['pendiente', 'aprobada', 'rechazada'])->default('pendiente');
             $table->foreignId('id_autorizador')->nullable()->constrained('users');

@@ -29,11 +29,13 @@
                     <form method="POST" action="{{ route('login') }}">
                         @csrf
 
-                        <!-- Email Address -->
-                        <div>
-                            <label for="email" class="block text-sm font-medium text-white">Email</label>
-                            <x-text-input id="email" class="block mt-1 w-full" type="email" name="email" :value="old('email')" required autofocus autocomplete="username" />
-                            <x-input-error :messages="$errors->get('email')" class="mt-2" />
+                        <!-- Código -->
+                        <div class="mb-4">
+                            <label for="codigo" class="block text-sm font-medium">Código</label>
+                            <input id="codigo" name="codigo" type="text" required autofocus class="mt-1 block w-full" value="{{ old('codigo') }}">
+                            @error('codigo')
+                                <div class="text-red-500 text-sm">{{ $message }}</div>
+                            @enderror
                         </div>
 
                         <!-- Password -->

@@ -87,7 +87,7 @@
       <li class="nav-item dropdown">
         <div class="dropdown">
             <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-              {{ Auth::user()->email }}
+              {{ Auth::user()->name }}
             </a>
             <div class="dropdown-menu" aria-labelledby="userDropdown">
                 <a class="dropdown-item" href="#">Perfil</a>
@@ -132,8 +132,8 @@
         <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
           <!-- Add icons to the links using the .nav-icon class
                with font-awesome or any other icon font library -->
-                    
-          <li class="nav-item">  
+          @if (auth()->user()->can('usuarios_ver') || auth()->user()->can('roles_ver')|| auth()->user()->can('permisos_ver'))         
+          <li class="nav-item menu-is-opening menu-open">  
             <a href="#" class="nav-link">
               <i class="nav-icon fa fa-cog" style="color: orange"></i>
               <p style="color: orange">
@@ -142,45 +142,33 @@
               </p>
             </a>
             <ul class="nav nav-treeview">
+              @can('usuarios_ver')
               <li class="nav-item">
                 <a href="{{route('usuario.index')}}" class="nav-link">
                   <i class="fa fa-users nav-icon"></i>
                   <p>Usuarios</p>
                 </a>
               </li>
+              @endcan
+              @can('roles_ver')
               <li class="nav-item">
                 <a href="{{route('roles.index')}}" class="nav-link">
                   <i class="fa fa-book nav-icon"></i>
                   <p>Roles</p>
                 </a>
               </li>
+              @endcan
+              @can('permisos_ver')
               <li class="nav-item">
-                <a href="" class="nav-link">
+                <a href="{{ route('permisos.index') }}" class="nav-link">
                   <i class="fa fa-key nav-icon"></i>
                   <p>Permisos</p>
                 </a>
               </li>
+              @endcan
             </ul>
           </li>
-
-          <li class="nav-item">  
-            <a href="#" class="nav-link">
-              <i class="nav-icon fa fa-users" style="color: orange"></i>
-              <p style="color: orange">
-                Gestion de clientes
-                <i class="fas fa-angle-left right"></i>
-              </p>
-            </a>
-            <ul class="nav nav-treeview">
-              <li class="nav-item">
-                <a href="{{route('clientes.index')}}" class="nav-link">
-                  <i class="far fa-user nav-icon"></i>
-                  <p>Clientes</p>
-                </a>
-              </li>
-            </ul>
-          </li>
-
+          @endif
           <li class="nav-item menu-is-opening menu-open">  
             <a href="#" class="nav-link">
               <i class="nav-icon fas fa-copy" style="color: orange"></i>
@@ -192,48 +180,60 @@
             <ul class="nav nav-treeview">
               @role('Administrador')
               <li class="nav-item">
-                <a href="{{route('solicitudes.index')}}" class="nav-link">
+                <a href="{{route('general.index')}}" class="nav-link">
                   <i class="fas fa-copy nav-icon"></i>
-                  <p>S. Precio Especial</p>
+                  <p>Solicitudes en general</p>
                 </a>
               </li>
               @endrole
+              @can('Devolucion_ver')
               <li class="nav-item">
                 <a href="{{route('devoluciones')}}" class="nav-link">
                   <i class="nav-icon far fa-file-alt"></i>
                   <p>Devolucion de venta</p>
                 </a>
               </li>
+              @endcan
+              @can('Anulacion_ver')
               <li class="nav-item">
                 <a href="{{route('anulaciones')}}" class="nav-link">
                   <i class="nav-icon far fa-times-circle"></i>
                   <p>Anulacion de venta</p>
                 </a>
               </li>
+              @endcan
+              @can('Sobregiro_ver')
               <li class="nav-item">
                 <a href="{{route('sobregiros')}}" class="nav-link">
                   <i class="nav-icon far fa-arrow-alt-circle-up"></i>
                   <p>Sobregiro en ventas</p>
                 </a>
               </li>
+              @endcan
+              @can('Precio_especial_ver')
               <li class="nav-item">
-                <a href="{{route('precios')}}" class="nav-link">
+                <a href="{{route('PrecioEspecial.index')}}" class="nav-link">
                   <i class="nav-icon far fa-file-alt"></i>
                   <p>Precio especial</p>
                 </a>
               </li>
+              @endcan
+              @can('Muestra_ver')
               <li class="nav-item">
                 <a href="{{route('muestras')}}" class="nav-link">
                   <i class="nav-icon far fa-file-alt"></i>
                   <p>Muestra de mercadería</p>
                 </a>
               </li>
+              @endcan
+              @can('Baja_ver')
               <li class="nav-item">
                 <a href="{{route('bajas')}}" class="nav-link">
                   <i class="nav-icon far fa-trash-alt"></i>
                   <p>Baja de mercadería</p>
                 </a>
               </li>
+              @endcan
             </ul>
           </li>
 

@@ -14,8 +14,8 @@ return new class extends Migration
         Schema::create('solicitud_precio_especial', function (Blueprint $table) {
             $table->id();
             $table->foreignId('id_solicitud')->constrained('solicitudes');
-            $table->foreignId('id_cliente')->constrained('clientes'); // Suponiendo que ya tienes una tabla clientes
-            $table->jsonb('detalle_productos'); // Para almacenar código SAI, nombre producto, precio especial
+            $table->string('cliente');// Suponiendo que ya tienes una tabla clientes
+            $table->string('detalle_productos'); // Para almacenar código SAI, nombre producto, precio especial
             $table->enum('estado', ['pendiente', 'aprobada', 'rechazada'])->default('pendiente');
             $table->timestamps();
         });

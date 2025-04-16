@@ -18,6 +18,9 @@ class UserSeeder extends Seeder
         DB::table('users')->insert([
             [
                 'email' => 'admin@rym.com',
+                'name' => 'Administrador',
+                'telefono' => 77012345,
+                'codigo' => 'admin',
                 'password' => Hash::make('secret'),
                 'estado' => 'a'
             ],

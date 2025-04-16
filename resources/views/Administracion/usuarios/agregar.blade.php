@@ -10,6 +10,18 @@
         <form action="{{ route('usuario.store') }}" method="POST">
           @csrf
             <div class="mb-3">
+                <label for="codigo" class="form-label">Codigo</label>
+                <input type="text" class="form-control" id="codigo" name="codigo" required>
+            </div>
+            <div class="mb-3">
+                <label for="name" class="form-label">Nombre</label>
+                <input type="text" class="form-control" id="name" name="name" required>
+            </div>
+            <div class="mb-3">
+                <label for="telefono" class="form-label">Telefono</label>
+                <input type="number" class="form-control" id="telefono" name="telefono" required>
+            </div>
+            <div class="mb-3">
                 <label for="email" class="form-label">E-mail</label>
                 <input type="email" class="form-control" id="email" name="email" required>
             </div>

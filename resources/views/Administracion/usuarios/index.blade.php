@@ -8,13 +8,13 @@
         <i class="fa fa-users mr-1"></i>
         <span>Usuarios</span>
     </h1>
-    
+    @can('usuarios_crear')
     <div class="float-right d-sm-block"> 
         <div class="btn-group" role="group" aria-label="Basic mixed styles example">
             <a href="#" data-toggle="modal" data-target="#addUserModal" class="btn btn-success"><i class="fa fa-plus-circle"></i>&nbsp; Agregar</a>
         </div> 
     </div>
-                
+     @endcan           
 </div>
     
 @if (session('success'))
@@ -38,16 +38,24 @@
                 <thead class="table-dark">
                     <tr>
                         <th>ID</th>
+                        <th>codigo</th>
+                        <th>Nombre</th>
+                        <th>Telefono</th>
                         <th>Email</th>
                         <th>Rol</th>
                         <th>Estado</th>
-                        <th>Acciones</th>
+                        @if (auth()->user()->can('usuarios_editar') || auth()->user()->can('usuarios_borrar')|| auth()->user()->can('usuarios_crear'))
+                            <th>Acciones</th>
+                        @endif
                     </tr>
                 </thead>
                 <tbody class="table-group-divider">
                     @foreach ($usuarios as $usuario)
                     <tr>
                         <td>{{ $usuario->id }}</td>
+                        <td>{{ $usuario->codigo }}</td>
+                        <td>{{ $usuario->name }}</td>
+                        <td>{{ $usuario->telefono }}</td>
                         <td>{{ $usuario->email }}</td>
                         <td>
                             {{ $usuario->roles->pluck('name')->join(', ') }}
@@ -55,16 +63,24 @@
                         <td>
                             <?= $usuario->estado === 'a' ? 'Activo' : ($usuario->estado === 'i' ? 'Inactivo' : '') ?>
                         </td>
-                        <td>
-                            <a href="#" data-toggle="modal" data-target="#editModal{{ $usuario->id }}" title="Editar" ><i class="fa fa-edit" aria-hidden="true"></i></a>
-                            &nbsp;
-                            <a href="#" data-toggle="modal" data-target="#deleteModal{{ $usuario->id }}" title="Eliminar" style="color:#dc3545"> <i class="fa fa-trash" aria-hidden="true"></i></a>
-                            &nbsp;
-                            <!-- Botón para abrir el modal -->
-                            <button type="button" class="btn btn-warning" data-toggle="modal" data-target="#modalAsignarRol{{ $usuario->id }}">
-                                Asignar Rol
-                            </button>
-                        </td>
+                        @if (auth()->user()->can('usuarios_editar') || auth()->user()->can('usuarios_borrar')|| auth()->user()->can('usuarios_crear'))
+                            <td>
+                                @can('usuarios_editar')
+                                    <a href="#" data-toggle="modal" data-target="#editModal{{ $usuario->id }}" title="Editar" ><i class="fa fa-edit" aria-hidden="true"></i></a>
+                                    &nbsp;
+                                @endcan
+                                @can('usuarios_borrar')
+                                    <a href="#" data-toggle="modal" data-target="#deleteModal{{ $usuario->id }}" title="Eliminar" style="color:#dc3545"> <i class="fa fa-trash" aria-hidden="true"></i></a>
+                                    &nbsp;
+                                @endcan
+                                <!-- Botón para abrir el modal -->
+                                @can('usuarios_crear')
+                                <button type="button" class="btn btn-warning" data-toggle="modal" data-target="#modalAsignarRol{{ $usuario->id }}">
+                                    <i class="fa fa-plus-circle"></i>&nbsp;Rol
+                                </button>
+                                @endcan
+                            </td>
+                        @endif
                     </tr>
                     @include('Administracion.usuarios.modificar', ['usuario' => $usuario])
                     @include('Administracion.usuarios.eliminar', ['usuario' => $usuario])

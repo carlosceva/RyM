@@ -7,7 +7,7 @@
                 <button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                ¿Estás seguro de que deseas eliminar al usuario? <b>{{$usuario->email}}</b>
+                ¿Estás seguro de que deseas eliminar al usuario? <b>{{$usuario->name}}</b>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>

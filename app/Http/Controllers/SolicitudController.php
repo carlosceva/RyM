@@ -3,10 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Solicitud;
-use App\Models\SolicitudPrecioEspecial;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use App\Models\Cliente;
+use Illuminate\Support\Facades\DB;
 
 class SolicitudController extends Controller
 {
@@ -15,27 +14,78 @@ class SolicitudController extends Controller
      */
     public function index()
     {
-        $user = Auth::user();
+        $solicitudes = Solicitud::with([
+            'usuario',
+            'autorizador',
+            'precioEspecial' // Relación con solicitud_precio_especial
+        ])
+        ->orderBy('fecha_solicitud', 'desc')
+        ->get();
 
-        if ($user->hasRole('Administrador')) {
-            $solicitudes = Solicitud::with('usuario', 'precioEspecial.cliente')
-                ->orderBy('fecha_solicitud', 'desc')
-                ->get();
-        } else {
-            $solicitudes = Solicitud::where('id_usuario', $user->id)
-                ->with('usuario', 'precioEspecial.cliente')
-                ->orderBy('fecha_solicitud', 'desc')
-                ->get();
-        }
-        
-        // Verificar si hay datos
-        if ($solicitudes->isEmpty()) {
-            $solicitudes = [];
-        }
-        $clientes = Cliente::all();
-
-        return view('GestionSolicitudes.general.index', compact('solicitudes','clientes'));
+        return view('GestionSolicitudes.general.index', compact('solicitudes'));
     }
+
+    public function aprobar($id)
+    {
+        $solicitud = Solicitud::findOrFail($id);
+        $solicitud->estado = 'aprobada';
+        $solicitud->id_autorizador = Auth::id();
+        $solicitud->fecha_autorizacion = now();
+        $solicitud->save();
+
+        return back()->with('success', 'Solicitud aprobada correctamente.');
+    }
+
+    public function rechazar($id)
+    {
+        $solicitud = Solicitud::findOrFail($id);
+        $solicitud->estado = 'rechazada';
+        $solicitud->id_autorizador = Auth::id();
+        $solicitud->fecha_autorizacion = now();
+        $solicitud->save();
+
+        return back()->with('success', 'Solicitud rechazada correctamente.');
+    }
+
+    public function aprobar_o_rechazar(Request $request)
+    {
+        // Validamos la solicitud
+        $request->validate([
+            'solicitud_id' => 'required|exists:solicitudes,id',
+            'accion' => 'required|in:aprobar,rechazar',
+            'observacion' => 'nullable|string',
+        ]);
+    
+        // Obtenemos la solicitud
+        $solicitud = Solicitud::findOrFail($request->solicitud_id);
+    
+        // Asignamos el autorizador y la fecha de autorización
+        $solicitud->id_autorizador = Auth::id();
+        $solicitud->fecha_autorizacion = now();
+    
+        // Actualizamos el estado dependiendo de la acción
+        if ($request->accion === 'aprobar') {
+            $solicitud->estado = 'aprobada';
+        } elseif ($request->accion === 'rechazar') {
+            $solicitud->estado = 'rechazada';
+        }
+    
+        // Si se proporciona una observación, la guardamos
+        if ($request->observacion) {
+            $solicitud->observacion = $request->observacion;
+        }
+    
+        // Guardamos los cambios en la base de datos
+        $solicitud->save();
+    
+        // Redirigimos al usuario con un mensaje de éxito
+        return redirect()->route('general.index')->with('success', 'La solicitud ha sido ' . $solicitud->estado . ' correctamente.');
+    }
+    
+    
+
+
+
 
     /**
      * Show the form for creating a new resource.
@@ -50,43 +100,9 @@ class SolicitudController extends Controller
      */
     public function store(Request $request)
     {
-        $request->validate([
-            'tipo' => 'required|string',
-            'glosa' => 'nullable|string',
-            // Otros campos de validación
-        ]);
-
-        $solicitud = Solicitud::create([
-            'id_usuario' => auth()->user()->id,
-            'tipo' => $request->tipo,
-            'fecha_solicitud' => now(),
-            'estado' => 'pendiente',
-            'glosa' => $request->glosa,
-        ]);
-
-        // Crear la solicitud de precio especial
-        $solicitudPrecioEspecial = SolicitudPrecioEspecial::create([
-            'id_solicitud' => $solicitud->id,
-            'id_cliente' => $request->id_cliente, // Asegúrate de tener el cliente
-            'detalle_productos' => json_encode($request->detalle_productos), // Suponiendo que el detalle es un array
-        ]);
-
-        return redirect()->route('solicitudes.index')->with('success', 'Solicitud de precio especial creada.');
+        //
     }
 
-    // Lógica para aprobar/rechazar las solicitudes
-    public function autorizar(Solicitud $solicitud)
-    {
-        $this->authorize('approve-solicitud', Solicitud::class); // Middleware para asegurarse de que solo los administradores lo hagan
-
-        $solicitud->update([
-            'estado' => 'aprobada',
-            'id_autorizador' => auth()->user()->id,
-            'fecha_autorizacion' => now(),
-        ]);
-
-        return redirect()->route('solicitudes.index')->with('success', 'Solicitud aprobada.');
-    }
     /**
      * Display the specified resource.
      */

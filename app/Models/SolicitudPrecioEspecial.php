@@ -12,7 +12,7 @@ class SolicitudPrecioEspecial extends Model
     protected $table = 'solicitud_precio_especial';
 
     protected $fillable = [
-        'id_solicitud', 'id_cliente', 'detalle_productos', 'estado'
+        'id_solicitud', 'cliente', 'detalle_productos', 'estado'
     ];
 
     // Relación con la solicitud
@@ -22,8 +22,8 @@ class SolicitudPrecioEspecial extends Model
     }
 
     // Relación con el cliente
-    public function cliente()
-    {
-        return $this->belongsTo(Cliente::class, 'id_cliente');
-    }
+    // public function cliente()
+    // {
+    //     return $this->belongsTo(Cliente::class, 'id_cliente');
+    // }
 }

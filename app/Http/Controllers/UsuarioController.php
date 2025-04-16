@@ -58,6 +58,9 @@ class UsuarioController extends Controller
                 'email' => $request->input('email'),
                 'password' => bcrypt($request->input('password')),
                 'estado' => 'a',
+                'codigo' => $request->input('codigo'),
+                'name' => $request->input('name'),
+                'telefono' => $request->input('telefono'),
             ]);
 
             $usuario->save();

@@ -11,9 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('roles', function (Blueprint $table) {
-            $table->string('estado');
-        });
+        if (!Schema::hasColumn('roles', 'estado')) {
+            Schema::table('roles', function (Blueprint $table) {
+                $table->string('estado')->default('activo');
+            });
+        }
     }
 
     /**

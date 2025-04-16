@@ -22,9 +22,18 @@ class AuthenticatedSessionController extends Controller
     /**
      * Handle an incoming authentication request.
      */
-    public function store(LoginRequest $request): RedirectResponse
+    public function store(Request  $request): RedirectResponse
     {
-        $request->authenticate();
+        $request->validate([
+            'codigo' => ['required', 'string'],
+            'password' => ['required', 'string'],
+        ]);
+
+        if (! Auth::attempt(['codigo' => $request->codigo, 'password' => $request->password], $request->boolean('remember'))) {
+            throw ValidationException::withMessages([
+                'codigo' => __('Credenciales inválidas.'),
+            ]);
+        }
 
         $request->session()->regenerate();
 

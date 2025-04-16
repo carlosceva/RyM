@@ -12,7 +12,7 @@ class Solicitud extends Model
     protected $table = 'solicitudes';
 
     protected $fillable = [
-        'id_usuario', 'tipo', 'fecha_solicitud', 'estado', 'id_autorizador', 'fecha_autorizacion', 'glosa', 'id_cliente', 'detalle_productos'
+        'id_usuario', 'tipo', 'fecha_solicitud', 'estado', 'id_autorizador', 'fecha_autorizacion', 'glosa', 'id_cliente', 'detalle_productos', 'observacion'
     ];
 
     // Relación con el usuario que solicita
