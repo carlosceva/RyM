@@ -10,6 +10,7 @@ use App\Http\Controllers\SolicitudController;
 use App\Http\Controllers\RolPermisoController;
 use App\Http\Controllers\MuestraMercaderiaController;
 use App\Http\Controllers\BajaMercaderiaController;
+use App\Http\Controllers\SobregiroController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -66,6 +67,11 @@ Route::middleware('auth')->group(function () {
     Route::get('/Baja/{id}/descargar/excel', [BajaMercaderiaController::class, 'descargarExcel'])->name('baja.descargar.excel');
     Route::post('/Baja/{id}/ejecutar', [BajaMercaderiaController::class, 'ejecutar'])->name('baja.ejecutar');
 
+    Route::resource('Sobregiro', SobregiroController::class);
+    Route::post('Sobregiro/aprobar_o_rechazar', [SobregiroController::class, 'aprobar_o_rechazar'])->name('sobregiro.aprobar_o_rechazar');
+    Route::post('/Sobregiro/{id}/ejecutar', [SobregiroController::class, 'ejecutar'])->name('sobregiro.ejecutar');
+    Route::get('/Sobregiro/{id}/descargar/pdf', [SobregiroController::class, 'descargarPDF'])->name('sobregiro.descargar.pdf');
+    Route::get('/Sobregiro/{id}/descargar/excel', [SobregiroController::class, 'descargarExcel'])->name('sobregiro.descargar.excel');
 
     Route::get('/permisos', [RolPermisoController::class, 'index'])->name('permisos.index');
     Route::post('/permisos/guardar/{id}', [RolPermisoController::class, 'guardar'])->name('permisos.guardar');
@@ -87,10 +93,6 @@ Route::get('/anulaciones', function () {
 Route::get('/devoluciones', function () {
     return view('GestionSolicitudes.devolucion.index');
 })->middleware(['auth', 'verified'])->name('devoluciones');
-
-Route::get('/sobregiros', function () {
-    return view('GestionSolicitudes.sobregiro.index');
-})->middleware(['auth', 'verified'])->name('sobregiros');
 
 
 require __DIR__.'/auth.php';

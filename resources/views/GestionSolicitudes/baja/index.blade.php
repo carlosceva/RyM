@@ -36,7 +36,7 @@
 @endif
     <div class="card table-responsive">
         <div class="card-body">
-            <table class="table table-hover table-bordered" id="solicitud">
+            <table class="table table-hover table-bordered" id="solicitud_baja">
                 <thead class="table-dark">
                     <tr>
                       <th>#</th>

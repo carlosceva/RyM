@@ -204,7 +204,7 @@
               @endcan
               @can('Sobregiro_ver')
               <li class="nav-item">
-                <a href="{{route('sobregiros')}}" class="nav-link">
+                <a href="{{route('Sobregiro.index')}}" class="nav-link">
                   <i class="nav-icon far fa-arrow-alt-circle-up"></i>
                   <p>Sobregiro en ventas</p>
                 </a>
@@ -341,6 +341,38 @@
   $('#roles').DataTable();
   $('#clientes').DataTable();
   $('#solicitud').DataTable();
+  $(document).ready(function() {
+        $('#solicitud_baja').DataTable({
+            "order": [[0, 'desc']], // Esta es la configuración que ordena por la primera columna (ID) de forma descendente
+            "paging": true,         // Activar la paginación
+            "searching": true,      // Habilitar la búsqueda
+            "lengthChange": true    // Permite cambiar el número de elementos por página
+        });
+    });
+    $(document).ready(function() {
+        $('#solicitud_muestra').DataTable({
+            "order": [[0, 'desc']], // Esta es la configuración que ordena por la primera columna (ID) de forma descendente
+            "paging": true,         // Activar la paginación
+            "searching": true,      // Habilitar la búsqueda
+            "lengthChange": true    // Permite cambiar el número de elementos por página
+        });
+    });
+    $(document).ready(function() {
+        $('#solicitud_precio').DataTable({
+            "order": [[0, 'desc']], // Esta es la configuración que ordena por la primera columna (ID) de forma descendente
+            "paging": true,         // Activar la paginación
+            "searching": true,      // Habilitar la búsqueda
+            "lengthChange": true    // Permite cambiar el número de elementos por página
+        });
+    });
+    $(document).ready(function() {
+        $('#solicitud_sobregiro').DataTable({
+            "order": [[0, 'desc']], // Esta es la configuración que ordena por la primera columna (ID) de forma descendente
+            "paging": true,         // Activar la paginación
+            "searching": true,      // Habilitar la búsqueda
+            "lengthChange": true    // Permite cambiar el número de elementos por página
+        });
+    });
 </script>    
 </body>
 </html>
