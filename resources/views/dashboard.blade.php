@@ -220,7 +220,7 @@
               @endcan
               @can('Muestra_ver')
               <li class="nav-item">
-                <a href="{{route('muestras')}}" class="nav-link">
+                <a href="{{route('Muestra.index')}}" class="nav-link">
                   <i class="nav-icon far fa-file-alt"></i>
                   <p>Muestra de mercadería</p>
                 </a>
@@ -228,7 +228,7 @@
               @endcan
               @can('Baja_ver')
               <li class="nav-item">
-                <a href="{{route('bajas')}}" class="nav-link">
+                <a href="{{route('Baja.index')}}" class="nav-link">
                   <i class="nav-icon far fa-trash-alt"></i>
                   <p>Baja de mercadería</p>
                 </a>

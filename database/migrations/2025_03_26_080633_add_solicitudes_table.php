@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('tipo'); // 'devolucion', 'anulacion', etc.
             $table->string('observacion')->nullable(); 
             $table->timestamp('fecha_solicitud')->useCurrent();
-            $table->enum('estado', ['pendiente', 'aprobada', 'rechazada'])->default('pendiente');
+            $table->string('estado')->default('pendiente');
             $table->foreignId('id_autorizador')->nullable()->constrained('users');
             $table->timestamp('fecha_autorizacion')->nullable();
             $table->text('glosa')->nullable();

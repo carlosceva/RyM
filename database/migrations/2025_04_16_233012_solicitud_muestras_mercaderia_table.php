@@ -9,14 +9,15 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
-    public function up()
+    public function up(): void
     {
-        Schema::create('solicitud_precio_especial', function (Blueprint $table) {
+        Schema::create('solicitud_muestras_mercaderia', function (Blueprint $table) {
             $table->id();
             $table->foreignId('id_solicitud')->constrained('solicitudes');
             $table->string('cliente');
-            $table->string('detalle_productos'); // Para almacenar código SAI, nombre producto, precio especial
+            $table->string('detalle_productos'); // Para almacenar código SAI, nombre producto
             $table->enum('estado', ['pendiente', 'aprobada', 'rechazada'])->default('pendiente');
+            $table->string('cod_sai');
             $table->timestamps();
         });
     }
@@ -26,6 +27,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('solicitud_precio_especial');
+        Schema::dropIfExists('solicitud_muestras_mercaderia');
     }
 };

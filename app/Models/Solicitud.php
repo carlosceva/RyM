@@ -27,18 +27,29 @@ class Solicitud extends Model
         return $this->belongsTo(User::class, 'id_autorizador');
     }
 
-    // Relación con la solicitud de precio especial
-    public function solicitudPrecioEspecial()
+    public function precioEspecial()
     {
         return $this->hasOne(SolicitudPrecioEspecial::class, 'id_solicitud');
     }
-    // Relación con el cliente
-    public function cliente()
+
+    public function muestraMercaderia()
     {
-        return $this->belongsTo(Cliente::class, 'id_cliente');
+        return $this->hasOne(MuestraMercaderia::class, 'id_solicitud');
     }
-    public function precioEspecial()
-{
-    return $this->hasOne(SolicitudPrecioEspecial::class, 'id_solicitud');
-}
+
+    public function bajaMercaderia()
+    {
+        return $this->hasOne(BajaMercaderia::class, 'id_solicitud');
+    }
+
+    public function ejecucion()
+    {
+        return $this->hasOne(SolicitudEjecutada::class, 'solicitud_id');
+    }
+
+    public function adjuntos()
+    {
+        return $this->hasMany(Adjuntos::class, 'id_solicitud');
+    }
+
 }

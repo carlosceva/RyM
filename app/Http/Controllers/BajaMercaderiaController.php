@@ -2,14 +2,15 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Solicitud;
-use App\Models\SolicitudPrecioEspecial;
+use App\Models\BajaMercaderia;
 use Illuminate\Http\Request;
+use App\Models\Solicitud;
+use App\Models\SolicitudEjecutada;
 use Illuminate\Support\Facades\Auth;
-use App\Models\Cliente;
 use Barryvdh\DomPDF\Facade\Pdf;
+use App\Models\Adjuntos;
 
-class PrecioEspecialController extends Controller
+class BajaMercaderiaController extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -17,22 +18,23 @@ class PrecioEspecialController extends Controller
     public function index()
     {
         $user = Auth::user();
-
-        if ($user->hasRole('Administrador') || $user->can('Precio_especial_aprobar') || $user->can('Precio_especial_reprobar')) {
-            $solicitudes = Solicitud::whereHas('precioEspecial')
-            ->with('usuario', 'precioEspecial')
-            ->orderBy('fecha_solicitud', 'desc')
-            ->get();        
+    
+        if ($user->hasRole('Administrador') || $user->can('Baja_aprobar') || $user->can('Baja_reprobar')) {
+            $solicitudes = Solicitud::whereHas('bajaMercaderia')
+                ->with('usuario', 'bajaMercaderia', 'adjuntos') // Cargamos los adjuntos también
+                ->orderBy('fecha_solicitud', 'desc')
+                ->get();        
         } else {
             $solicitudes = Solicitud::where('id_usuario', $user->id)
-            ->whereHas('precioEspecial') 
-            ->with('usuario', 'precioEspecial')
-            ->orderBy('fecha_solicitud', 'asc')
-            ->get();        
+                ->whereHas('bajaMercaderia')
+                ->with('usuario', 'bajaMercaderia', 'adjuntos') // Cargamos los adjuntos también
+                ->orderBy('fecha_solicitud', 'asc')
+                ->get();        
         }
-        
-        return view('GestionSolicitudes.precio.index', compact('solicitudes'));
+    
+        return view('GestionSolicitudes.baja.index', compact('solicitudes'));
     }
+    
 
     /**
      * Show the form for creating a new resource.
@@ -47,12 +49,15 @@ class PrecioEspecialController extends Controller
      */
     public function store(Request $request)
     {
+
+        // Validación de los campos
         $request->validate([
             'tipo' => 'required|string',
             'glosa' => 'nullable|string',
-            // Otros campos de validación
+            //'archivo' => 'nullable|file|mimes:xlsx,xls,csv,pdf,docx,jpg,png|max:2048', // Validación del archivo
         ]);
-
+    
+        // Crear la solicitud
         $solicitud = Solicitud::create([
             'id_usuario' => auth()->user()->id,
             'tipo' => $request->tipo,
@@ -60,16 +65,36 @@ class PrecioEspecialController extends Controller
             'estado' => 'pendiente',
             'glosa' => $request->glosa,
         ]);
-
-        // Crear la solicitud de precio especial
-        $solicitudPrecioEspecial = SolicitudPrecioEspecial::create([
+    
+        // Si hay un archivo adjunto, procesarlo
+        if ($request->hasFile('archivo')) {
+            // Obtener el archivo
+            $archivo = $request->file('archivo');
+    
+            // Generar un nombre único para el archivo
+            $nombreArchivo = time() . '_' . $archivo->getClientOriginalName();
+    
+            // Guardar el archivo en el almacenamiento público
+            $path = $archivo->storeAs('adjuntos', $nombreArchivo, 'public');
+    
+            // Guardar el registro en la tabla 'adjuntos'
+            Adjuntos::create([
+                'id_solicitud' => $solicitud->id,
+                'archivo' => $path,  // Guardar la ruta del archivo en la base de datos
+            ]);
+        }
+    
+        // Crear la baja de mercadería
+        $solicitudBajaMercaderia = BajaMercaderia::create([
             'id_solicitud' => $solicitud->id,
-            'cliente' => $request->cliente, // Asegúrate de tener el cliente
-            'detalle_productos' => $request->detalle_productos, // Suponiendo que el detalle es un array
+            'almacen' => $request->almacen, 
+            'detalle_productos' => $request->detalle_productos,
+            'motivo' => $request->motivo,
         ]);
-
-        return redirect()->route('PrecioEspecial.index')->with('success', 'Solicitud de precio especial creada.');
+    
+        return redirect()->route('Baja.index')->with('success', 'Solicitud de Baja de Mercaderia creada.');
     }
+    
 
     public function aprobar_o_rechazar(Request $request)
     {
@@ -103,22 +128,49 @@ class PrecioEspecialController extends Controller
         $solicitud->save();
     
         // Redirigimos al usuario con un mensaje de éxito
-        return redirect()->route('PrecioEspecial.index')->with('success', 'La solicitud ha sido ' . $solicitud->estado . ' correctamente.');
+        return redirect()->route('Baja.index')->with('success', 'La solicitud ha sido ' . $solicitud->estado . ' correctamente.');
+    }
+
+    public function ejecutar($id)
+    {
+        $solicitud = Solicitud::findOrFail($id);
+    
+        // Solo puede ejecutarse si está aprobada y aún no ha sido ejecutada
+        if ($solicitud->estado !== 'aprobada') {
+            return back()->with('error', 'Solo las solicitudes aprobadas pueden ser ejecutadas.');
+        }
+    
+        if ($solicitud->ejecucion) {
+            return back()->with('error', 'Esta solicitud ya fue ejecutada.');
+        }
+    
+        // Registrar ejecución
+        SolicitudEjecutada::create([
+            'solicitud_id' => $solicitud->id,
+            'ejecutado_por' => Auth::id(),
+            'fecha_ejecucion' => now(),
+        ]);
+
+        // Cambiar el estado de la solicitud
+        $solicitud->estado = 'ejecutada';
+        $solicitud->save();
+    
+        return back()->with('success', 'Solicitud ejecutada exitosamente.');
     }
 
     public function descargarPDF($id)
     {
-        $solicitud = Solicitud::with(['usuario', 'precioEspecial', 'autorizador'])->findOrFail($id);
+        $solicitud = Solicitud::with(['usuario', 'bajaMercaderia', 'autorizador'])->findOrFail($id);
 
         // Retorna el mismo contenido que ves en la tarjeta, pero en una vista PDF
-        $pdf = Pdf::loadView('GestionSolicitudes.precio.pdf-ticket', compact('solicitud'));
+        $pdf = Pdf::loadView('GestionSolicitudes.baja.pdf-ticket', compact('solicitud'));
 
         return $pdf->download("ticket_solicitud_{$solicitud->id}.pdf");
     }
 
     public function descargarExcel($id)
     {
-        $solicitud = Solicitud::with(['usuario', 'precioEspecial', 'autorizador'])->findOrFail($id);
+        $solicitud = Solicitud::with(['usuario', 'bajaMercaderia', 'autorizador'])->findOrFail($id);
 
         $filename = "ticket_solicitud_{$solicitud->id}.csv";
 
@@ -153,15 +205,15 @@ class PrecioEspecialController extends Controller
             fputcsv($output, []);
 
             // Si hay productos
-            if ($solicitud->precioEspecial) {
-                fputcsv($output, ['Cliente', $solicitud->precioEspecial->cliente ?? 'Sin cliente']);
+            if ($solicitud->bajaMercaderia) {
+                fputcsv($output, ['Almacen', $solicitud->bajaMercaderia->cliente ?? 'Sin almacen']);
                 fputcsv($output, []);
 
                 // Encabezados de la tabla de productos
                 fputcsv($output, ['#', 'Producto', 'Cantidad']);
 
-                if (!empty($solicitud->precioEspecial->detalle_productos)) {
-                    $productos = explode(',', $solicitud->precioEspecial->detalle_productos);
+                if (!empty($solicitud->bajaMercaderia->detalle_productos)) {
+                    $productos = explode(',', $solicitud->bajaMercaderia->detalle_productos);
                     foreach ($productos as $index => $item) {
                         [$producto, $cantidad] = explode('-', $item) + [null, null];
                         fputcsv($output, [
@@ -184,7 +236,7 @@ class PrecioEspecialController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Solicitud $solicitud)
+    public function show(BajaMercaderia $bajaMercaderia)
     {
         //
     }
@@ -192,7 +244,7 @@ class PrecioEspecialController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Solicitud $solicitud)
+    public function edit(BajaMercaderia $bajaMercaderia)
     {
         //
     }
@@ -200,7 +252,7 @@ class PrecioEspecialController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Solicitud $solicitud)
+    public function update(Request $request, BajaMercaderia $bajaMercaderia)
     {
         //
     }
@@ -208,7 +260,7 @@ class PrecioEspecialController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Solicitud $solicitud)
+    public function destroy(BajaMercaderia $bajaMercaderia)
     {
         //
     }

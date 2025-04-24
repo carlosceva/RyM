@@ -5,14 +5,14 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
-class SolicitudPrecioEspecial extends Model
+class BajaMercaderia extends Model
 {
     use HasFactory;
 
-    protected $table = 'solicitud_precio_especial';
+    protected $table = 'solicitud_bajas_mercaderia';
 
     protected $fillable = [
-        'id_solicitud', 'cliente', 'detalle_productos', 'estado'
+        'id_solicitud', 'almacen', 'detalle_productos', 'estado', 'motivo'
     ];
 
     // Relación con la solicitud
@@ -20,5 +20,4 @@ class SolicitudPrecioEspecial extends Model
     {
         return $this->belongsTo(Solicitud::class, 'id_solicitud');
     }
-
 }

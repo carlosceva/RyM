@@ -36,7 +36,7 @@
                 <div class="col">
                     <div class="card shadow-sm h-100 ">
                         <!-- Header -->
-                        <div class="card-header @if($solicitud->estado === 'aprobada') 
+                        <div class="card-header @if($solicitud->estado === 'aprobada' || $solicitud->estado === 'ejecutada') 
                                 bg-success 
                             @elseif($solicitud->estado === 'rechazada') 
                                 bg-danger 
@@ -68,21 +68,23 @@
 
                                 <!-- Columna derecha -->
                                 <div class="col-12 col-md-6 mt-3 mt-md-0">
-                                    @if($solicitud->precioEspecial)
-                                    <p class="mb-2"><strong>{{ $solicitud->precioEspecial->cliente ?? 'Sin cliente' }}</strong></p>
-                                    <div class="border p-2 rounded bg-light small">
-                                        <table class="table table-borderless table-sm mb-0">
-                                            <thead>
-                                                <tr>
-                                                    <th scope="col">#</th>
-                                                    <th scope="col">Producto</th>
-                                                    <th scope="col">Cantidad</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                @if(!empty($solicitud->precioEspecial->detalle_productos))
-                                                    @php $productos = explode(',', $solicitud->precioEspecial->detalle_productos); @endphp
-                                                    @foreach($productos as $index => $item)
+                                    @if(!empty($solicitud->precioEspecial) && !empty($solicitud->precioEspecial->detalle_productos))
+                                        <!-- Si tiene precio especial -->
+                                        <p class="mb-2"><strong>{{ $solicitud->precioEspecial->cliente ?? 'Sin cliente' }}</strong></p>
+                                        <div class="border p-2 rounded bg-light small">
+                                            <table class="table table-borderless table-sm mb-0">
+                                                <thead>
+                                                    <tr>
+                                                        <th scope="col">#</th>
+                                                        <th scope="col">Producto</th>
+                                                        <th scope="col">Cantidad</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    @php
+                                                        $productos = explode(',', $solicitud->precioEspecial->detalle_productos);
+                                                    @endphp
+                                                    @foreach ($productos as $index => $item)
                                                         @php
                                                             $partes = explode('-', $item);
                                                             $producto = trim($partes[0] ?? '');
@@ -94,16 +96,76 @@
                                                             <td>{{ $cantidad }}</td>
                                                         </tr>
                                                     @endforeach
-                                                @else
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    @elseif(!empty($solicitud->muestraMercaderia) && !empty($solicitud->muestraMercaderia->detalle_productos))
+                                        <!-- Si tiene muestra de mercadería -->
+                                        <p class="mb-2"><strong>{{ $solicitud->muestraMercaderia->cliente ?? 'Sin cliente' }}</strong></p>
+                                        <div class="border p-2 rounded bg-light small">
+                                            <table class="table table-borderless table-sm mb-0">
+                                                <thead>
                                                     <tr>
-                                                        <td colspan="3">No hay productos registrados.</td>
+                                                        <th scope="col">#</th>
+                                                        <th scope="col">Producto</th>
+                                                        <th scope="col">Cantidad</th>
                                                     </tr>
-                                                @endif
-                                            </tbody>
-                                        </table>
-                                    </div>
+                                                </thead>
+                                                <tbody>
+                                                    @php
+                                                        $productos = explode(',', $solicitud->muestraMercaderia->detalle_productos);
+                                                    @endphp
+                                                    @foreach ($productos as $index => $item)
+                                                        @php
+                                                            $partes = explode('-', $item);
+                                                            $producto = trim($partes[0] ?? '');
+                                                            $cantidad = trim($partes[1] ?? '');
+                                                        @endphp
+                                                        <tr>
+                                                            <td>{{ $index + 1 }}</td>
+                                                            <td>{{ $producto }}</td>
+                                                            <td>{{ $cantidad }}</td>
+                                                        </tr>
+                                                    @endforeach
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    @elseif(!empty($solicitud->bajaMercaderia) && !empty($solicitud->bajaMercaderia->detalle_productos))
+                                        <!-- Si tiene baja de mercadería -->
+                                        <p class="mb-2"><strong>{{ $solicitud->bajaMercaderia->almacen ?? 'Sin almacen' }}</strong></p>
+                                        <div class="border p-2 rounded bg-light small">
+                                            <table class="table table-borderless table-sm mb-0">
+                                                <thead>
+                                                    <tr>
+                                                        <th scope="col">#</th>
+                                                        <th scope="col">Producto</th>
+                                                        <th scope="col">Cantidad</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    @php
+                                                        $productos = explode(',', $solicitud->bajaMercaderia->detalle_productos);
+                                                    @endphp
+                                                    @foreach ($productos as $index => $item)
+                                                        @php
+                                                            $partes = explode('-', $item);
+                                                            $producto = trim($partes[0] ?? '');
+                                                            $cantidad = trim($partes[1] ?? '');
+                                                        @endphp
+                                                        <tr>
+                                                            <td>{{ $index + 1 }}</td>
+                                                            <td>{{ $producto }}</td>
+                                                            <td>{{ $cantidad }}</td>
+                                                        </tr>
+                                                    @endforeach
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    @else
+                                        <p>No hay productos registrados.</p>
                                     @endif
                                 </div>
+
 
                             </div>
 
@@ -112,13 +174,28 @@
                                 <div class="col-12 border-top pt-2">
                                     <div class="d-flex justify-content-between flex-wrap small">
                                         <span><strong>{{ $solicitud->autorizador->name ?? 'Sin autorizar' }}</strong></span>
-                                        <span class="badge bg-{{ $solicitud->estado === 'aprobada' ? 'success' : ($solicitud->estado === 'rechazada' ? 'danger' : 'warning') }}">
+                                        <span class="badge bg-{{ ($solicitud->estado === 'aprobada' || $solicitud->estado === 'ejecutada') ? 'success' : ($solicitud->estado === 'rechazada' ? 'danger' : 'warning') }}">
                                             {{ ucfirst($solicitud->estado) }}
                                         </span>
                                         <span>{{ $solicitud->fecha_autorizacion ?? 'N/D' }}</span>
                                     </div>
                                 </div>
                             </div>
+
+                            <!-- Ejecución -->
+                             @if($solicitud->tipo === 'Muestra de Mercaderia' || $solicitud->tipo === 'Baja de Mercaderia' && $solicitud->estado !=='rechazada')
+                            <div class="row mt-2">
+                                <div class="col-12 border-top pt-2">
+                                    <div class="d-flex justify-content-between flex-wrap small">
+                                        <span><strong>{{ $solicitud->ejecucion->usuario->name ?? 'Sin Ejecutar' }} </strong></span>
+                                        <span class="badge bg-{{ $solicitud->ejecucion ? 'success' : 'warning' }}">
+                                            {{ $solicitud->ejecucion ? 'Ejecutada' : 'Pendiente' }}
+                                        </span>
+                                        <span>{{ $solicitud->ejecucion->fecha_ejecucion ?? 'N/D' }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            @endif
 
                             <!-- Observación -->
                             <div class="row mt-2">
@@ -133,7 +210,7 @@
                             
                             <!-- Footer con acciones -->
                                 <div class="card-footer text-end 
-                                    @if($solicitud->estado === 'aprobada') 
+                                    @if($solicitud->estado === 'aprobada' || $solicitud->estado === 'ejecutada') 
                                         bg-success 
                                     @elseif($solicitud->estado === 'rechazada') 
                                         bg-danger 

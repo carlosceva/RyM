@@ -8,12 +8,12 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\PrecioEspecialController;
 use App\Http\Controllers\SolicitudController;
 use App\Http\Controllers\RolPermisoController;
-
+use App\Http\Controllers\MuestraMercaderiaController;
+use App\Http\Controllers\BajaMercaderiaController;
 
 Route::get('/', function () {
     return view('welcome');
 });
-
 
 Route::get('/dashboard', function () {
     return view('dashboard');
@@ -51,18 +51,24 @@ Route::middleware('auth')->group(function () {
     Route::get('/PrecioEspecial/{id}/descargar/pdf', [PrecioEspecialController::class, 'descargarPDF'])->name('precioEspecial.descargar.pdf');
     Route::get('/PrecioEspecial/{id}/descargar/excel', [PrecioEspecialController::class, 'descargarExcel'])->name('precioEspecial.descargar.excel');
 
-
     Route::get('/general', [SolicitudController::class, 'index'])->name('general.index');
-    Route::post('/general/{id}/aprobar', [SolicitudController::class, 'aprobar'])->name('general.aprobar');
-    Route::post('/general/{id}/rechazar', [SolicitudController::class, 'rechazar'])->name('general.rechazar');
-
     Route::post('general/aprobar_o_rechazar', [SolicitudController::class, 'aprobar_o_rechazar'])->name('general.aprobar_o_rechazar');
 
-    // web.php
+    Route::resource('Muestra', MuestraMercaderiaController::class);
+    Route::post('Muestra/aprobar_o_rechazar', [MuestraMercaderiaController::class, 'aprobar_o_rechazar'])->name('muestra.aprobar_o_rechazar');
+    Route::get('/Muestra/{id}/descargar/pdf', [MuestraMercaderiaController::class, 'descargarPDF'])->name('muestra.descargar.pdf');
+    Route::get('/Muestra/{id}/descargar/excel', [MuestraMercaderiaController::class, 'descargarExcel'])->name('muestra.descargar.excel');
+    Route::post('/Muestra/{id}/ejecutar', [MuestraMercaderiaController::class, 'ejecutar'])->name('muestra.ejecutar');
+
+    Route::resource('Baja', BajaMercaderiaController::class);
+    Route::post('Baja/aprobar_o_rechazar', [BajaMercaderiaController::class, 'aprobar_o_rechazar'])->name('baja.aprobar_o_rechazar');
+    Route::get('/Baja/{id}/descargar/pdf', [BajaMercaderiaController::class, 'descargarPDF'])->name('baja.descargar.pdf');
+    Route::get('/Baja/{id}/descargar/excel', [BajaMercaderiaController::class, 'descargarExcel'])->name('baja.descargar.excel');
+    Route::post('/Baja/{id}/ejecutar', [BajaMercaderiaController::class, 'ejecutar'])->name('baja.ejecutar');
+
+
     Route::get('/permisos', [RolPermisoController::class, 'index'])->name('permisos.index');
     Route::post('/permisos/guardar/{id}', [RolPermisoController::class, 'guardar'])->name('permisos.guardar');
-
-
 });
 
 
@@ -85,14 +91,6 @@ Route::get('/devoluciones', function () {
 Route::get('/sobregiros', function () {
     return view('GestionSolicitudes.sobregiro.index');
 })->middleware(['auth', 'verified'])->name('sobregiros');
-
-Route::get('/muestras', function () {
-    return view('GestionSolicitudes.muestra.index');
-})->middleware(['auth', 'verified'])->name('muestras');
-
-Route::get('/bajas', function () {
-    return view('GestionSolicitudes.baja.index');
-})->middleware(['auth', 'verified'])->name('bajas');
 
 
 require __DIR__.'/auth.php';

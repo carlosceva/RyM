@@ -2,14 +2,14 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Solicitud;
-use App\Models\SolicitudPrecioEspecial;
+use App\Models\MuestraMercaderia;
 use Illuminate\Http\Request;
+use App\Models\Solicitud;
+use App\Models\SolicitudEjecutada;
 use Illuminate\Support\Facades\Auth;
-use App\Models\Cliente;
 use Barryvdh\DomPDF\Facade\Pdf;
 
-class PrecioEspecialController extends Controller
+class MuestraMercaderiaController extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -18,20 +18,20 @@ class PrecioEspecialController extends Controller
     {
         $user = Auth::user();
 
-        if ($user->hasRole('Administrador') || $user->can('Precio_especial_aprobar') || $user->can('Precio_especial_reprobar')) {
-            $solicitudes = Solicitud::whereHas('precioEspecial')
-            ->with('usuario', 'precioEspecial')
+        if ($user->hasRole('Administrador') || $user->can('Muestra_aprobar') || $user->can('Muestra_reprobar')) {
+            $solicitudes = Solicitud::whereHas('muestraMercaderia')
+            ->with('usuario', 'muestraMercaderia')
             ->orderBy('fecha_solicitud', 'desc')
             ->get();        
         } else {
             $solicitudes = Solicitud::where('id_usuario', $user->id)
-            ->whereHas('precioEspecial') 
-            ->with('usuario', 'precioEspecial')
+            ->whereHas('muestraMercaderia') // Solo las solicitudes que tienen muestraMercaderia
+            ->with('usuario', 'muestraMercaderia')
             ->orderBy('fecha_solicitud', 'asc')
             ->get();        
         }
         
-        return view('GestionSolicitudes.precio.index', compact('solicitudes'));
+        return view('GestionSolicitudes.muestra.index', compact('solicitudes'));
     }
 
     /**
@@ -50,7 +50,6 @@ class PrecioEspecialController extends Controller
         $request->validate([
             'tipo' => 'required|string',
             'glosa' => 'nullable|string',
-            // Otros campos de validación
         ]);
 
         $solicitud = Solicitud::create([
@@ -61,14 +60,14 @@ class PrecioEspecialController extends Controller
             'glosa' => $request->glosa,
         ]);
 
-        // Crear la solicitud de precio especial
-        $solicitudPrecioEspecial = SolicitudPrecioEspecial::create([
+        $solicitudMuestraMercaderia = MuestraMercaderia::create([
             'id_solicitud' => $solicitud->id,
-            'cliente' => $request->cliente, // Asegúrate de tener el cliente
-            'detalle_productos' => $request->detalle_productos, // Suponiendo que el detalle es un array
+            'cliente' => $request->cliente, 
+            'detalle_productos' => $request->detalle_productos,
+            'cod_sai' => $request->cod_sai,
         ]);
 
-        return redirect()->route('PrecioEspecial.index')->with('success', 'Solicitud de precio especial creada.');
+        return redirect()->route('Muestra.index')->with('success', 'Solicitud de Muestra de Mercaderia creada.');
     }
 
     public function aprobar_o_rechazar(Request $request)
@@ -103,22 +102,49 @@ class PrecioEspecialController extends Controller
         $solicitud->save();
     
         // Redirigimos al usuario con un mensaje de éxito
-        return redirect()->route('PrecioEspecial.index')->with('success', 'La solicitud ha sido ' . $solicitud->estado . ' correctamente.');
+        return redirect()->route('Muestra.index')->with('success', 'La solicitud ha sido ' . $solicitud->estado . ' correctamente.');
+    }
+
+    public function ejecutar($id)
+    {
+        $solicitud = Solicitud::findOrFail($id);
+    
+        // Solo puede ejecutarse si está aprobada y aún no ha sido ejecutada
+        if ($solicitud->estado !== 'aprobada') {
+            return back()->with('error', 'Solo las solicitudes aprobadas pueden ser ejecutadas.');
+        }
+    
+        if ($solicitud->ejecucion) {
+            return back()->with('error', 'Esta solicitud ya fue ejecutada.');
+        }
+    
+        // Registrar ejecución
+        SolicitudEjecutada::create([
+            'solicitud_id' => $solicitud->id,
+            'ejecutado_por' => Auth::id(),
+            'fecha_ejecucion' => now(),
+        ]);
+
+        // Cambiar el estado de la solicitud
+        $solicitud->estado = 'ejecutada';
+        $solicitud->save();
+    
+        return back()->with('success', 'Solicitud ejecutada exitosamente.');
     }
 
     public function descargarPDF($id)
     {
-        $solicitud = Solicitud::with(['usuario', 'precioEspecial', 'autorizador'])->findOrFail($id);
+        $solicitud = Solicitud::with(['usuario', 'muestraMercaderia', 'autorizador'])->findOrFail($id);
 
         // Retorna el mismo contenido que ves en la tarjeta, pero en una vista PDF
-        $pdf = Pdf::loadView('GestionSolicitudes.precio.pdf-ticket', compact('solicitud'));
+        $pdf = Pdf::loadView('GestionSolicitudes.muestra.pdf-ticket', compact('solicitud'));
 
         return $pdf->download("ticket_solicitud_{$solicitud->id}.pdf");
     }
 
     public function descargarExcel($id)
     {
-        $solicitud = Solicitud::with(['usuario', 'precioEspecial', 'autorizador'])->findOrFail($id);
+        $solicitud = Solicitud::with(['usuario', 'muestraMercaderia', 'autorizador'])->findOrFail($id);
 
         $filename = "ticket_solicitud_{$solicitud->id}.csv";
 
@@ -153,15 +179,15 @@ class PrecioEspecialController extends Controller
             fputcsv($output, []);
 
             // Si hay productos
-            if ($solicitud->precioEspecial) {
-                fputcsv($output, ['Cliente', $solicitud->precioEspecial->cliente ?? 'Sin cliente']);
+            if ($solicitud->muestraMercaderia) {
+                fputcsv($output, ['Cliente', $solicitud->muestraMercaderia->cliente ?? 'Sin cliente']);
                 fputcsv($output, []);
 
                 // Encabezados de la tabla de productos
                 fputcsv($output, ['#', 'Producto', 'Cantidad']);
 
-                if (!empty($solicitud->precioEspecial->detalle_productos)) {
-                    $productos = explode(',', $solicitud->precioEspecial->detalle_productos);
+                if (!empty($solicitud->muestraMercaderia->detalle_productos)) {
+                    $productos = explode(',', $solicitud->muestraMercaderia->detalle_productos);
                     foreach ($productos as $index => $item) {
                         [$producto, $cantidad] = explode('-', $item) + [null, null];
                         fputcsv($output, [
@@ -184,7 +210,7 @@ class PrecioEspecialController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Solicitud $solicitud)
+    public function show(MuestraMercaderia $muestraMercaderia)
     {
         //
     }
@@ -192,7 +218,7 @@ class PrecioEspecialController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Solicitud $solicitud)
+    public function edit(MuestraMercaderia $muestraMercaderia)
     {
         //
     }
@@ -200,7 +226,7 @@ class PrecioEspecialController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Solicitud $solicitud)
+    public function update(Request $request, MuestraMercaderia $muestraMercaderia)
     {
         //
     }
@@ -208,7 +234,7 @@ class PrecioEspecialController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Solicitud $solicitud)
+    public function destroy(MuestraMercaderia $muestraMercaderia)
     {
         //
     }
