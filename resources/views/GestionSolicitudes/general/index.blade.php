@@ -54,6 +54,34 @@
 
                         <!-- Cuerpo -->
                         <div class="card-body">
+                        @if($solicitud->tipo === "Sobregiro de Venta")
+                            <div class="row  p-2 ">
+                                <div class="col-12 col-md-6 ">
+                                    <p class="mb-1"><strong>Solicitante:</strong> {{ $solicitud->usuario->name ?? 'N/D' }}</p>
+                                </div>
+                            </div>
+
+                            <div class="row  p-2 ">
+                                <div class="col-12 col-md-6">
+                                    <p class="mb-1"><strong>Cliente:</strong> {{ $solicitud->sobregiro->cliente ?? 'No asignado' }}</p>
+                                </div>
+
+                                <div class="col-12 col-md-6 mt-3 mt-md-0">
+                                    <p class="mb-2"><strong>Importe: </strong>{{ $solicitud->sobregiro->importe ?? '0.0' }}</p>
+                                </div>
+                            </div>
+
+                            <div class="row p-2">
+                                <div class="col-12">
+                                    <div class="d-flex align-items-center">
+                                        <strong class="me-2">Motivo:</strong>
+                                        <div class="border p-2 rounded bg-light small flex-grow-1">
+                                            {{ $solicitud->glosa ?? 'Sin glosa' }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        @else
                             <div class="row">
                                 <!-- Columna izquierda -->
                                 <div class="col-12 col-md-6">
@@ -161,14 +189,14 @@
                                                 </tbody>
                                             </table>
                                         </div>
-                                    @else
+                                    
                                         <p>No hay productos registrados.</p>
                                     @endif
                                 </div>
 
 
                             </div>
-
+                        @endif
                             <!-- Autorización -->
                             <div class="row mt-3">
                                 <div class="col-12 border-top pt-2">
@@ -183,7 +211,7 @@
                             </div>
 
                             <!-- Ejecución -->
-                             @if($solicitud->tipo === 'Muestra de Mercaderia' || $solicitud->tipo === 'Baja de Mercaderia' && $solicitud->estado !=='rechazada')
+                             @if(($solicitud->tipo === 'Muestra de Mercaderia' || $solicitud->tipo === 'Baja de Mercaderia') && $solicitud->estado !=='rechazada')
                             <div class="row mt-2">
                                 <div class="col-12 border-top pt-2">
                                     <div class="d-flex justify-content-between flex-wrap small">

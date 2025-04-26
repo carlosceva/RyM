@@ -20,21 +20,23 @@
 
         <!-- Cuerpo -->
         <div class="card-body">
-            <div class="row">
-                <!-- Columna izquierda -->
-                <div class="col-12 col-md-6">
+            <div class="row  p-2 ">
+                <div class="col-12 col-md-6 ">
                     <p class="mb-1"><strong>Solicitante:</strong> {{ $solicitud->usuario->name ?? 'N/D' }}</p>
-                </div>
-
-                <!-- Columna derecha -->
-                <div class="col-12 col-md-6 mt-3 mt-md-0">
-                    @if($solicitud->sobregiro)
-                    <p class="mb-2"><strong>Importe: </strong>{{ $solicitud->sobregiro->importe }}</p>
-                    @endif
                 </div>
             </div>
 
-            <div class="row">
+            <div class="row  p-2 ">
+                <div class="col-12 col-md-6">
+                    <p class="mb-1"><strong>Cliente:</strong> {{ $solicitud->sobregiro->cliente ?? 'No asignado' }}</p>
+                </div>
+
+                <div class="col-12 col-md-6 mt-3 mt-md-0">
+                    <p class="mb-2"><strong>Importe: </strong>{{ $solicitud->sobregiro->importe ?? '0.0' }}</p>
+                </div>
+            </div>
+
+            <div class="row p-2">
                 <div class="col-12">
                     <div class="d-flex align-items-center">
                         <strong class="me-2">Motivo:</strong>
