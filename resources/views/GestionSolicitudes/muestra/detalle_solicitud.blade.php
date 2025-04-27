@@ -73,6 +73,7 @@
             </div>
 
             <!-- Autorización -->
+            @if($solicitud->estado !=='rechazada')
             <div class="row mt-3">
                 <div class="col-12 border-top pt-2">
                     <div class="d-flex justify-content-between flex-wrap small">
@@ -84,7 +85,7 @@
                     </div>
                 </div>
             </div>
-
+            @endif
             <!-- Ejecución -->
             <div class="row mt-2">
                 <div class="col-12 border-top pt-2">

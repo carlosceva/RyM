@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Sobregiro;
+use App\Models\Anulacion;
 use Illuminate\Http\Request;
 use App\Models\Solicitud;
 use App\Models\SolicitudEjecutada;
@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Auth;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\DB;
 
-class SobregiroController extends Controller
+class AnulacionController extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -19,20 +19,20 @@ class SobregiroController extends Controller
     {
         $user = Auth::user();
 
-        if ($user->hasRole('Administrador') || $user->can('Sobregiro_aprobar') || $user->can('Sobregiro_reprobar')) {
-            $solicitudes = Solicitud::whereHas('sobregiro')
-            ->with('usuario', 'sobregiro')
+        if ($user->hasRole('Administrador') || $user->can('Anulacion_aprobar') || $user->can('Anulacion_reprobar')) {
+            $solicitudes = Solicitud::whereHas('anulacion')
+            ->with('usuario', 'anulacion')
             ->orderBy('fecha_solicitud', 'desc')
             ->get();        
         } else {
             $solicitudes = Solicitud::where('id_usuario', $user->id)
-            ->whereHas('sobregiro')
-            ->with('usuario', 'sobregiro')
+            ->whereHas('anulacion')
+            ->with('usuario', 'anulacion')
             ->orderBy('fecha_solicitud', 'desc')
             ->get();        
         }
-        
-        return view('GestionSolicitudes.sobregiro.index', compact('solicitudes'));
+
+        return view('GestionSolicitudes.anulacion.index', compact('solicitudes'));
     }
 
     /**
@@ -48,19 +48,16 @@ class SobregiroController extends Controller
      */
     public function store(Request $request)
     {
-        // Validación de los datos
         $request->validate([
             'tipo' => 'required|string',
             'glosa' => 'nullable|string',
-            'importe' => 'required|numeric|regex:/^\d+(\.\d{1,2})?$/', // Asegurándote que importe sea un número válido
-            'cliente' => 'required|string',  // También puedes validar cliente según sea necesario
+            'nota_venta' => 'required|string', 
+            'motivo' => 'required|string',  
         ]);
     
-        // Iniciar una transacción
         DB::beginTransaction();
     
         try {
-            // Crear la solicitud
             $solicitud = Solicitud::create([
                 'id_usuario' => auth()->user()->id,
                 'tipo' => $request->tipo,
@@ -69,24 +66,21 @@ class SobregiroController extends Controller
                 'glosa' => $request->glosa,
             ]);
     
-            // Crear el sobregiro
-            $solicitudSobregiro = Sobregiro::create([
+            $anulacion = Anulacion::create([
                 'id_solicitud' => $solicitud->id,
-                'cliente' => $request->cliente,
-                'importe' => $request->importe, // Asegúrate de que importe sea un número válido
+                'nota_venta' => $request->nota_venta,
+                'motivo' => $request->motivo,
             ]);
     
-            // Confirmar la transacción si todo va bien
             DB::commit();
     
-            return redirect()->route('Sobregiro.index')->with('success', 'Solicitud de Sobregiro creada.');
+            return redirect()->route('Anulacion.index')->with('success', 'Solicitud de Anulacion creada.');
     
         } catch (\Exception $e) {
-            // Si algo falla, revertimos la transacción
+
             DB::rollBack();
-    
-            // Puedes manejar el error y devolverlo
-            return redirect()->route('Sobregiro.index')->with('error', 'Hubo un problema al crear la solicitud de sobregiro: ' . $e->getMessage());
+
+            return redirect()->route('Anulacion.index')->with('error', 'Hubo un problema al crear la solicitud de Anulacion: ' . $e->getMessage());
         }
     }
 
@@ -122,7 +116,7 @@ class SobregiroController extends Controller
         $solicitud->save();
     
         // Redirigimos al usuario con un mensaje de éxito
-        return redirect()->route('Sobregiro.index')->with('success', 'La solicitud ha sido ' . $solicitud->estado . ' correctamente.');
+        return redirect()->route('Anulacion.index')->with('success', 'La solicitud ha sido ' . $solicitud->estado . ' correctamente.');
     }
 
     public function ejecutar($id)
@@ -154,19 +148,19 @@ class SobregiroController extends Controller
 
     public function descargarPDF($id)
     {
-        $solicitud = Solicitud::with(['usuario', 'sobregiro', 'autorizador'])->findOrFail($id);
+        $solicitud = Solicitud::with(['usuario', 'anulacion', 'autorizador'])->findOrFail($id);
 
         // Retorna el mismo contenido que ves en la tarjeta, pero en una vista PDF
-        $pdf = Pdf::loadView('GestionSolicitudes.sobregiro.pdf-ticket', compact('solicitud'));
+        $pdf = Pdf::loadView('GestionSolicitudes.anulacion.pdf-ticket', compact('solicitud'));
 
-        return $pdf->download("ticket_solicitud_{$solicitud->id}.pdf");
+        return $pdf->download("ticket_anulacion_{$solicitud->id}.pdf");
     }
 
     public function descargarExcel($id)
     {
-        $solicitud = Solicitud::with(['usuario', 'autorizador', 'sobregiro', 'ejecucion.usuario'])->findOrFail($id);
+        $solicitud = Solicitud::with(['usuario', 'autorizador', 'anulacion', 'ejecucion.usuario'])->findOrFail($id);
 
-        $filename = "ticket_solicitud_{$solicitud->id}.csv";
+        $filename = "ticket_anulacion_{$solicitud->id}.csv";
 
         $headers = [
             'Content-type' => 'text/csv',
@@ -186,7 +180,8 @@ class SobregiroController extends Controller
                 'Tipo',
                 'Estado',
                 'Solicitante',
-                'Importe',
+                'Nota_venta',
+                'motivo',
                 'Glosa',
                 'Autorizador',
                 'Fecha autorizacion',
@@ -202,7 +197,8 @@ class SobregiroController extends Controller
                 strtolower($solicitud->tipo),
                 strtolower($solicitud->estado),
                 $solicitud->usuario->name ?? 'ND',
-                $solicitud->sobregiro->importe ?? 'N/D',
+                $solicitud->anulacion->nota_venta ?? 'N/D',
+                $solicitud->anulacion->motivo ?? 'Sin motivo',
                 $solicitud->glosa ?? 'Sin glosa',
                 $solicitud->autorizador->name ?? 'Sin autorizar',
                 $solicitud->fecha_autorizacion ?? 'N/D',
@@ -220,7 +216,7 @@ class SobregiroController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Sobregiro $sobregiro)
+    public function show(Anulacion $anulacion)
     {
         //
     }
@@ -228,7 +224,7 @@ class SobregiroController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Sobregiro $sobregiro)
+    public function edit(Anulacion $anulacion)
     {
         //
     }
@@ -236,7 +232,7 @@ class SobregiroController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Sobregiro $sobregiro)
+    public function update(Request $request, Anulacion $anulacion)
     {
         //
     }
@@ -244,7 +240,7 @@ class SobregiroController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Sobregiro $sobregiro)
+    public function destroy(Anulacion $anulacion)
     {
         //
     }

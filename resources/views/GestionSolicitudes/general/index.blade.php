@@ -81,6 +81,33 @@
                                     </div>
                                 </div>
                             </div>
+                        @elseif($solicitud->tipo === "Anulacion de Venta")
+                            <div class="row  p-2 ">
+                                <div class="col-12 col-md-6 ">
+                                    <p class="mb-1"><strong>Solicitante:</strong> {{ $solicitud->usuario->name ?? 'N/D' }}</p>
+                                </div>
+                            </div>
+
+                            <div class="row  p-2 ">
+                                <div class="col-12 col-md-6">
+                                    <p class="mb-1"><strong>Nota de venta:</strong> {{ $solicitud->anulacion->nota_venta }}</p>
+                                </div>
+
+                                <div class="col-12 col-md-6 mt-3 mt-md-0">
+                                    <p class="mb-2"><strong>Motivo: </strong>{{ $solicitud->anulacion->motivo }}</p>
+                                </div>
+                            </div>
+
+                            <div class="row p-2">
+                                <div class="col-12">
+                                    <div class="d-flex align-items-center">
+                                        <strong class="me-2">Glosa:</strong>
+                                        <div class="border p-2 rounded bg-light small flex-grow-1">
+                                            {{ $solicitud->glosa ?? 'Sin glosa' }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         @else
                             <div class="row">
                                 <!-- Columna izquierda -->
@@ -211,7 +238,7 @@
                             </div>
 
                             <!-- Ejecución -->
-                             @if(($solicitud->tipo === 'Muestra de Mercaderia' || $solicitud->tipo === 'Baja de Mercaderia') && $solicitud->estado !=='rechazada')
+                             @if(($solicitud->tipo === 'Muestra de Mercaderia' || $solicitud->tipo === 'Baja de Mercaderia' || $solicitud->tipo ==='Sobregiro de Venta' || $solicitud->tipo ==='Anulacion de Venta') && $solicitud->estado !=='rechazada')
                             <div class="row mt-2">
                                 <div class="col-12 border-top pt-2">
                                     <div class="d-flex justify-content-between flex-wrap small">

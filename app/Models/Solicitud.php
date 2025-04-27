@@ -47,6 +47,11 @@ class Solicitud extends Model
         return $this->hasOne(Sobregiro::class, 'id_solicitud');
     }
 
+    public function anulacion()
+    {
+        return $this->hasOne(Anulacion::class, 'id_solicitud');
+    }
+
     public function ejecucion()
     {
         return $this->hasOne(SolicitudEjecutada::class, 'solicitud_id');

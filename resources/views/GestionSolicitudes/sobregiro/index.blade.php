@@ -170,7 +170,7 @@
         <button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
-        <form action="{{ route('Sobregiro.store') }}" method="POST">
+        <form action="{{ route('Sobregiro.store') }}" method="POST" onsubmit="this.querySelector('button[type=submit]').disabled = true;">
           @csrf
             <!-- Tipo de Solicitud -->
             <input type="hidden" name="tipo" value="Sobregiro de Venta">
@@ -197,6 +197,10 @@
             <div class="mb-3">
                 <label for="importe" class="form-label">Importe</label>
                 <input type="text" class="form-control" id="importe" name="importe">
+                
+                @error('importe')
+                    <div class="text-danger mt-2">{{ $message }}</div>
+                @enderror
             </div>
 
             <!-- Glosa (Descripción o motivo de la solicitud) -->
@@ -245,7 +249,12 @@
   </div>
 </div>
 
-
+<script>
+    const form = document.querySelector('form');
+    form.addEventListener('submit', function () {
+        form.querySelector('button[type=submit]').disabled = true;
+    });
+</script>
 
 <script>
     function setAccionAndSolicitudId(accion, solicitudId) {

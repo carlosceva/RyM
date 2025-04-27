@@ -17,9 +17,11 @@ class SolicitudController extends Controller
         $solicitudes = Solicitud::with([
             'usuario',
             'autorizador',
-            'precioEspecial', // Relación con solicitud_precio_especial
+            'precioEspecial',
             'muestraMercaderia',
-            'bajaMercaderia'
+            'bajaMercaderia',
+            'sobregiro',
+            'anulacion'
         ])
         ->orderBy('fecha_solicitud', 'desc')
         ->get();

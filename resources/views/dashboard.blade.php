@@ -196,7 +196,7 @@
               @endcan
               @can('Anulacion_ver')
               <li class="nav-item">
-                <a href="{{route('anulaciones')}}" class="nav-link">
+                <a href="{{route('Anulacion.index')}}" class="nav-link">
                   <i class="nav-icon far fa-times-circle"></i>
                   <p>Anulacion de venta</p>
                 </a>
@@ -367,6 +367,14 @@
     });
     $(document).ready(function() {
         $('#solicitud_sobregiro').DataTable({
+            "order": [[0, 'desc']], // Esta es la configuración que ordena por la primera columna (ID) de forma descendente
+            "paging": true,         // Activar la paginación
+            "searching": true,      // Habilitar la búsqueda
+            "lengthChange": true    // Permite cambiar el número de elementos por página
+        });
+    });
+    $(document).ready(function() {
+        $('#solicitud_anulacion').DataTable({
             "order": [[0, 'desc']], // Esta es la configuración que ordena por la primera columna (ID) de forma descendente
             "paging": true,         // Activar la paginación
             "searching": true,      // Habilitar la búsqueda

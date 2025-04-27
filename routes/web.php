@@ -11,6 +11,7 @@ use App\Http\Controllers\RolPermisoController;
 use App\Http\Controllers\MuestraMercaderiaController;
 use App\Http\Controllers\BajaMercaderiaController;
 use App\Http\Controllers\SobregiroController;
+use App\Http\Controllers\AnulacionController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -72,6 +73,12 @@ Route::middleware('auth')->group(function () {
     Route::post('/Sobregiro/{id}/ejecutar', [SobregiroController::class, 'ejecutar'])->name('sobregiro.ejecutar');
     Route::get('/Sobregiro/{id}/descargar/pdf', [SobregiroController::class, 'descargarPDF'])->name('sobregiro.descargar.pdf');
     Route::get('/Sobregiro/{id}/descargar/excel', [SobregiroController::class, 'descargarExcel'])->name('sobregiro.descargar.excel');
+
+    Route::resource('Anulacion', AnulacionController::class);
+    Route::post('Anulacion/aprobar_o_rechazar', [AnulacionController::class, 'aprobar_o_rechazar'])->name('anulacion.aprobar_o_rechazar');
+    Route::post('/Anulacion/{id}/ejecutar', [AnulacionController::class, 'ejecutar'])->name('anulacion.ejecutar');
+    Route::get('/Anulacion/{id}/descargar/pdf', [AnulacionController::class, 'descargarPDF'])->name('anulacion.descargar.pdf');
+    Route::get('/Anulacion/{id}/descargar/excel', [AnulacionController::class, 'descargarExcel'])->name('anulacion.descargar.excel');
 
     Route::get('/permisos', [RolPermisoController::class, 'index'])->name('permisos.index');
     Route::post('/permisos/guardar/{id}', [RolPermisoController::class, 'guardar'])->name('permisos.guardar');
