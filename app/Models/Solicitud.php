@@ -52,6 +52,11 @@ class Solicitud extends Model
         return $this->hasOne(Anulacion::class, 'id_solicitud');
     }
 
+    public function devolucion()
+    {
+        return $this->hasOne(Devolucion::class, 'id_solicitud');
+    }
+
     public function ejecucion()
     {
         return $this->hasOne(SolicitudEjecutada::class, 'solicitud_id');

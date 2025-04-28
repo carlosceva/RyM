@@ -188,7 +188,7 @@
               @endrole
               @can('Devolucion_ver')
               <li class="nav-item">
-                <a href="{{route('devoluciones')}}" class="nav-link">
+                <a href="{{route('Devolucion.index')}}" class="nav-link">
                   <i class="nav-icon far fa-file-alt"></i>
                   <p>Devolucion de venta</p>
                 </a>

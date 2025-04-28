@@ -12,6 +12,7 @@ use App\Http\Controllers\MuestraMercaderiaController;
 use App\Http\Controllers\BajaMercaderiaController;
 use App\Http\Controllers\SobregiroController;
 use App\Http\Controllers\AnulacionController;
+use App\Http\Controllers\DevolucionController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -79,6 +80,12 @@ Route::middleware('auth')->group(function () {
     Route::post('/Anulacion/{id}/ejecutar', [AnulacionController::class, 'ejecutar'])->name('anulacion.ejecutar');
     Route::get('/Anulacion/{id}/descargar/pdf', [AnulacionController::class, 'descargarPDF'])->name('anulacion.descargar.pdf');
     Route::get('/Anulacion/{id}/descargar/excel', [AnulacionController::class, 'descargarExcel'])->name('anulacion.descargar.excel');
+    
+    Route::resource('Devolucion', DevolucionController::class);
+    Route::post('Devolucion/aprobar_o_rechazar', [DevolucionController::class, 'aprobar_o_rechazar'])->name('devolucion.aprobar_o_rechazar');
+    Route::post('/Devolucion/{id}/ejecutar', [DevolucionController::class, 'ejecutar'])->name('devolucion.ejecutar');
+    Route::get('/Devolucion/{id}/descargar/pdf', [DevolucionController::class, 'descargarPDF'])->name('devolucion.descargar.pdf');
+    Route::get('/Devolucion/{id}/descargar/excel', [DevolucionController::class, 'descargarExcel'])->name('devolucion.descargar.excel');
 
     Route::get('/permisos', [RolPermisoController::class, 'index'])->name('permisos.index');
     Route::post('/permisos/guardar/{id}', [RolPermisoController::class, 'guardar'])->name('permisos.guardar');
@@ -92,14 +99,6 @@ Route::middleware(['role:Administrador'])->group(function () {
 Route::get('/hoja-en-blanco', function () {
     return view('HojaEnBlanco');
 })->middleware(['auth', 'verified'])->name('HojaEnBlanco');
-
-Route::get('/anulaciones', function () {
-    return view('GestionSolicitudes.anulacion.index');
-})->middleware(['auth', 'verified'])->name('anulaciones');
-
-Route::get('/devoluciones', function () {
-    return view('GestionSolicitudes.devolucion.index');
-})->middleware(['auth', 'verified'])->name('devoluciones');
 
 
 require __DIR__.'/auth.php';

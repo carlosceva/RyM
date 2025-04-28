@@ -92,8 +92,10 @@
                                 <div class="col-12 col-md-6">
                                     <p class="mb-1"><strong>Nota de venta:</strong> {{ $solicitud->anulacion->nota_venta }}</p>
                                 </div>
+                            </div>
 
-                                <div class="col-12 col-md-6 mt-3 mt-md-0">
+                            <div class="row  p-2 ">
+                                <div class="col-12 ">
                                     <p class="mb-2"><strong>Motivo: </strong>{{ $solicitud->anulacion->motivo }}</p>
                                 </div>
                             </div>
@@ -217,10 +219,9 @@
                                             </table>
                                         </div>
                                     
-                                        <p>No hay productos registrados.</p>
+                                    
                                     @endif
                                 </div>
-
 
                             </div>
                         @endif
@@ -263,30 +264,29 @@
                             </div>
                         </div>
                             
-                            <!-- Footer con acciones -->
-                                <div class="card-footer text-end 
-                                    @if($solicitud->estado === 'aprobada' || $solicitud->estado === 'ejecutada') 
-                                        bg-success 
-                                    @elseif($solicitud->estado === 'rechazada') 
-                                        bg-danger 
-                                    @endif">
-                                    @if($solicitud->estado == 'pendiente')
-                                        <div class="card-footer text-end">
-                                            <!-- Aprobar con modal -->
-                                            <button class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#observacionModal"
-                                                    onclick="setAccionAndSolicitudId('aprobar', {{ $solicitud->id }})">
-                                                Aprobar
-                                            </button>
+                        <!-- Footer con acciones -->
+                        <div class="card-footer text-end 
+                            @if($solicitud->estado === 'aprobada' || $solicitud->estado === 'ejecutada') 
+                                bg-success 
+                            @elseif($solicitud->estado === 'rechazada') 
+                                bg-danger 
+                            @endif">
+                            @if($solicitud->estado == 'pendiente')
+                                
+                                    <!-- Aprobar con modal -->
+                                    <button class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#observacionModal"
+                                            onclick="setAccionAndSolicitudId('aprobar', {{ $solicitud->id }})">
+                                        Aprobar
+                                    </button>
 
-                                            <!-- Rechazar con modal -->
-                                            <button class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#observacionModal"
-                                                    onclick="setAccionAndSolicitudId('rechazar', {{ $solicitud->id }})">
-                                                Rechazar
-                                            </button>
-                                        </div>
-                                    @endif
-                                </div>
-                                  
+                                    <!-- Rechazar con modal -->
+                                    <button class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#observacionModal"
+                                            onclick="setAccionAndSolicitudId('rechazar', {{ $solicitud->id }})">
+                                        Rechazar
+                                    </button>
+                                
+                            @endif
+                        </div> 
                     </div>
                 </div>
                 @empty
@@ -331,9 +331,6 @@
     </div>
   </div>
 </div>
-
-
-
 
 <script>
     function setAccionAndSolicitudId(accion, solicitudId) {
