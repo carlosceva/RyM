@@ -62,6 +62,11 @@ class Solicitud extends Model
         return $this->hasOne(SolicitudEjecutada::class, 'solicitud_id');
     }
 
+    public function ejecuciones()
+    {
+        return $this->hasMany(SolicitudEjecutada::class, 'solicitud_id');
+    }
+
     public function adjuntos()
     {
         return $this->hasMany(Adjuntos::class, 'id_solicitud');

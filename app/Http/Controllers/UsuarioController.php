@@ -6,6 +6,7 @@ use App\Models\User;
 use Spatie\Permission\Models\Role;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Hash;
 
 class UsuarioController extends Controller
 {
@@ -14,7 +15,7 @@ class UsuarioController extends Controller
      */
     public function index()
     {
-        $usuarios = User::all();
+        $usuarios = User::where('estado', 'a')->get();
         $roles = Role::all();
         return view('Administracion.usuarios.index', compact('usuarios', 'roles'));
     }
@@ -61,6 +62,7 @@ class UsuarioController extends Controller
                 'codigo' => $request->input('codigo'),
                 'name' => $request->input('name'),
                 'telefono' => $request->input('telefono'),
+                'key' => $request->input('key'),
             ]);
 
             $usuario->save();
@@ -94,14 +96,34 @@ class UsuarioController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        /*$request->validate([
+        // Validación de los campos necesarios
+        $request->validate([
             'name' => 'required|string|max:255',
-            'telefono' => 'required|integer',
-        ]);*/
-
+            'telefono' => 'required|numeric', // Validamos que el teléfono sea un número
+            'email' => 'email|max:255',
+            'estado' => 'required|string|in:a,i',
+            // Validación para la contraseña (opcional)
+            'password' => 'nullable|string|min:6|confirmed', // La contraseña es opcional, pero si se proporciona, debe tener confirmación
+        ]);
+    
+        // Encontrar al usuario
         $usuario = User::findOrFail($id);
-        $usuario->update($request->all());
-
+    
+        // Actualizar los datos del usuario (excepto la contraseña)
+        $usuario->name = $request->name;
+        $usuario->telefono = $request->telefono;
+        $usuario->email = $request->email;
+        $usuario->estado = $request->estado;
+        $usuario->key = $request->key;
+    
+        // Si la contraseña es proporcionada, la actualizamos
+        if ($request->has('password') && !empty($request->password)) {
+            $usuario->password = Hash::make($request->password);
+        }
+    
+        // Guardar los cambios en la base de datos
+        $usuario->save();
+    
         return redirect()->route('usuario.index')->with('success', 'Usuario actualizado exitosamente.');
     }
 

@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignId('id_solicitud')->constrained('solicitudes');
             $table->string('almacen');
             $table->string('detalle_productos'); 
-            $table->enum('estado', ['pendiente', 'aprobada', 'rechazada', 'ejecutada'])->default('pendiente');
+            $table->string('estado')->default('pendiente');
             $table->string('motivo')->nullable(); 
             $table->timestamps();
         });

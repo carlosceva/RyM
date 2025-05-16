@@ -9,6 +9,8 @@ use App\Models\SolicitudEjecutada;
 use Illuminate\Support\Facades\Auth;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\DB;
+use App\Models\User;
+use App\Services\WhatsAppService;
 
 class SobregiroController extends Controller
 {
@@ -19,17 +21,27 @@ class SobregiroController extends Controller
     {
         $user = Auth::user();
 
-        if ($user->hasRole('Administrador') || $user->can('Sobregiro_aprobar') || $user->can('Sobregiro_reprobar')) {
-            $solicitudes = Solicitud::whereHas('sobregiro')
-            ->with('usuario', 'sobregiro')
-            ->orderBy('fecha_solicitud', 'desc')
-            ->get();        
+        if ($user->hasRole('Administrador') || $user->can('Sobregiro_aprobar') || $user->can('Sobregiro_reprobar') || $user->can('Sobregiro_ejecutar')) {
+            $solicitudes = Solicitud::where('estado', '!=', 'inactivo')
+                ->whereHas('sobregiro', function ($query) {
+                    $query->where('estado', '!=', 'inactivo');
+                })
+                ->with(['usuario', 'sobregiro' => function ($query) {
+                    $query->where('estado', '!=', 'inactivo');
+                }])
+                ->orderBy('fecha_solicitud', 'desc')
+                ->get();        
         } else {
-            $solicitudes = Solicitud::where('id_usuario', $user->id)
-            ->whereHas('sobregiro')
-            ->with('usuario', 'sobregiro')
-            ->orderBy('fecha_solicitud', 'desc')
-            ->get();        
+            $solicitudes = Solicitud::where('estado', '!=', 'inactivo')
+                ->where('id_usuario', $user->id)
+                ->whereHas('sobregiro', function ($query) {
+                    $query->where('estado', '!=', 'inactivo');
+                })
+                ->with(['usuario', 'sobregiro' => function ($query) {
+                    $query->where('estado', '!=', 'inactivo');
+                }])
+                ->orderBy('fecha_solicitud', 'asc')
+                ->get();        
         }
         
         return view('GestionSolicitudes.sobregiro.index', compact('solicitudes'));
@@ -46,7 +58,7 @@ class SobregiroController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(Request $request, WhatsAppService $whatsapp)
     {
         // Validación de los datos
         $request->validate([
@@ -76,7 +88,26 @@ class SobregiroController extends Controller
                 'importe' => $request->importe, // Asegúrate de que importe sea un número válido
             ]);
     
-            // Confirmar la transacción si todo va bien
+            $usuariosResponsables = User::whereHas('roles.permissions', function ($query) {
+                $query->where('name', 'Sobregiro_aprobar');
+            })->get();
+
+            $phoneNumbers = $usuariosResponsables->map(function ($user) {
+                return [
+                    'telefono' => '+591' . str_pad($user->telefono, 8, '0', STR_PAD_LEFT),
+                    'api_key' => $user->key, 
+                ];
+            });
+
+            $phoneNumbers = $phoneNumbers->toArray();
+
+            $message = "Se ha creado una nueva solicitud de *Sobregiro de venta* y está esperando aprobación.\n" .
+            "Número de solicitud: " . $solicitud->id . "\n" .
+            "Fecha de creación: " . $solicitud->fecha_solicitud->format('d/m/Y H:i') . "\n" .
+            "Solicitado por: " . auth()->user()->name . ".";
+
+            $responses = $whatsapp->sendWithAPIKey($phoneNumbers, $message);
+
             DB::commit();
     
             return redirect()->route('Sobregiro.index')->with('success', 'Solicitud de Sobregiro creada.');
@@ -244,8 +275,22 @@ class SobregiroController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Sobregiro $sobregiro)
+    public function destroy($id)
     {
-        //
+        $solicitud = Solicitud::findOrFail($id);
+
+        // Cambiar estado de la solicitud
+        $solicitud->estado = 'inactivo';
+        $solicitud->save();
+
+        // Cambiar estado del precio especial si existe
+        $precio = $solicitud->sobregiro;
+        if ($precio) {
+            $precio->estado = 'inactivo';
+            $precio->save();
+        }
+
+        return redirect()->route('Sobregiro.index')
+            ->with('success', 'Solicitud anulada correctamente.');
     }
 }

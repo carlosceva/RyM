@@ -6,8 +6,10 @@ use App\Models\Solicitud;
 use App\Models\SolicitudPrecioEspecial;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use App\Models\Cliente;
+use Illuminate\Support\Facades\DB;
+use App\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf;
+use App\Services\WhatsAppService;
 
 class PrecioEspecialController extends Controller
 {
@@ -17,22 +19,33 @@ class PrecioEspecialController extends Controller
     public function index()
     {
         $user = Auth::user();
-
+    
         if ($user->hasRole('Administrador') || $user->can('Precio_especial_aprobar') || $user->can('Precio_especial_reprobar')) {
-            $solicitudes = Solicitud::whereHas('precioEspecial')
-            ->with('usuario', 'precioEspecial')
-            ->orderBy('fecha_solicitud', 'desc')
-            ->get();        
+            $solicitudes = Solicitud::where('estado', '!=', 'inactivo')
+                ->whereHas('precioEspecial', function ($query) {
+                    $query->where('estado', '!=', 'inactivo');
+                })
+                ->with(['usuario', 'precioEspecial' => function ($query) {
+                    $query->where('estado', '!=', 'inactivo');
+                }])
+                ->orderBy('fecha_solicitud', 'desc')
+                ->get();        
         } else {
-            $solicitudes = Solicitud::where('id_usuario', $user->id)
-            ->whereHas('precioEspecial') 
-            ->with('usuario', 'precioEspecial')
-            ->orderBy('fecha_solicitud', 'asc')
-            ->get();        
+            $solicitudes = Solicitud::where('estado', '!=', 'inactivo')
+                ->where('id_usuario', $user->id)
+                ->whereHas('precioEspecial', function ($query) {
+                    $query->where('estado', '!=', 'inactivo');
+                })
+                ->with(['usuario', 'precioEspecial' => function ($query) {
+                    $query->where('estado', '!=', 'inactivo');
+                }])
+                ->orderBy('fecha_solicitud', 'asc')
+                ->get();        
         }
-        
+    
         return view('GestionSolicitudes.precio.index', compact('solicitudes'));
     }
+    
 
     /**
      * Show the form for creating a new resource.
@@ -45,30 +58,59 @@ class PrecioEspecialController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+
+    public function store(Request $request, WhatsAppService $whatsapp)
     {
         $request->validate([
             'tipo' => 'required|string',
             'glosa' => 'nullable|string',
-            // Otros campos de validación
         ]);
 
-        $solicitud = Solicitud::create([
-            'id_usuario' => auth()->user()->id,
-            'tipo' => $request->tipo,
-            'fecha_solicitud' => now(),
-            'estado' => 'pendiente',
-            'glosa' => $request->glosa,
-        ]);
+        DB::beginTransaction();
+    
+        try {
+            $solicitud = Solicitud::create([
+                'id_usuario' => auth()->user()->id,
+                'tipo' => $request->tipo,
+                'fecha_solicitud' => now(),
+                'estado' => 'pendiente',
+                'glosa' => $request->glosa,
+            ]);
+    
+            $solicitudPrecioEspecial = SolicitudPrecioEspecial::create([
+                'id_solicitud' => $solicitud->id,
+                'cliente' => $request->cliente,
+                'detalle_productos' => $request->detalle_productos,
+            ]);
+            
+            $usuariosResponsables = User::whereHas('roles.permissions', function ($query) {
+                $query->where('name', 'Precio_especial_aprobar');
+            })->get();
 
-        // Crear la solicitud de precio especial
-        $solicitudPrecioEspecial = SolicitudPrecioEspecial::create([
-            'id_solicitud' => $solicitud->id,
-            'cliente' => $request->cliente, // Asegúrate de tener el cliente
-            'detalle_productos' => $request->detalle_productos, // Suponiendo que el detalle es un array
-        ]);
+            $phoneNumbers = $usuariosResponsables->map(function ($user) {
+                return [
+                    'telefono' => '+591' . str_pad($user->telefono, 8, '0', STR_PAD_LEFT),
+                    'api_key' => $user->key, 
+                ];
+            });
 
-        return redirect()->route('PrecioEspecial.index')->with('success', 'Solicitud de precio especial creada.');
+            $phoneNumbers = $phoneNumbers->toArray();
+            
+            $message = "Se ha creado una nueva solicitud de *Precio especial* y está esperando aprobación.\n" .
+            "Número de solicitud: " . $solicitud->id . "\n" .
+            "Fecha de creación: " . $solicitud->fecha_solicitud->format('d/m/Y H:i') . "\n" .
+            "Solicitado por: " . auth()->user()->name . ".";
+
+            $responses = $whatsapp->sendWithAPIKey($phoneNumbers, $message);
+
+            DB::commit();
+
+            return redirect()->route('PrecioEspecial.index')->with('success', 'Solicitud de precio especial creada.');
+    
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Hubo un error al procesar la solicitud. Intenta nuevamente.');
+        }
     }
 
     public function aprobar_o_rechazar(Request $request)
@@ -208,8 +250,23 @@ class PrecioEspecialController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Solicitud $solicitud)
+    public function destroy($id)
     {
-        //
+        $solicitud = Solicitud::findOrFail($id);
+
+        // Cambiar estado de la solicitud
+        $solicitud->estado = 'inactivo';
+        $solicitud->save();
+
+        // Cambiar estado del precio especial si existe
+        $precio = $solicitud->precioEspecial;
+        if ($precio) {
+            $precio->estado = 'inactivo';
+            $precio->save();
+        }
+
+        return redirect()->route('PrecioEspecial.index')
+            ->with('success', 'Solicitud anulada correctamente.');
     }
+
 }

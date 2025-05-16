@@ -36,15 +36,29 @@
 @endif
     <div class="card table-responsive">
         <div class="card-body">
+            <div class="mb-3 d-flex align-items-center gap-3">
+                <label for="fechaInicio" class="mb-0">Desde:</label>
+                <input type="date" id="fechaInicio" class="form-control" style="max-width: 200px;">
+                
+                <label for="fechaFin" class="mb-0 ms-3">Hasta:</label>
+                <input type="date" id="fechaFin" class="form-control" style="max-width: 200px;">
+            </div>
             <table class="table table-hover table-bordered" id="solicitud_sobregiro">
                 <thead class="table-dark">
                     <tr>
                       <th>#</th>
+                      <th class="d-none">Tipo</th>                  <!-- oculto -->
+                      <th>Fecha</th>
+                      <th class="d-none">Solicitante</th>                  <!-- oculto -->
                       <th>Cliente</th>
                       <th>Importe</th>
-                      <th>Fecha</th>
-                      <th>Observacion</th>
+                      <th class="d-none">Glosa</th>                  <!-- oculto -->
                       <th>Estado</th>
+                      <th class="d-none">Autorizador</th>                  <!-- oculto -->
+                      <th class="d-none">Fecha autorizacion</th>                  <!-- oculto -->
+                      <th class="d-none">Ejecutado por</th>                  <!-- oculto -->
+                      <th class="d-none">Fecha ejecucion</th>                  <!-- oculto -->
+                      <th>Observacion</th>
                       <th>Acciones</th>
                     </tr>
                 </thead>
@@ -65,11 +79,18 @@
 
                     <tr class="{{ $claseFila }}">
                         <td>{{ $solicitud->id }}</td>
+                        <td class="d-none">{{ ucfirst($solicitud->tipo) }}</td>      <!-- oculto -->
+                        <td>{{ \Carbon\Carbon::parse($solicitud->fecha_solicitud)->format('Y-m-d') }}</td>
+                        <td class="d-none">{{ $solicitud->usuario->name ?? 'N/D' }}</td>      <!-- oculto -->
                         <td>{{ $solicitud->sobregiro?->cliente ?? 'No asignado' }}</td>
                         <td>{{ $solicitud->sobregiro?->importe ?? '00.00' }}</td>
-                        <td>{{ \Carbon\Carbon::parse($solicitud->fecha_solicitud)->format('Y-m-d') }}</td>
-                        <td>{{ $solicitud->observacion ?? 'Sin observación' }}</td>
+                        <td class="d-none">{{ $solicitud->glosa ?? 'Sin glosa' }}</td>      <!-- oculto -->
                         <td>{{ ucfirst($estado) }}</td>
+                        <td class="d-none">{{ $solicitud->autorizador->name ?? 'Sin autorizar' }}</td>      <!-- oculto -->
+                        <td class="d-none">{{ $solicitud->fecha_autorizacion ?? 'N/D' }}</td>      <!-- oculto -->
+                        <td class="d-none">{{ $solicitud->ejecucion->usuario->name ?? 'Sin ejecutar' }}</td>      <!-- oculto -->
+                        <td class="d-none">{{ $solicitud->ejecucion->fecha_ejecucion ?? 'N/D' }}</td>      <!-- oculto -->
+                        <td>{{ $solicitud->observacion ?? 'Sin observación' }}</td>
                         <td>
                             <div class="d-flex flex-column flex-sm-row justify-content-center align-items-center">
                                 
@@ -95,7 +116,7 @@
                                             </button>
                                             @endcan
                                 @endif
-                                @can('Sobregiro_editar')
+                                @can('Sobregiro_ejecutar')
                                 @if ($solicitud->estado === 'aprobada' && !$solicitud->ejecucion)
                                       <button type="button" class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#modalEjecutar{{ $solicitud->id }}">
                                           Ejecutar

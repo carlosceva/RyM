@@ -37,6 +37,21 @@
             </div>
 
             <div class="row p-2">
+                <div class="col-12 col-md-6">
+                    <p class="mb-1">
+                        <strong>Tiene Pago:</strong>
+                        {{ is_null($solicitud->anulacion->tiene_pago) ? '---' : ($solicitud->anulacion->tiene_pago ? 'Sí' : 'No') }}
+                    </p>
+                </div>
+                <div class="col-12 col-md-6">
+                    <p class="mb-1">
+                        <strong>Tiene Entrega:</strong>
+                        {{ is_null($solicitud->anulacion->tiene_entrega) ? '---' : ($solicitud->anulacion->tiene_entrega ? 'Sí' : 'No') }}
+                    </p>
+                </div>
+            </div>
+
+            <div class="row p-2">
                 <div class="col-12">
                     <div class="d-flex align-items-center">
                         <strong class="me-2">Glosa:</strong>
@@ -92,6 +107,7 @@
                 background-color: white !important;  /* Fondo blanco */
                 color: #198754 !important;           /* Texto verde */
                 border: 1px solid #198754 !important;/* Borde verde */
+                transition: color 0.3s ease, background-color 0.3s ease; /* Sincroniza transición */
             }
 
             /* Estilo cuando pasa el mouse (hover) */
@@ -103,10 +119,36 @@
             /* Estilo para el icono del botón Excel (verde por defecto) */
             .btn-excel i {
                 color: #198754 !important; /* Icono verde */
+                transition: color 0.3s ease; /* Sincroniza la transición del color del icono */
             }
 
             /* Cuando pasa el mouse, el icono se pone blanco */
             .btn-excel:hover i {
+                color: white !important; /* Icono blanco en hover */
+            }
+
+            /* Estilo para el botón PDF (estado normal) */
+            .btn-pdf {
+                background-color: white !important;  /* Fondo blanco */
+                color: #dc3545 !important;           /* Texto rojo */
+                border: 1px solid #dc3545 !important;/* Borde rojo */
+                transition: color 0.3s ease, background-color 0.3s ease; /* Sincroniza transición */
+            }
+
+            /* Estilo cuando pasa el mouse (hover) */
+            .btn-pdf:hover {
+                background-color: #c82333 !important; /* Rojo más oscuro */
+                color: white !important;              /* Texto blanco */
+            }
+
+            /* Estilo para el icono del botón PDF (rojo por defecto) */
+            .btn-pdf i {
+                color: #dc3545 !important; /* Icono rojo */
+                transition: color 0.3s ease; /* Sincroniza la transición del color del icono */
+            }
+
+            /* Cuando pasa el mouse, el icono se pone blanco */
+            .btn-pdf:hover i {
                 color: white !important; /* Icono blanco en hover */
             }
 
@@ -120,33 +162,43 @@
             }
         </style>
 
-
         <!-- Footer con acciones -->
-        <div class="card-footer text-end 
-            @if($solicitud->estado === 'aprobada' || $solicitud->estado === 'ejecutada') 
-                footer-aprobada 
-            @elseif($solicitud->estado === 'rechazada') 
-                footer-rechazada 
-            @endif">
-            
-            <a href="{{ route('anulacion.descargar.pdf', $solicitud->id) }}" 
-            class="btn btn-sm btn-outline-danger me-2 bg-danger" 
-            target="_blank">
-                <i class="fa fa-file-pdf"></i> PDF
-            </a>
+        <div class="card-footer @if($solicitud->estado === 'aprobada' || $solicitud->estado === 'ejecutada') 
+                                    footer-aprobada 
+                                @elseif($solicitud->estado === 'rechazada') 
+                                    footer-rechazada 
+                                @endif">
+            <div class="row">
+                @can('Anulacion_borrar')
+                <!-- Columna izquierda -->
+                <div class="col d-flex align-items-center">
+                    <form action="{{ route('Anulacion.destroy', $solicitud->id) }}" method="POST" onsubmit="return confirm('¿Estás seguro de que deseas anular esta solicitud?');" class="m-0">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" class="btn btn-sm btn-pdf me-2">
+                            <i class="fa fa-trash"></i> Anular solicitud
+                        </button>
+                    </form>
+                </div>
+                @endcan
+                <!-- Columna derecha -->
+                <div class="col-auto ms-auto d-flex align-items-center">
+                    <a href="{{ route('anulacion.descargar.pdf', $solicitud->id) }}" class="btn btn-sm btn-pdf me-2" target="_blank">
+                        <i class="fa fa-file-pdf"></i> PDF
+                    </a>
+                    <a href="{{ route('anulacion.descargar.excel', $solicitud->id) }}" class="btn btn-sm btn-excel" target="_blank">
+                        <i class="fa fa-file-excel me-1"></i> Excel
+                    </a>
+                </div>
+            </div>    
+        </div>
 
-            <a href="{{ route('anulacion.descargar.excel', $solicitud->id) }}" 
-            class="btn btn-sm btn-excel" 
-            target="_blank">
-                <i class="fa fa-file-excel me-1"></i> Excel
-            </a>
-        </div>
-        <!-- Botón "Cerrar" para el modal -->
-         <div class="card-footer text-end">
-            <button type="button" class="btn btn-dark" data-bs-dismiss="modal" aria-label="Close">
-                Cerrar
-            </button>
-        </div>
+    </div>
+    <!-- Botón "Cerrar" para el modal -->
+    <div class=" text-end">
+        <button type="button" class="btn btn-dark" data-bs-dismiss="modal" aria-label="Close">
+            Cerrar
+        </button>
     </div>
 </div>
                 

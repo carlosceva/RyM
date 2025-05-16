@@ -1,6 +1,6 @@
 @extends('dashboard')
 
-@section('title', 'Precio especial de venta')
+@section('title', 'Solicitudes')
 
 @section('content')
 <div class="card-header">

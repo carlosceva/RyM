@@ -23,6 +23,7 @@ class SolicitudController extends Controller
             'sobregiro',
             'anulacion'
         ])
+        ->where('estado', '!=', 'inactivo')
         ->orderBy('fecha_solicitud', 'desc')
         ->get();
 
@@ -85,11 +86,6 @@ class SolicitudController extends Controller
         // Redirigimos al usuario con un mensaje de éxito
         return redirect()->route('general.index')->with('success', 'La solicitud ha sido ' . $solicitud->estado . ' correctamente.');
     }
-    
-    
-
-
-
 
     /**
      * Show the form for creating a new resource.

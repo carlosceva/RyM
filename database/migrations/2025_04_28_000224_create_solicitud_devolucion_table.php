@@ -20,8 +20,8 @@ return new class extends Migration
             $table->string('almacen');
             $table->string('motivo');
             $table->string('detalle_productos')->nullable();
-            $table->boolean('requiere_abono')->default(false);
-            $table->boolean('tiene_entrega')->default(false);
+            $table->boolean('tiene_pago')->nullable();
+            $table->boolean('tiene_entrega')->nullable();
 
             $table->string('estado')->default('pendiente');
             $table->timestamps();

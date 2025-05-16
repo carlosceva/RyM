@@ -41,7 +41,7 @@
                         <th>codigo</th>
                         <th>Nombre</th>
                         <th>Telefono</th>
-                        <th>Email</th>
+                        <th>Key</th>
                         <th>Rol</th>
                         <th>Estado</th>
                         @if (auth()->user()->can('usuarios_editar') || auth()->user()->can('usuarios_borrar')|| auth()->user()->can('usuarios_crear'))
@@ -56,7 +56,7 @@
                         <td>{{ $usuario->codigo }}</td>
                         <td>{{ $usuario->name }}</td>
                         <td>{{ $usuario->telefono }}</td>
-                        <td>{{ $usuario->email }}</td>
+                        <td>{{ $usuario->key }}</td>
                         <td>
                             {{ $usuario->roles->pluck('name')->join(', ') }}
                         </td>

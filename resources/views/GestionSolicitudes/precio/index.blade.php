@@ -36,14 +36,20 @@
 @endif
     <div class="card table-responsive">
         <div class="card-body">
+            
             <table class="table table-hover table-bordered" id="solicitud_precio">
                 <thead class="table-dark">
                     <tr>
                       <th>#</th>
-                      <th>Cliente</th>
-                      <th>Productos</th>
+                      <th class="d-none">Tipo</th>                  <!-- oculto -->
                       <th>Fecha</th>
+                      <th class="d-none">Solicitante</th>           <!-- oculto -->
+                      <th>Cliente</th>
+                      <th class="d-none">Motivo</th>                <!-- oculto -->
+                      <th>Productos</th>
                       <th>Estado</th>
+                      <th class="d-none">Autorizador</th>           <!-- oculto -->
+                      <th class="d-none">Fecha autorizacion</th>    <!-- oculto -->
                       <th>Observacion</th>
                       <th>Acciones</th>
                     </tr>
@@ -63,10 +69,15 @@
 
                     <tr class="{{ $claseFila }}">
                         <td>{{ $solicitud->id }}</td>
-                        <td>{{ $solicitud->precioEspecial?->cliente ?? 'No asignado' }}</td>
-                        <td>{{ $solicitud->precioEspecial?->detalle_productos ?? 'Sin detalle de productos' }}</td>
+                        <td class="d-none">{{ ucfirst($solicitud->tipo) }}</td>      <!-- oculto -->
                         <td>{{ \Carbon\Carbon::parse($solicitud->fecha_solicitud)->format('Y-m-d') }}</td>
+                        <td class="d-none">{{ $solicitud->usuario->name ?? 'N/D' }}</td>      <!-- oculto -->
+                        <td>{{ $solicitud->precioEspecial?->cliente ?? 'No asignado' }}</td>
+                        <td class="d-none">{{ $solicitud->glosa ?? 'Sin glosa' }}</td>      <!-- oculto -->
+                        <td>{{ $solicitud->precioEspecial?->detalle_productos ?? 'Sin detalle de productos' }}</td>
                         <td>{{ ucfirst($estado) }}</td>
+                        <td class="d-none">{{ $solicitud->autorizador->name ?? 'Sin autorizar' }}</td>      <!-- oculto -->
+                        <td class="d-none">{{ $solicitud->fecha_autorizacion ?? 'N/D' }}</td>      <!-- oculto -->
                         <td>{{ $solicitud->observacion ?? 'Sin observación' }}</td>
                         <td>
                             <div class="d-flex flex-column flex-sm-row justify-content-center align-items-center">
@@ -128,60 +139,7 @@
     </div>
     @endforeach
  
-    <!-- Vista para crear solicitud -->
-<div class="modal fade" id="modalNuevaSolicitud" tabindex="-1" aria-labelledby="modalCrearSolicitudLabel" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="modalCrearSolicitudLabel">Crear Solicitud de Precio Especial</h5>
-        <button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        <form action="{{ route('PrecioEspecial.store') }}" method="POST">
-          @csrf
-          <!-- Tipo de Solicitud -->
-          <input type="hidden" name="tipo" value="precio_especial">
-
-          <!-- Usuario que solicita (Oculto porque es el usuario autenticado) -->
-        <input type="hidden" name="id_usuario" value="{{ auth()->id() }}">
-
-          <!-- Fecha de solicitud (Generada automáticamente) -->
-        <div class="mb-3">
-            <label for="fecha_solicitud" class="form-label">Fecha de Solicitud</label>
-            <input type="text" class="form-control" id="fecha_solicitud" value="{{ now()->format('Y-m-d H:i:s') }}" disabled>
-        </div>
-
-          <!-- Estado (Se define automáticamente como pendiente) -->
-        <input type="hidden" name="estado" value="pendiente">
-
-          <!-- Glosa (Descripción o motivo de la solicitud) -->
-        <div class="mb-3">
-            <label for="glosa" class="form-label">Motivo de la solicitud</label>
-            <textarea class="form-control" id="glosa" name="glosa" rows="3" required></textarea>
-        </div>
-
-          <!-- Cliente -->
-        <div class="mb-3">
-            <label for="cliente" class="form-label">Cliente</label>
-            <input type="text" class="form-control" id="cliente" name="cliente">
-            
-        </div>
-
-          <!-- Detalle Productos (puede ser un campo JSON o similar) -->
-          <div class="mb-3">
-            <label for="detalle_productos" class="form-label">Detalle de Productos</label>
-            <textarea name="detalle_productos" id="detalle_productos" class="form-control" rows="3" required></textarea>
-          </div>
-
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
-            <button type="submit" class="btn btn-primary">Crear Solicitud</button>
-          </div>
-        </form>
-      </div>
-    </div>
-  </div>
-</div>
+    @include('GestionSolicitudes.precio.create')
 
 <!-- Modal para Agregar Observación -->
 <div class="modal fade" id="observacionModal" tabindex="-1" aria-labelledby="observacionModalLabel" aria-hidden="true">

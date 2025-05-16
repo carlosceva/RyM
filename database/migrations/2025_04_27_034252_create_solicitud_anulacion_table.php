@@ -16,6 +16,9 @@ return new class extends Migration
             $table->foreignId('id_solicitud')->constrained('solicitudes');
             $table->string('nota_venta');
             $table->string('motivo');
+            $table->boolean('tiene_pago')->default(false);
+            $table->boolean('tiene_entrega')->default(false);
+
             $table->string('estado')->default('pendiente');
             $table->timestamps();
         });

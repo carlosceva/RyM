@@ -9,6 +9,9 @@ use App\Models\SolicitudEjecutada;
 use Illuminate\Support\Facades\Auth;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\DB;
+use App\Models\Devolucion;
+use App\Models\User;
+use App\Services\WhatsAppService;
 
 class AnulacionController extends Controller
 {
@@ -19,17 +22,27 @@ class AnulacionController extends Controller
     {
         $user = Auth::user();
 
-        if ($user->hasRole('Administrador') || $user->can('Anulacion_aprobar') || $user->can('Anulacion_reprobar')) {
-            $solicitudes = Solicitud::whereHas('anulacion')
-            ->with('usuario', 'anulacion')
-            ->orderBy('fecha_solicitud', 'desc')
-            ->get();        
+        if ($user->hasRole('Administrador') || $user->can('Anulacion_aprobar') || $user->can('Anulacion_reprobar') || $user->can('Anulacion_pago') || $user->can('Anulacion_entrega')) {
+            $solicitudes = Solicitud::where('estado', '!=', 'inactivo')
+                ->whereHas('anulacion', function ($query) {
+                    $query->where('estado', '!=', 'inactivo');
+                })
+                ->with(['usuario', 'anulacion' => function ($query) {
+                    $query->where('estado', '!=', 'inactivo');
+                }])
+                ->orderBy('fecha_solicitud', 'desc')
+                ->get();        
         } else {
-            $solicitudes = Solicitud::where('id_usuario', $user->id)
-            ->whereHas('anulacion')
-            ->with('usuario', 'anulacion')
-            ->orderBy('fecha_solicitud', 'desc')
-            ->get();        
+            $solicitudes = Solicitud::where('estado', '!=', 'inactivo')
+                ->where('id_usuario', $user->id)
+                ->whereHas('anulacion', function ($query) {
+                    $query->where('estado', '!=', 'inactivo');
+                })
+                ->with(['usuario', 'anulacion' => function ($query) {
+                    $query->where('estado', '!=', 'inactivo');
+                }])
+                ->orderBy('fecha_solicitud', 'asc')
+                ->get();        
         }
 
         return view('GestionSolicitudes.anulacion.index', compact('solicitudes'));
@@ -46,7 +59,7 @@ class AnulacionController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(Request $request, WhatsAppService $whatsapp)
     {
         $request->validate([
             'tipo' => 'required|string',
@@ -71,6 +84,26 @@ class AnulacionController extends Controller
                 'nota_venta' => $request->nota_venta,
                 'motivo' => $request->motivo,
             ]);
+
+            $usuariosResponsables = User::whereHas('roles.permissions', function ($query) {
+                $query->where('name', 'Anulacion_aprobar');
+            })->get();
+
+            $phoneNumbers = $usuariosResponsables->map(function ($user) {
+                return [
+                    'telefono' => '+591' . str_pad($user->telefono, 8, '0', STR_PAD_LEFT),
+                    'api_key' => $user->key, 
+                ];
+            });
+
+            $phoneNumbers = $phoneNumbers->toArray();
+
+            $message = "Se ha creado una nueva solicitud de *Anulacion de Venta* y está esperando aprobación.\n" .
+            "Número de solicitud: " . $solicitud->id . "\n" .
+            "Fecha de creación: " . $solicitud->fecha_solicitud->format('d/m/Y H:i') . "\n" .
+            "Solicitado por: " . auth()->user()->name . ".";
+
+            $responses = $whatsapp->sendWithAPIKey($phoneNumbers, $message);
     
             DB::commit();
     
@@ -80,7 +113,7 @@ class AnulacionController extends Controller
 
             DB::rollBack();
 
-            return redirect()->route('Anulacion.index')->with('error', 'Hubo un problema al crear la solicitud de Anulacion: ' . $e->getMessage());
+            return back()->with('error', 'Hubo un error al procesar la solicitud. Intenta nuevamente.');
         }
     }
 
@@ -123,28 +156,109 @@ class AnulacionController extends Controller
     {
         $solicitud = Solicitud::findOrFail($id);
     
-        // Solo puede ejecutarse si está aprobada y aún no ha sido ejecutada
         if ($solicitud->estado !== 'aprobada') {
             return back()->with('error', 'Solo las solicitudes aprobadas pueden ser ejecutadas.');
         }
     
-        if ($solicitud->ejecucion) {
-            return back()->with('error', 'Esta solicitud ya fue ejecutada.');
+        $anulacion = $solicitud->anulacion;
+    
+        if (!$anulacion) {
+            return back()->with('error', 'No se encontró la información de anulación asociada a esta solicitud.');
         }
     
-        // Registrar ejecución
-        SolicitudEjecutada::create([
-            'solicitud_id' => $solicitud->id,
-            'ejecutado_por' => Auth::id(),
-            'fecha_ejecucion' => now(),
-        ]);
-
-        // Cambiar el estado de la solicitud
-        $solicitud->estado = 'ejecutada';
-        $solicitud->save();
+        $tieneEntrega = (bool) $anulacion->tiene_entrega;
+        $tienePago = (bool) $anulacion->tiene_pago;
     
-        return back()->with('success', 'Solicitud ejecutada exitosamente.');
+        // Caso 1: No hay entrega ni pago → ejecutar anulación
+        if (!$tieneEntrega && !$tienePago) {
+            SolicitudEjecutada::create([
+                'solicitud_id' => $solicitud->id,
+                'ejecutado_por' => Auth::id(),
+                'fecha_ejecucion' => now(),
+            ]);
+    
+            $solicitud->estado = 'ejecutada';
+            $solicitud->save();
+    
+            return back()->with('success', 'Solicitud de anulación ejecutada correctamente.');
+        }
+    
+        // Caso 2: Hay entrega o pago → generar solicitud de devolución
+        DB::beginTransaction();
+    
+        try {
+            // 🔄 Actualizar solicitud original
+            $solicitud->estado = 'convertida';
+            $solicitud->observacion = 'Se procedió con una solicitud de devolución.';
+            $solicitud->save();
+    
+            // 🆕 Crear nueva solicitud tipo devolución
+            $nuevaSolicitud = Solicitud::create([
+                'id_usuario' => $solicitud->id_usuario,
+                'tipo' => 'Devolucion de Venta',
+                'fecha_solicitud' => now(),
+                'estado' => 'pendiente',
+                'observacion' => 'Generada automáticamente desde solicitud de anulación #' . $solicitud->id,
+            ]);
+    
+            // 🧾 Crear el registro de devolución
+            Devolucion::create([
+                'id_solicitud' => $nuevaSolicitud->id,
+                'nota_venta' => $anulacion->nota_venta,
+                'motivo' => 'Conversión automática desde solicitud de anulación',
+                'cliente' => '',
+                'almacen' => '',
+                'detalle_productos' => '',
+                'tiene_pago' => $tienePago,
+                'tiene_entrega' => $tieneEntrega,
+            ]);
+    
+            DB::commit();
+    
+            return redirect()->route('Devolucion.index')
+                ->with('success', 'La anulación fue convertida en una solicitud de devolución.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Error al generar la devolución: ' . $e->getMessage());
+        }
     }
+    
+
+    public function verificarPago(Request $request, $id)
+    {
+        $request->validate([
+            'pago' => 'required|boolean',
+        ]);
+    
+        $solicitud = Solicitud::findOrFail($id);
+    
+        if (!$solicitud->anulacion) {
+            return redirect()->back()->with('error', 'No se encontró el registro de anulación.');
+        }
+    
+        $solicitud->anulacion->tiene_pago = $request->pago;
+        $solicitud->anulacion->save();
+    
+        return redirect()->back()->with('success', 'Verificación de pago registrada correctamente.');
+    }
+    
+    public function verificarEntrega(Request $request, $id)
+    {
+        $request->validate([
+            'entrega' => 'required|boolean',
+        ]);
+    
+        $solicitud = Solicitud::findOrFail($id);
+    
+        if (!$solicitud->anulacion) {
+            return redirect()->back()->with('error', 'No se encontró el registro de anulación.');
+        }
+    
+        $solicitud->anulacion->tiene_entrega = $request->entrega;
+        $solicitud->anulacion->save();
+    
+        return redirect()->back()->with('success', 'Verificación de entrega registrada correctamente.');
+    }     
 
     public function descargarPDF($id)
     {
@@ -240,8 +354,22 @@ class AnulacionController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Anulacion $anulacion)
+    public function destroy($id)
     {
-        //
+        $solicitud = Solicitud::findOrFail($id);
+
+        // Cambiar estado de la solicitud
+        $solicitud->estado = 'inactivo';
+        $solicitud->save();
+
+        // Cambiar estado del precio especial si existe
+        $precio = $solicitud->anulacion;
+        if ($precio) {
+            $precio->estado = 'inactivo';
+            $precio->save();
+        }
+
+        return redirect()->route('Anulacion.index')
+            ->with('success', 'Solicitud anulada correctamente.');
     }
 }

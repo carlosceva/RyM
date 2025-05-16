@@ -41,8 +41,8 @@
             </thead>
             <tbody>
                 @php
-                    $solicitudes = ['Precio_especial', 'Anulacion', 'Devolucion', 'Sobregiro', 'Baja', 'Muestra', 'usuarios', 'roles','permisos'];
-                    $acciones = ['ver', 'crear', 'editar', 'borrar', 'aprobar', 'reprobar'];
+                    $solicitudes = ['Anulacion', 'Devolucion', 'Precio_especial', 'Sobregiro', 'Baja', 'Muestra', 'usuarios', 'roles','permisos'];
+                    $acciones = ['ver', 'crear', 'borrar', 'aprobar', 'reprobar', 'ejecutar', 'entrega', 'pago'];
                 @endphp
 
                 @foreach ($roles as $role)
@@ -73,14 +73,19 @@
                                                 $permiso = $permissions->firstWhere('name', $permisoName);
                                             @endphp
                                             <td>
-                                                @if ($permiso && $role->hasPermissionTo($permiso->name))
-                                                    @php
-                                                        // Si al menos un permiso está activado, marcar la variable como true
-                                                        $roleHasPermission = true;
-                                                    @endphp
-                                                    <i class="fa fa-check text-success"></i>
+                                                @if($permiso)
+                                                    @if ($role->hasPermissionTo($permiso->name))
+                                                        @php
+                                                            // Si al menos un permiso está activado, marcar la variable como true
+                                                            $roleHasPermission = true;
+                                                        @endphp
+                                                        <i class="fa fa-check text-success"></i>
+                                                    @else
+                                                        <i class="fa fa-times text-danger"></i>
+                                                    @endif
                                                 @else
-                                                    <i class="fa fa-times text-danger"></i>
+                                                    <!-- Si el permiso no existe -->
+                                                    <span>-</span> <!-- Guion -->
                                                 @endif
                                             </td>
                                         @endforeach

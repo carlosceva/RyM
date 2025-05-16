@@ -70,7 +70,7 @@
 
             <div class="row">
                 <div class="col">
-                    <p class="mb-1"><strong>Requiere abono:</strong> {{ $solicitud->devolucion->requiere_abono ? 'Sí' : 'No' }}</p>
+                    <p class="mb-1"><strong>Requiere abono:</strong> {{ $solicitud->devolucion->tiene_pago ? 'Sí' : 'No' }}</p>
                 </div>
                 <div class="col">
                     <p class="mb-1"><strong>Tiene entrega:</strong> {{ $solicitud->devolucion->tiene_entrega ? 'Sí' : 'No' }}</p>

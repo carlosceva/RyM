@@ -69,6 +69,7 @@
                 </div>
             </div>
 
+
             <!-- Motivo -->
             <div class="d-flex align-center mb-2">
                 <strong class="me-2">Glosa:</strong>

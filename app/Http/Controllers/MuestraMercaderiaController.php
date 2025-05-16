@@ -8,6 +8,9 @@ use App\Models\Solicitud;
 use App\Models\SolicitudEjecutada;
 use Illuminate\Support\Facades\Auth;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\DB;
+use App\Models\User;
+use App\Services\WhatsAppService;
 
 class MuestraMercaderiaController extends Controller
 {
@@ -18,17 +21,27 @@ class MuestraMercaderiaController extends Controller
     {
         $user = Auth::user();
 
-        if ($user->hasRole('Administrador') || $user->can('Muestra_aprobar') || $user->can('Muestra_reprobar')) {
-            $solicitudes = Solicitud::whereHas('muestraMercaderia')
-            ->with('usuario', 'muestraMercaderia')
-            ->orderBy('fecha_solicitud', 'desc')
-            ->get();        
+        if ($user->hasRole('Administrador') || $user->can('Muestra_aprobar') || $user->can('Muestra_reprobar') || $user->can('Muestra_ejecutar')) {
+            $solicitudes = Solicitud::where('estado', '!=', 'inactivo')
+                ->whereHas('muestraMercaderia', function ($query) {
+                    $query->where('estado', '!=', 'inactivo');
+                })
+                ->with(['usuario', 'muestraMercaderia' => function ($query) {
+                    $query->where('estado', '!=', 'inactivo');
+                }])
+                ->orderBy('fecha_solicitud', 'desc')
+                ->get();        
         } else {
-            $solicitudes = Solicitud::where('id_usuario', $user->id)
-            ->whereHas('muestraMercaderia') // Solo las solicitudes que tienen muestraMercaderia
-            ->with('usuario', 'muestraMercaderia')
-            ->orderBy('fecha_solicitud', 'asc')
-            ->get();        
+            $solicitudes = Solicitud::where('estado', '!=', 'inactivo')
+                ->where('id_usuario', $user->id)
+                ->whereHas('muestraMercaderia', function ($query) {
+                    $query->where('estado', '!=', 'inactivo');
+                })
+                ->with(['usuario', 'muestraMercaderia' => function ($query) {
+                    $query->where('estado', '!=', 'inactivo');
+                }])
+                ->orderBy('fecha_solicitud', 'asc')
+                ->get();        
         }
         
         return view('GestionSolicitudes.muestra.index', compact('solicitudes'));
@@ -45,29 +58,62 @@ class MuestraMercaderiaController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(Request $request, WhatsAppService $whatsapp)
     {
         $request->validate([
             'tipo' => 'required|string',
             'glosa' => 'nullable|string',
         ]);
 
-        $solicitud = Solicitud::create([
-            'id_usuario' => auth()->user()->id,
-            'tipo' => $request->tipo,
-            'fecha_solicitud' => now(),
-            'estado' => 'pendiente',
-            'glosa' => $request->glosa,
-        ]);
+        DB::beginTransaction();
 
-        $solicitudMuestraMercaderia = MuestraMercaderia::create([
-            'id_solicitud' => $solicitud->id,
-            'cliente' => $request->cliente, 
-            'detalle_productos' => $request->detalle_productos,
-            'cod_sai' => $request->cod_sai,
-        ]);
+        try {
+            $solicitud = Solicitud::create([
+                'id_usuario' => auth()->user()->id,
+                'tipo' => $request->tipo,
+                'fecha_solicitud' => now(),
+                'estado' => 'pendiente',
+                'glosa' => $request->glosa,
+            ]);
 
-        return redirect()->route('Muestra.index')->with('success', 'Solicitud de Muestra de Mercaderia creada.');
+            $solicitudMuestraMercaderia = MuestraMercaderia::create([
+                'id_solicitud' => $solicitud->id,
+                'cliente' => $request->cliente, 
+                'detalle_productos' => $request->detalle_productos,
+                'cod_sai' => $request->cod_sai,
+            ]);
+
+            $usuariosResponsables = User::whereHas('roles.permissions', function ($query) {
+                $query->where('name', 'Muestra_aprobar');
+            })->get();
+
+            $phoneNumbers = $usuariosResponsables->map(function ($user) {
+                return [
+                    'telefono' => '+591' . str_pad($user->telefono, 8, '0', STR_PAD_LEFT),
+                    'api_key' => $user->key, 
+                ];
+            });
+
+            $phoneNumbers = $phoneNumbers->toArray();
+
+            $message = "Se ha creado una nueva solicitud de *Muestra de mercadería* y está esperando aprobación.\n" .
+            "Número de solicitud: " . $solicitud->id . "\n" .
+            "Fecha de creación: " . $solicitud->fecha_solicitud->format('d/m/Y H:i') . "\n" .
+            "Solicitado por: " . auth()->user()->name . ".";
+
+            $responses = $whatsapp->sendWithAPIKey($phoneNumbers, $message);
+
+            DB::commit();
+
+            return redirect()->route('Muestra.index')->with('success', 'Solicitud de Muestra de Mercaderia creada.');
+
+        } catch (\Exception $e) {
+
+            DB::rollBack();
+
+            return redirect()->route('Muestra.index')->with('error', 'Hubo un problema al crear la solicitud de Muestra de Mercaderia: ' . $e->getMessage());
+        }
+        
     }
 
     public function aprobar_o_rechazar(Request $request)
@@ -234,8 +280,22 @@ class MuestraMercaderiaController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(MuestraMercaderia $muestraMercaderia)
+    public function destroy($id)
     {
-        //
+        $solicitud = Solicitud::findOrFail($id);
+
+        // Cambiar estado de la solicitud
+        $solicitud->estado = 'inactivo';
+        $solicitud->save();
+
+        // Cambiar estado del precio especial si existe
+        $precio = $solicitud->muestraMercaderia;
+        if ($precio) {
+            $precio->estado = 'inactivo';
+            $precio->save();
+        }
+
+        return redirect()->route('Muestra.index')
+            ->with('success', 'Solicitud anulada correctamente.');
     }
 }

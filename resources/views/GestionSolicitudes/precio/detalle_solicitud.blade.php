@@ -1,5 +1,5 @@
 <!-- Ticket -->
-<div class="col">
+<div>
     <div class="card shadow-sm h-100 ">
         <!-- Header -->
         <div class="card-header @if($solicitud->estado === 'aprobada') 
@@ -42,6 +42,7 @@
                                     <th scope="col">#</th>
                                     <th scope="col">Producto</th>
                                     <th scope="col">Cantidad</th>
+                                    <th scope="col">Precio</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -52,11 +53,13 @@
                                             $partes = explode('-', $item);
                                             $producto = trim($partes[0] ?? '');
                                             $cantidad = trim($partes[1] ?? '');
+                                            $precio = trim($partes[2] ?? '');
                                         @endphp
                                         <tr>
                                             <td>{{ $index + 1 }}</td>
                                             <td>{{ $producto }}</td>
                                             <td>{{ $cantidad }}</td>
+                                            <td>{{ $precio }}</td>
                                         </tr>
                                     @endforeach
                                 @else
@@ -96,17 +99,103 @@
             </div>
         </div>
             
-        <!-- Footer con acciones -->
-        <div class="card-footer text-end">
-            <a href="{{ route('precioEspecial.descargar.pdf', $solicitud->id) }}" class="btn btn-sm btn-outline-danger me-2" target="_blank">
-                <i class="fa fa-file-pdf"></i> PDF
-            </a>
+        <style>
+            /* Estilo para el botón Excel (estado normal) */
+            .btn-excel {
+                background-color: white !important;  /* Fondo blanco */
+                color: #198754 !important;           /* Texto verde */
+                border: 1px solid #198754 !important;/* Borde verde */
+                transition: color 0.3s ease, background-color 0.3s ease; /* Sincroniza transición */
+            }
 
-            <a href="{{ route('precioEspecial.descargar.excel', $solicitud->id) }}" class="btn btn-sm btn-outline-success" target="_blank">
-                <i class="fa fa-file-excel"></i> Excel
-            </a>
-        </div>
-                    
+            /* Estilo cuando pasa el mouse (hover) */
+            .btn-excel:hover {
+                background-color: #145a32 !important; /* Verde más oscuro */
+                color: white !important;              /* Texto blanco */
+            }
+
+            /* Estilo para el icono del botón Excel (verde por defecto) */
+            .btn-excel i {
+                color: #198754 !important; /* Icono verde */
+                transition: color 0.3s ease; /* Sincroniza la transición del color del icono */
+            }
+
+            /* Cuando pasa el mouse, el icono se pone blanco */
+            .btn-excel:hover i {
+                color: white !important; /* Icono blanco en hover */
+            }
+
+            /* Estilo para el botón PDF (estado normal) */
+            .btn-pdf {
+                background-color: white !important;  /* Fondo blanco */
+                color: #dc3545 !important;           /* Texto rojo */
+                border: 1px solid #dc3545 !important;/* Borde rojo */
+                transition: color 0.3s ease, background-color 0.3s ease; /* Sincroniza transición */
+            }
+
+            /* Estilo cuando pasa el mouse (hover) */
+            .btn-pdf:hover {
+                background-color: #c82333 !important; /* Rojo más oscuro */
+                color: white !important;              /* Texto blanco */
+            }
+
+            /* Estilo para el icono del botón PDF (rojo por defecto) */
+            .btn-pdf i {
+                color: #dc3545 !important; /* Icono rojo */
+                transition: color 0.3s ease; /* Sincroniza la transición del color del icono */
+            }
+
+            /* Cuando pasa el mouse, el icono se pone blanco */
+            .btn-pdf:hover i {
+                color: white !important; /* Icono blanco en hover */
+            }
+
+            /* Fondo de los botones en el footer dependiendo del estado */
+            .footer-aprobada {
+                background-color: #198754 !important; /* Verde para aprobado */
+            }
+
+            .footer-rechazada {
+                background-color: #dc3545 !important; /* Rojo para rechazada */
+            }
+        </style>
+
+        <!-- Footer con acciones -->
+        <div class="card-footer @if($solicitud->estado === 'aprobada' || $solicitud->estado === 'ejecutada') 
+                                    footer-aprobada 
+                                @elseif($solicitud->estado === 'rechazada') 
+                                    footer-rechazada 
+                                @endif">
+            <div class="row">
+                @can('Precio_especial_borrar')
+                <!-- Columna izquierda -->
+                <div class="col d-flex align-items-center">
+                    <form action="{{ route('PrecioEspecial.destroy', $solicitud->id) }}" method="POST" onsubmit="return confirm('¿Estás seguro de que deseas anular esta solicitud?');" class="m-0">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" class="btn btn-sm btn-pdf me-2">
+                            <i class="fa fa-trash"></i> Anular solicitud
+                        </button>
+                    </form>
+                </div>
+                @endcan
+                <!-- Columna derecha -->
+                <div class="col-auto ms-auto d-flex align-items-center">
+                    <a href="{{ route('precioEspecial.descargar.pdf', $solicitud->id) }}" class="btn btn-sm btn-pdf me-2" target="_blank">
+                        <i class="fa fa-file-pdf"></i> PDF
+                    </a>
+                    <a href="{{ route('precioEspecial.descargar.excel', $solicitud->id) }}" class="btn btn-sm btn-excel" target="_blank">
+                        <i class="fa fa-file-excel me-1"></i> Excel
+                    </a>
+                </div>
+            </div>    
+        </div>             
+    </div>
+     <!-- Botón "Cerrar" para el modal -->
+     <div class="text-end">
+        <button type="button" class="btn btn-dark" data-bs-dismiss="modal" aria-label="Close">
+            Cerrar
+        </button>
     </div>
 </div>
                 

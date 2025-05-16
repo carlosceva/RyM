@@ -3,12 +3,15 @@
 namespace App\Http\Controllers;
 
 use App\Models\Devolucion;
+use App\Models\Anulacion;
 use Illuminate\Http\Request;
 use App\Models\Solicitud;
 use App\Models\SolicitudEjecutada;
 use Illuminate\Support\Facades\Auth;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\DB;
+use App\Models\User;
+use App\Services\WhatsAppService;
 
 class DevolucionController extends Controller
 {
@@ -19,17 +22,27 @@ class DevolucionController extends Controller
     {
         $user = Auth::user();
 
-        if ($user->hasRole('Administrador') || $user->can('Devolucion_aprobar') || $user->can('Devolucion_reprobar')) {
-            $solicitudes = Solicitud::whereHas('devolucion')
-            ->with('usuario', 'devolucion')
-            ->orderBy('fecha_solicitud', 'desc')
-            ->get();        
+        if ($user->hasRole('Administrador') || $user->can('Devolucion_aprobar') || $user->can('Devolucion_reprobar') || $user->can('Devolucion_pago') || $user->can('Devolucion_entrega')) {
+            $solicitudes = Solicitud::where('estado', '!=', 'inactivo')
+                ->whereHas('devolucion', function ($query) {
+                    $query->where('estado', '!=', 'inactivo');
+                })
+                ->with(['usuario', 'devolucion' => function ($query) {
+                    $query->where('estado', '!=', 'inactivo');
+                }])
+                ->orderBy('fecha_solicitud', 'desc')
+                ->get();        
         } else {
-            $solicitudes = Solicitud::where('id_usuario', $user->id)
-            ->whereHas('devolucion')
-            ->with('usuario', 'devolucion')
-            ->orderBy('fecha_solicitud', 'desc')
-            ->get();        
+            $solicitudes = Solicitud::where('estado', '!=', 'inactivo')
+                ->where('id_usuario', $user->id)
+                ->whereHas('devolucion', function ($query) {
+                    $query->where('estado', '!=', 'inactivo');
+                })
+                ->with(['usuario', 'devolucion' => function ($query) {
+                    $query->where('estado', '!=', 'inactivo');
+                }])
+                ->orderBy('fecha_solicitud', 'asc')
+                ->get();        
         }
 
         return view('GestionSolicitudes.devolucion.index', compact('solicitudes'));
@@ -46,7 +59,7 @@ class DevolucionController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(Request $request, WhatsAppService $whatsapp)
     {
         $request->validate([
             'tipo' => 'required|string',
@@ -58,9 +71,6 @@ class DevolucionController extends Controller
         DB::beginTransaction();
     
         try {
-            // Si no se selecciona, asigna `false` por defecto.
-            $requiereAbono = $request->has('requiere_abono') ? true : false;
-            $tieneEntrega = $request->has('tiene_entrega') ? true : false;
     
             $solicitud = Solicitud::create([
                 'id_usuario' => auth()->user()->id,
@@ -70,16 +80,34 @@ class DevolucionController extends Controller
                 'glosa' => $request->glosa,
             ]);
     
-            $anulacion = Devolucion::create([
+            $devolucion = Devolucion::create([
                 'id_solicitud' => $solicitud->id,
                 'nota_venta' => $request->nota_venta,
                 'motivo' => $request->motivo,
                 'cliente' => $request->cliente,
                 'almacen' => $request->almacen,
                 'detalle_productos' => $request->detalle_productos,
-                'requiere_abono' => $requiereAbono,
-                'tiene_entrega' => $tieneEntrega,
             ]);
+
+            $usuariosResponsables = User::whereHas('roles.permissions', function ($query) {
+                $query->where('name', 'Devolucion_aprobar');
+            })->get();
+
+            $phoneNumbers = $usuariosResponsables->map(function ($user) {
+                return [
+                    'telefono' => '+591' . str_pad($user->telefono, 8, '0', STR_PAD_LEFT),
+                    'api_key' => $user->key, 
+                ];
+            });
+
+            $phoneNumbers = $phoneNumbers->toArray();
+
+            $message = "Se ha creado una nueva solicitud de *Devolucion de Venta* y está esperando aprobación.\n" .
+            "Número de solicitud: " . $solicitud->id . "\n" .
+            "Fecha de creación: " . $solicitud->fecha_solicitud->format('d/m/Y H:i') . "\n" .
+            "Solicitado por: " . auth()->user()->name . ".";
+
+            $responses = $whatsapp->sendWithAPIKey($phoneNumbers, $message);
     
             DB::commit();
     
@@ -131,28 +159,101 @@ class DevolucionController extends Controller
     {
         $solicitud = Solicitud::findOrFail($id);
     
-        // Solo puede ejecutarse si está aprobada y aún no ha sido ejecutada
         if ($solicitud->estado !== 'aprobada') {
             return back()->with('error', 'Solo las solicitudes aprobadas pueden ser ejecutadas.');
         }
     
-        if ($solicitud->ejecucion) {
-            return back()->with('error', 'Esta solicitud ya fue ejecutada.');
+        $devolucion = $solicitud->devolucion;
+    
+        $tieneEntrega = (bool) $devolucion->tiene_entrega;
+        $tienePago = (bool) $devolucion->tiene_pago;
+    
+        // Caso 1: No hay entrega ni pago → convertir en anulación
+        if (!$tieneEntrega && !$tienePago) {
+            DB::beginTransaction();
+    
+            try {
+                // Marcar solicitud original como convertida
+                $solicitud->estado = 'convertida';
+                $solicitud->observacion = 'Se procedió con una solicitud de anulación.';
+                $solicitud->save();
+    
+                // Crear nueva solicitud tipo anulación
+                $nuevaSolicitud = Solicitud::create([
+                    'id_usuario' => $solicitud->id_usuario,
+                    'tipo' => 'Anulación de Venta',
+                    'fecha_solicitud' => now(),
+                    'estado' => 'pendiente',
+                    'observacion' => 'Generada automáticamente desde solicitud de devolución #' . $solicitud->id,
+                ]);
+    
+                // Crear la relación en tabla `solicitud_anulacion`
+                Anulacion::create([
+                    'id_solicitud' => $nuevaSolicitud->id,
+                    'nota_venta' => $devolucion->nota_venta,
+                    'motivo' => $devolucion->nota_venta,
+                    'tiene_pago' => false,
+                    'tiene_entrega' => false,
+                ]);
+    
+                DB::commit();
+    
+                return redirect()->route('Anulacion.index')
+                    ->with('success', 'La devolución fue convertida en una solicitud de anulación.');
+            } catch (\Exception $e) {
+                DB::rollBack();
+                return back()->with('error', 'Error al generar la anulación: ' . $e->getMessage());
+            }
         }
     
-        // Registrar ejecución
+        // Caso 2: Hay entrega o pago → continuar como devolución ejecutada
         SolicitudEjecutada::create([
             'solicitud_id' => $solicitud->id,
             'ejecutado_por' => Auth::id(),
             'fecha_ejecucion' => now(),
         ]);
-
-        // Cambiar el estado de la solicitud
+    
         $solicitud->estado = 'ejecutada';
         $solicitud->save();
     
-        return back()->with('success', 'Solicitud ejecutada exitosamente.');
+        return back()->with('success', 'Solicitud de devolución ejecutada correctamente.');
+    }    
+
+    public function verificarPago(Request $request, $id)
+    {
+        $request->validate([
+            'pago' => 'required|boolean',
+        ]);
+    
+        $solicitud = Solicitud::findOrFail($id);
+    
+        if (!$solicitud->devolucion) {
+            return redirect()->back()->with('error', 'No se encontró el registro de devolucion.');
+        }
+    
+        $solicitud->devolucion->tiene_pago = $request->pago;
+        $solicitud->devolucion->save();
+    
+        return redirect()->back()->with('success', 'Verificación de pago registrada correctamente.');
     }
+    
+    public function verificarEntrega(Request $request, $id)
+    {
+        $request->validate([
+            'entrega' => 'required|boolean',
+        ]);
+    
+        $solicitud = Solicitud::findOrFail($id);
+    
+        if (!$solicitud->devolucion) {
+            return redirect()->back()->with('error', 'No se encontró el registro de devolucion.');
+        }
+    
+        $solicitud->devolucion->tiene_entrega = $request->entrega;
+        $solicitud->devolucion->save();
+    
+        return redirect()->back()->with('success', 'Verificación de entrega registrada correctamente.');
+    }    
 
     public function descargarPDF($id)
     {
@@ -257,8 +358,22 @@ class DevolucionController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Devolucion $devolucion)
+    public function destroy($id)
     {
-        //
+        $solicitud = Solicitud::findOrFail($id);
+
+        // Cambiar estado de la solicitud
+        $solicitud->estado = 'inactivo';
+        $solicitud->save();
+
+        // Cambiar estado del precio especial si existe
+        $precio = $solicitud->devolucion;
+        if ($precio) {
+            $precio->estado = 'inactivo';
+            $precio->save();
+        }
+
+        return redirect()->route('Devolucion.index')
+            ->with('success', 'Solicitud anulada correctamente.');
     }
 }

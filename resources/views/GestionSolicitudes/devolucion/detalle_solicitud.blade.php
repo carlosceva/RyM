@@ -46,17 +46,16 @@
             </div>
 
             <div class="row p-2">
-                <div class="col-12 col-md-6">
-                    <p class="mb-1">
-                        <strong>Requiere abono:</strong>
-                        {{ $solicitud->devolucion->requiere_abono ? 'Sí' : 'No' }}
+                <div class="col-6 d-flex align-items-center">
+                    <p class="me-2 col-md-6">
+                        <strong>Tiene Pago:</strong>
+                        {{ is_null($solicitud->devolucion->tiene_pago) ? '---' : ($solicitud->devolucion->tiene_pago ? 'Sí' : 'No') }}
                     </p>
                 </div>
-
-                <div class="col-12 col-md-6 mt-3 mt-md-0">
-                    <p class="mb-1">
-                        <strong>Tiene entrega:</strong>
-                        {{ $solicitud->devolucion->tiene_entrega ? 'Sí' : 'No' }}
+                <div class="col-6 d-flex align-items-center">
+                    <p class="me-2 col-md-6">
+                        <strong>Tiene Entrega:</strong>
+                        {{ is_null($solicitud->devolucion->tiene_entrega) ? '---' : ($solicitud->devolucion->tiene_entrega ? 'Sí' : 'No') }}
                     </p>
                 </div>
             </div>
@@ -222,37 +221,42 @@
         </style>
 
         <!-- Footer con acciones -->
-        <div class="card-footer d-flex justify-content-between align-items-center
-            @if($solicitud->estado === 'aprobada' || $solicitud->estado === 'ejecutada') 
-                footer-aprobada 
-            @elseif($solicitud->estado === 'rechazada') 
-                footer-rechazada 
-            @endif">
-
-            <!-- Botones PDF y Excel alineados a la izquierda -->
-            <div class="d-flex">
-                <!-- Botón PDF con estilo personalizado -->
-                <a href="{{ route('devolucion.descargar.pdf', $solicitud->id) }}" 
-                    class="btn btn-sm btn-pdf me-2" 
-                    target="_blank">
-                    <i class="fa fa-file-pdf"></i> PDF
-                </a>
-
-                <!-- Botón Excel con estilo personalizado -->
-                <a href="{{ route('devolucion.descargar.excel', $solicitud->id) }}" 
-                    class="btn btn-sm btn-excel" 
-                    target="_blank">
-                    <i class="fa fa-file-excel me-1"></i> Excel
-                </a>
-            </div>
-
-            <!-- Espacio para que el botón "Cerrar" se alinee a la derecha -->
-            <div class="ms-auto">
-                <button type="button" class="btn btn-sm btn-dark" data-bs-dismiss="modal" aria-label="Close">
-                    Cerrar
-                </button>
-            </div>
+        <div class="card-footer @if($solicitud->estado === 'aprobada' || $solicitud->estado === 'ejecutada') 
+                                    footer-aprobada 
+                                @elseif($solicitud->estado === 'rechazada') 
+                                    footer-rechazada 
+                                @endif">
+            <div class="row">
+                @can('Devolucion_borrar')
+                <!-- Columna izquierda -->
+                <div class="col d-flex align-items-center">
+                    <form action="{{ route('Devolucion.destroy', $solicitud->id) }}" method="POST" onsubmit="return confirm('¿Estás seguro de que deseas anular esta solicitud?');" class="m-0">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" class="btn btn-sm btn-pdf me-2">
+                            <i class="fa fa-trash"></i> Anular solicitud
+                        </button>
+                    </form>
+                </div>
+                @endcan
+                <!-- Columna derecha -->
+                <div class="col-auto ms-auto d-flex align-items-center">
+                    <a href="{{ route('devolucion.descargar.pdf', $solicitud->id) }}" class="btn btn-sm btn-pdf me-2" target="_blank">
+                        <i class="fa fa-file-pdf"></i> PDF
+                    </a>
+                    <a href="{{ route('devolucion.descargar.excel', $solicitud->id) }}" class="btn btn-sm btn-excel" target="_blank">
+                        <i class="fa fa-file-excel me-1"></i> Excel
+                    </a>
+                </div>
+            </div>    
         </div>
+
+    </div>
+    <!-- Botón "Cerrar" para el modal -->
+    <div class=" text-end">
+        <button type="button" class="btn btn-dark" data-bs-dismiss="modal" aria-label="Close">
+            Cerrar
+        </button>
     </div>
 </div>
                 

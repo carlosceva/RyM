@@ -8,6 +8,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
+use Illuminate\Validation\ValidationException;
 
 class AuthenticatedSessionController extends Controller
 {
@@ -31,7 +32,7 @@ class AuthenticatedSessionController extends Controller
 
         if (! Auth::attempt(['codigo' => $request->codigo, 'password' => $request->password], $request->boolean('remember'))) {
             throw ValidationException::withMessages([
-                'codigo' => __('Credenciales inválidas.'),
+                'login' => __('Credenciales inválidas.'),
             ]);
         }
 

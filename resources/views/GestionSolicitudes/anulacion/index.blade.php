@@ -36,14 +36,29 @@
 @endif
     <div class="card table-responsive">
         <div class="card-body">
+            <div class="mb-3 d-flex align-items-center gap-3">
+                <label for="fechaInicio" class="mb-0">Desde:</label>
+                <input type="date" id="fechaInicio" class="form-control" style="max-width: 200px;">
+                
+                <label for="fechaFin" class="mb-0 ms-3">Hasta:</label>
+                <input type="date" id="fechaFin" class="form-control" style="max-width: 200px;">
+            </div>
             <table class="table table-hover table-bordered" id="solicitud_anulacion">
                 <thead class="table-dark">
                     <tr>
                       <th>#</th>
-                      <th>Nota</th>
-                      <th>Motivo</th>
+                      <th class="d-none">Tipo</th>                  <!-- oculto -->
                       <th>Fecha</th>
+                      <th class="d-none">Solicitante</th>                  <!-- oculto -->
+                      <th># Nota</th>
+                      <th>Motivo</th>
+                      <th class="d-none">Glosa</th>                  <!-- oculto -->
                       <th>Estado</th>
+                      <th class="d-none">Autorizador</th>                  <!-- oculto -->
+                      <th class="d-none">Fecha autorizado</th>                  <!-- oculto -->
+                      <th class="d-none">Ejecutado por</th>                  <!-- oculto -->
+                      <th class="d-none">Fecha ejecucion</th>                  <!-- oculto -->
+                      <th>Observacion</th>                  
                       <th>Acciones</th>
                     </tr>
                 </thead>
@@ -64,10 +79,18 @@
 
                     <tr class="{{ $claseFila }}">
                         <td>{{ $solicitud->id }}</td>
-                        <td>{{ $solicitud->anulacion->nota_venta }}</td>
-                        <td>{{ $solicitud->anulacion->motivo }}</td>
+                        <td class="d-none">{{ ucfirst($solicitud->tipo) }}</td>      <!-- oculto -->
                         <td>{{ \Carbon\Carbon::parse($solicitud->fecha_solicitud)->format('Y-m-d') }}</td>
+                        <td class="d-none">{{ $solicitud->usuario->name ?? 'N/D' }}</td>      <!-- oculto -->
+                        <td>{{ $solicitud->anulacion->nota_venta }}</td>
+                        <td>{{ $solicitud->anulacion->motivo }}</td> 
+                        <td class="d-none">{{ $solicitud->glosa ?? 'Sin glosa' }}</td>      <!-- oculto -->
                         <td>{{ ucfirst($estado) }}</td>
+                        <td class="d-none">{{ $solicitud->autorizador->name ?? 'Sin autorizar' }}</td>      <!-- oculto -->
+                        <td class="d-none">{{ $solicitud->fecha_autorizacion ?? 'N/D' }}</td>      <!-- oculto -->
+                        <td class="d-none">{{ $solicitud->ejecucion->usuario->name ?? 'Sin ejecutar' }}</td>      <!-- oculto -->
+                        <td class="d-none">{{ $solicitud->ejecucion->fecha_ejecucion ?? 'N/D' }}</td>      <!-- oculto -->
+                        <td>{{ $solicitud->observacion ?? 'Sin observación' }}</td>
                         <td>
                             <div class="d-flex flex-column flex-sm-row justify-content-center align-items-center">
                                 
@@ -93,14 +116,33 @@
                                             </button>
                                             @endcan
                                 @endif
-                                @can('Anulacion_editar')
+                                
                                 @if ($solicitud->estado === 'aprobada' && !$solicitud->ejecucion)
-                                      <button type="button" class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#modalEjecutar{{ $solicitud->id }}">
-                                          Ejecutar
-                                      </button>
-                                  @endif
-                                @endcan
-                                &nbsp;
+                                    @can('Anulacion_ejecutar')
+                                        @if($solicitud->anulacion->tiene_pago !== null && $solicitud->anulacion->tiene_entrega !== null)
+                                            <button type="button" class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#modalEjecutar{{ $solicitud->id }}">
+                                                Ejecutar
+                                            </button>
+                                            &nbsp;
+                                        @endif
+                                    @endcan
+                                    @can('Anulacion_entrega')
+                                        @if($solicitud->anulacion->tiene_entrega === null)
+                                            <button type="button" class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#modalEntrega{{ $solicitud->id }}">
+                                                Verificar Entrega
+                                            </button>
+                                            &nbsp;
+                                        @endif
+                                    @endcan
+                                    @can('Anulacion_pago')
+                                        @if($solicitud->anulacion->tiene_pago === null)
+                                            <button type="button" class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#modalPago{{ $solicitud->id }}">
+                                                Verificar Pago
+                                            </button>
+                                            &nbsp;
+                                        @endif
+                                    @endcan
+                                @endif
 
                               <!-- Botón para ver detalles en formato ticket -->
                               <button class="btn btn-sm btn-primary d-flex align-items-center justify-content-center"
@@ -135,28 +177,138 @@
         </div>
     </div>
 
-    <!-- Modal para ejecutar solicitud -->
-    <div class="modal fade" id="modalEjecutar{{ $solicitud->id }}" tabindex="-1" aria-labelledby="modalLabel{{ $solicitud->id }}" aria-hidden="true">
+    <!-- Modal para verificar pago solicitud -->
+    <div class="modal fade" id="modalPago{{ $solicitud->id }}" tabindex="-1" aria-labelledby="modalLabel{{ $solicitud->id }}" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-            <form action="{{ route('anulacion.ejecutar', $solicitud->id) }}" method="POST">
-                @csrf
-                @method('POST')
-                <div class="modal-header">
-                <h5 class="modal-title" id="modalLabel{{ $solicitud->id }}">Confirmar Ejecución</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            <div class="modal-content border-0 shadow-sm">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="modalLabel{{ $solicitud->id }}">Verificar Pago</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                 </div>
-                <div class="modal-body">
-                <p>¿Está seguro de registrar esta acción?</p>
-                </div>
-                <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <button type="submit" class="btn btn-success">Ejecutar</button>
-                </div>
-            </form>
+
+                <form method="POST" action="{{ route('solicitud.anulacion.verificarPago', $solicitud->id) }}">
+                    @csrf
+                    <div class="modal-body">
+
+                        <div class="mb-3">
+                            <label class="form-label">¿Tiene pago registrado?</label>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="pago" id="pagoSi{{ $solicitud->id }}" value="1">
+                                <label class="form-check-label" for="pagoSi{{ $solicitud->id }}">Sí</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="pago" id="pagoNo{{ $solicitud->id }}" value="0">
+                                <label class="form-check-label" for="pagoNo{{ $solicitud->id }}">No</label>
+                            </div>
+                        </div>
+
+                        <div id="resultado{{ $solicitud->id }}" class="alert d-none fw-bold text-center"></div>
+
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-success">Confirmar verificación</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
+
+    <!-- Modal para verificar entrega solicitud -->
+    <div class="modal fade" id="modalEntrega{{ $solicitud->id }}" tabindex="-1" aria-labelledby="modalLabel{{ $solicitud->id }}" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-sm">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="modalLabel{{ $solicitud->id }}">Verificar Entrega</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+
+                <form method="POST" action="{{ route('solicitud.anulacion.verificarEntrega', $solicitud->id) }}">
+                    @csrf
+                    <div class="modal-body">
+
+                        <div class="mb-3">
+                            <label class="form-label">¿Tiene entrega registrada en sistema?</label>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="entrega" id="entregaSi{{ $solicitud->id }}" value="1">
+                                <label class="form-check-label" for="entregaSi{{ $solicitud->id }}">Sí</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="entrega" id="entregaNo{{ $solicitud->id }}" value="0">
+                                <label class="form-check-label" for="entregaNo{{ $solicitud->id }}">No</label>
+                            </div>
+                        </div>
+
+                        <div id="resultado{{ $solicitud->id }}" class="alert d-none fw-bold text-center"></div>
+
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-success">Confirmar verificación</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para ejecutar solicitud -->
+    <div class="modal fade" id="modalEjecutar{{ $solicitud->id }}" tabindex="-1" aria-labelledby="modalLabel{{ $solicitud->id }}" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-sm">
+                <form action="{{ route('anulacion.ejecutar', $solicitud->id) }}" method="POST">
+                    @csrf
+                    @method('POST')
+                    <div class="modal-header bg-primary text-white">
+                        <h5 class="modal-title" id="modalLabel{{ $solicitud->id }}">Confirmar Ejecución</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                    </div>
+
+                    <div class="modal-body">
+                        @php
+                            $anulacion = $solicitud->anulacion;
+                            $tienePago = $anulacion?->tiene_pago;
+                            $tieneEntrega = $anulacion?->tiene_entrega;
+                        @endphp
+
+                        <ul class="list-group mb-3">
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                Pago registrado:
+                                <span class="fw-bold {{ $tienePago ? 'text-success' : 'text-danger' }}">
+                                    {{ $tienePago ? 'Sí' : 'No' }}
+                                </span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                Entrega registrada:
+                                <span class="fw-bold {{ $tieneEntrega ? 'text-success' : 'text-danger' }}">
+                                    {{ $tieneEntrega ? 'Sí' : 'No' }}
+                                </span>
+                            </li>
+                        </ul>
+
+                        @if (!$tienePago && !$tieneEntrega)
+                            <div class="alert alert-danger fw-bold text-center">
+                                Se procederá como <u>anulación</u>.
+                            </div>
+                        @else
+                            <div class="alert alert-warning fw-bold text-center">
+                                Se procederá como <u>devolución</u>.
+                            </div>
+                        @endif
+
+                        <p class="text-center mt-2">¿Está seguro de ejecutar esta acción?</p>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-success">Ejecutar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     @endforeach
  
     <!-- Vista para crear solicitud -->

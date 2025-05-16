@@ -9,6 +9,9 @@ use App\Models\SolicitudEjecutada;
 use Illuminate\Support\Facades\Auth;
 use Barryvdh\DomPDF\Facade\Pdf;
 use App\Models\Adjuntos;
+use Illuminate\Support\Facades\DB;
+use App\Models\User;
+use App\Services\WhatsAppService;
 
 class BajaMercaderiaController extends Controller
 {
@@ -18,16 +21,26 @@ class BajaMercaderiaController extends Controller
     public function index()
     {
         $user = Auth::user();
-    
-        if ($user->hasRole('Administrador') || $user->can('Baja_aprobar') || $user->can('Baja_reprobar')) {
-            $solicitudes = Solicitud::whereHas('bajaMercaderia')
-                ->with('usuario', 'bajaMercaderia', 'adjuntos') // Cargamos los adjuntos también
+
+        if ($user->hasRole('Administrador') || $user->can('Baja_aprobar') || $user->can('Baja_reprobar') || $user->can('Baja_ejecutar')) {
+            $solicitudes = Solicitud::where('estado', '!=', 'inactivo')
+                ->whereHas('bajaMercaderia', function ($query) {
+                    $query->where('estado', '!=', 'inactivo');
+                })
+                ->with(['usuario', 'bajaMercaderia' => function ($query) {
+                    $query->where('estado', '!=', 'inactivo');
+                }])
                 ->orderBy('fecha_solicitud', 'desc')
                 ->get();        
         } else {
-            $solicitudes = Solicitud::where('id_usuario', $user->id)
-                ->whereHas('bajaMercaderia')
-                ->with('usuario', 'bajaMercaderia', 'adjuntos') // Cargamos los adjuntos también
+            $solicitudes = Solicitud::where('estado', '!=', 'inactivo')
+                ->where('id_usuario', $user->id)
+                ->whereHas('bajaMercaderia', function ($query) {
+                    $query->where('estado', '!=', 'inactivo');
+                })
+                ->with(['usuario', 'bajaMercaderia' => function ($query) {
+                    $query->where('estado', '!=', 'inactivo');
+                }])
                 ->orderBy('fecha_solicitud', 'asc')
                 ->get();        
         }
@@ -47,7 +60,7 @@ class BajaMercaderiaController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(Request $request, WhatsAppService $whatsapp)
     {
 
         // Validación de los campos
@@ -56,43 +69,73 @@ class BajaMercaderiaController extends Controller
             'glosa' => 'nullable|string',
             //'archivo' => 'nullable|file|mimes:xlsx,xls,csv,pdf,docx,jpg,png|max:2048', // Validación del archivo
         ]);
-    
-        // Crear la solicitud
-        $solicitud = Solicitud::create([
-            'id_usuario' => auth()->user()->id,
-            'tipo' => $request->tipo,
-            'fecha_solicitud' => now(),
-            'estado' => 'pendiente',
-            'glosa' => $request->glosa,
-        ]);
-    
-        // Si hay un archivo adjunto, procesarlo
-        if ($request->hasFile('archivo')) {
-            // Obtener el archivo
-            $archivo = $request->file('archivo');
-    
-            // Generar un nombre único para el archivo
-            $nombreArchivo = time() . '_' . $archivo->getClientOriginalName();
-    
-            // Guardar el archivo en el almacenamiento público
-            $path = $archivo->storeAs('adjuntos', $nombreArchivo, 'public');
-    
-            // Guardar el registro en la tabla 'adjuntos'
-            Adjuntos::create([
-                'id_solicitud' => $solicitud->id,
-                'archivo' => $path,  // Guardar la ruta del archivo en la base de datos
+
+        DB::beginTransaction();
+
+        try {
+            // Crear la solicitud
+            $solicitud = Solicitud::create([
+                'id_usuario' => auth()->user()->id,
+                'tipo' => $request->tipo,
+                'fecha_solicitud' => now(),
+                'estado' => 'pendiente',
+                'glosa' => $request->glosa,
             ]);
+        
+            // Si hay un archivo adjunto, procesarlo
+            if ($request->hasFile('archivo')) {
+                // Obtener el archivo
+                $archivo = $request->file('archivo');
+        
+                // Generar un nombre único para el archivo
+                $nombreArchivo = time() . '_' . $archivo->getClientOriginalName();
+        
+                // Guardar el archivo en el almacenamiento público
+                $path = $archivo->storeAs('adjuntos', $nombreArchivo, 'public');
+        
+                // Guardar el registro en la tabla 'adjuntos'
+                Adjuntos::create([
+                    'id_solicitud' => $solicitud->id,
+                    'archivo' => $path,  // Guardar la ruta del archivo en la base de datos
+                ]);
+            }
+        
+            // Crear la baja de mercadería
+            $solicitudBajaMercaderia = BajaMercaderia::create([
+                'id_solicitud' => $solicitud->id,
+                'almacen' => $request->almacen, 
+                'detalle_productos' => $request->detalle_productos,
+                'motivo' => $request->motivo,
+            ]);
+            
+            $usuariosResponsables = User::whereHas('roles.permissions', function ($query) {
+                $query->where('name', 'Baja_aprobar');
+            })->get();
+
+            $phoneNumbers = $usuariosResponsables->map(function ($user) {
+                return [
+                    'telefono' => '+591' . str_pad($user->telefono, 8, '0', STR_PAD_LEFT),
+                    'api_key' => $user->key, 
+                ];
+            });
+
+            $phoneNumbers = $phoneNumbers->toArray();
+
+            $message = "Se ha creado una nueva solicitud de *Baja de mercadería* y está esperando aprobación.\n" .
+            "Número de solicitud: " . $solicitud->id . "\n" .
+            "Fecha de creación: " . $solicitud->fecha_solicitud->format('d/m/Y H:i') . "\n" .
+            "Solicitado por: " . auth()->user()->name . ".";
+
+            $responses = $whatsapp->sendWithAPIKey($phoneNumbers, $message);
+
+            DB::commit();
+
+            return redirect()->route('Baja.index')->with('success', 'Solicitud de Baja de Mercaderia creada.');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->route('Muestra.index')->with('error', 'Hubo un problema al crear la solicitud de Muestra de Mercaderia: ' . $e->getMessage());
         }
-    
-        // Crear la baja de mercadería
-        $solicitudBajaMercaderia = BajaMercaderia::create([
-            'id_solicitud' => $solicitud->id,
-            'almacen' => $request->almacen, 
-            'detalle_productos' => $request->detalle_productos,
-            'motivo' => $request->motivo,
-        ]);
-    
-        return redirect()->route('Baja.index')->with('success', 'Solicitud de Baja de Mercaderia creada.');
     }
     
 
@@ -260,8 +303,22 @@ class BajaMercaderiaController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(BajaMercaderia $bajaMercaderia)
+    public function destroy($id)
     {
-        //
+        $solicitud = Solicitud::findOrFail($id);
+
+        // Cambiar estado de la solicitud
+        $solicitud->estado = 'inactivo';
+        $solicitud->save();
+
+        // Cambiar estado del precio especial si existe
+        $precio = $solicitud->bajaMercaderia;
+        if ($precio) {
+            $precio->estado = 'inactivo';
+            $precio->save();
+        }
+
+        return redirect()->route('Baja.index')
+            ->with('success', 'Solicitud anulada correctamente.');
     }
 }

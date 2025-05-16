@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignId('id_solicitud')->constrained('solicitudes');
             $table->string('cliente');
             $table->string('detalle_productos'); // Para almacenar código SAI, nombre producto
-            $table->enum('estado', ['pendiente', 'aprobada', 'rechazada'])->default('pendiente');
+            $table->string('estado')->default('pendiente');
             $table->string('cod_sai');
             $table->timestamps();
         });
