@@ -16,49 +16,50 @@ class PermisosSeeder extends Seeder
     {
         $adminRole = Role::firstOrCreate(['name' => 'Administrador', 'estado' => 'a']);
 
-        // $solicitudes = ['Precio_especial', 'Anulacion', 'Devolucion', 'Sobregiro', 'Baja', 'Muestra'];
-        // $acciones = ['ver', 'crear', 'borrar', 'aprobar', 'reprobar', 'ejecutar'];
+        $solicitudes = ['Precio_especial', 'Anulacion', 'Devolucion', 'Sobregiro', 'Baja', 'Muestra'];
+        $acciones = ['ver', 'crear', 'borrar', 'aprobar', 'reprobar', 'ejecutar'];
         
-        // foreach ($solicitudes as $solicitud) {
-        //     foreach ($acciones as $accion) {
-        //         $permiso = "{$solicitud}_{$accion}";
-        //         $permisoObj = Permission::firstOrCreate(['name' => $permiso]);
+        foreach ($solicitudes as $solicitud) {
+            foreach ($acciones as $accion) {
+                $permiso = "{$solicitud}_{$accion}";
+                $permisoObj = Permission::firstOrCreate(['name' => $permiso]);
 
-        //         // Asigna el permiso al rol "Administrador"
-        //         $adminRole->givePermissionTo($permisoObj);
-        //     }
-        // }
+                // Asigna el permiso al rol "Administrador"
+                $adminRole->givePermissionTo($permisoObj);
+            }
+        }
 
-        // $permisosAdmin = [
-        //     // Usuarios
-        //     'usuarios_ver',
-        //     'usuarios_crear',
-        //     'usuarios_editar',
-        //     'usuarios_borrar',
+        $permisosAdmin = [
+            // Usuarios
+            'usuarios_ver',
+            'usuarios_crear',
+            'usuarios_editar',
+            'usuarios_borrar',
             
-        //     // Roles
-        //     'roles_ver',
-        //     'roles_crear',
-        //     'roles_editar',
-        //     'roles_borrar',
+            // Roles
+            'roles_ver',
+            'roles_crear',
+            'roles_editar',
+            'roles_borrar',
 
-        //     // Permisos
-        //     'permisos_ver',
+            // Permisos
+            'permisos_ver',
+            'sistema_ver',
 
-        //     //entrega y pago
-        //     'Anulacion_entrega',
-        //     'Anulacion_pago',
-        //     'Devolucion_entrega',
-        //     'Devolucion_pago'
-        // ];
+            //entrega y pago
+            'Anulacion_entrega',
+            'Anulacion_pago',
+            'Devolucion_entrega',
+            'Devolucion_pago'
+        ];
 
-        // // Crear los permisos si no existen
-        // foreach ($permisosAdmin as $permisoAdmin) {
-        //     $permisoObj = Permission::firstOrCreate(['name' => $permisoAdmin]);
+        // Crear los permisos si no existen
+        foreach ($permisosAdmin as $permisoAdmin) {
+            $permisoObj = Permission::firstOrCreate(['name' => $permisoAdmin]);
 
-        //     // Asigna el permiso al rol "Administrador"
-        //     $adminRole->givePermissionTo($permisoObj);
-        // }
+            // Asigna el permiso al rol "Administrador"
+            $adminRole->givePermissionTo($permisoObj);
+        }
 
         //los ejecutar
         $ejecutarPermisos = [
@@ -76,10 +77,8 @@ class PermisosSeeder extends Seeder
             $adminRole->givePermissionTo($permisoObj);
         }
 
-        // 🧑‍💼 Crear el rol de administrador si no existe
-        //$adminRole = Role::firstOrCreate(['name' => 'Administrador']);
+        $adminRole = Role::firstOrCreate(['name' => 'Administrador']);
 
-        // Asignar todos los permisos al rol de administrador
-        //$adminRole->syncPermissions(Permission::all());
+        $adminRole->syncPermissions(Permission::all());
     }
 }
