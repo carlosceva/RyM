@@ -66,6 +66,8 @@ class DevolucionController extends Controller
             'glosa' => 'nullable|string',
             'nota_venta' => 'required|string', 
             'motivo' => 'required|string',  
+            'tiene_pago' => 'required|boolean',
+            'obs_pago' => 'nullable|string',
         ]);
     
         DB::beginTransaction();
@@ -87,6 +89,8 @@ class DevolucionController extends Controller
                 'cliente' => $request->cliente,
                 'almacen' => $request->almacen,
                 'detalle_productos' => $request->detalle_productos,
+                'tiene_pago' => $request->tiene_pago,
+                'obs_pago' => $request->obs_pago,
             ]);
 
             $usuariosResponsables = User::whereHas('roles.permissions', function ($query) {
@@ -120,7 +124,7 @@ class DevolucionController extends Controller
         }
     }    
 
-    public function aprobar_o_rechazar(Request $request)
+    public function aprobar_o_rechazar(Request $request, WhatsAppService $whatsapp)
     {
         // Validamos la solicitud
         $request->validate([
@@ -139,6 +143,31 @@ class DevolucionController extends Controller
         // Actualizamos el estado dependiendo de la acción
         if ($request->accion === 'aprobar') {
             $solicitud->estado = 'aprobada';
+
+            $usuariosResponsables = User::whereHas('roles.permissions', function ($query) {
+                $query->where('name', 'Devolucion_entrega');
+            })
+            ->whereHas('roles.permissions', function ($query) {
+                $query->where('name', 'Devolucion_ejecutar');
+            })
+            ->get();
+
+            $phoneNumbers = $usuariosResponsables->map(function ($user) {
+                return [
+                    'telefono' => '+591' . str_pad($user->telefono, 8, '0', STR_PAD_LEFT),
+                    'api_key' => $user->key, 
+                ];
+            });
+
+            $phoneNumbers = $phoneNumbers->toArray();
+
+            $message = "Se ha aprobado una solicitud de *Devolucion de Venta* y está esperando su confirmacion.\n" .
+            "N° de solicitud: " . $solicitud->id . "\n" .
+            "Fecha de autorizacion: " . $solicitud->fecha_autorizacion->format('d/m/Y H:i') . "\n" .
+            "Autorizado por: " . $solicitud->autorizador->name . ".";
+
+            $responses = $whatsapp->sendWithAPIKey($phoneNumbers, $message);
+
         } elseif ($request->accion === 'rechazar') {
             $solicitud->estado = 'rechazada';
         }
@@ -155,7 +184,7 @@ class DevolucionController extends Controller
         return redirect()->route('Devolucion.index')->with('success', 'La solicitud ha sido ' . $solicitud->estado . ' correctamente.');
     }
 
-    public function ejecutar($id)
+    public function ejecutar($id, WhatsAppService $whatsapp)
     {
         $solicitud = Solicitud::findOrFail($id);
     
@@ -167,9 +196,13 @@ class DevolucionController extends Controller
     
         $tieneEntrega = (bool) $devolucion->tiene_entrega;
         $tienePago = (bool) $devolucion->tiene_pago;
+        $entregaFisica = $devolucion->entrega_fisica;
+        $esAnulacion = !$tienePago && !$tieneEntrega && $entregaFisica === false;
+
+        $usuarioSolicitante = $solicitud->usuario;
     
         // Caso 1: No hay entrega ni pago → convertir en anulación
-        if (!$tieneEntrega && !$tienePago) {
+        if ($esAnulacion) {
             DB::beginTransaction();
     
             try {
@@ -191,12 +224,28 @@ class DevolucionController extends Controller
                 Anulacion::create([
                     'id_solicitud' => $nuevaSolicitud->id,
                     'nota_venta' => $devolucion->nota_venta,
-                    'motivo' => $devolucion->nota_venta,
-                    'tiene_pago' => false,
-                    'tiene_entrega' => false,
+                    'motivo' => $devolucion->motivo,
+                    'tiene_pago' => $devolucion->tiene_pago,
+                    'tiene_entrega' => $devolucion->tiene_entrega,
+                    'entrega_fisica' => $devolucion->entrega_fisica,
+                    'obs_pago' => $devolucion->obs_pago,
                 ]);
     
                 DB::commit();
+
+                // ✅ Notificar al solicitante
+                if ($usuarioSolicitante && $usuarioSolicitante->telefono && $usuarioSolicitante->key) {
+                    $mensaje = "🔄 Su solicitud de *Devolucion* fue convertida en una *Anulacion*.\n" .
+                            "N° de solicitud Devolucion: {$solicitud->id}\n" .
+                            "Nueva solicitud creada: {$nuevaSolicitud->id}\n" .
+                            "Fecha: " . now()->format('d/m/Y H:i') . "\n" .
+                            "Responsable: " . auth()->user()->name . ".";
+
+                    $whatsapp->sendWithAPIKey([[
+                        'telefono' => '+591' . str_pad($usuarioSolicitante->telefono, 8, '0', STR_PAD_LEFT),
+                        'api_key' => $usuarioSolicitante->key
+                    ]], $mensaje);
+                }
     
                 return redirect()->route('Anulacion.index')
                     ->with('success', 'La devolución fue convertida en una solicitud de anulación.');
@@ -215,14 +264,27 @@ class DevolucionController extends Controller
     
         $solicitud->estado = 'ejecutada';
         $solicitud->save();
+
+        // ✅ Notificar al solicitante
+        if ($usuarioSolicitante && $usuarioSolicitante->telefono && $usuarioSolicitante->key) {
+            $mensaje = "❌ Su solicitud de *Devolucion* ha sido *ejecutada*.\n" .
+                    "N° de solicitud: {$solicitud->id}\n" .
+                    "Fecha: " . now()->format('d/m/Y H:i') . "\n" .
+                    "Ejecutado por: " . auth()->user()->name . ".";
+
+            $whatsapp->sendWithAPIKey([[
+                'telefono' => '+591' . str_pad($usuarioSolicitante->telefono, 8, '0', STR_PAD_LEFT),
+                'api_key' => $usuarioSolicitante->key
+            ]], $mensaje);
+        }
     
         return back()->with('success', 'Solicitud de devolución ejecutada correctamente.');
     }    
 
-    public function verificarPago(Request $request, $id)
+    public function verificarEntregaFisica(Request $request, $id, WhatsAppService $whatsapp)
     {
         $request->validate([
-            'pago' => 'required|boolean',
+            'entrega' => 'required|boolean',
         ]);
     
         $solicitud = Solicitud::findOrFail($id);
@@ -231,13 +293,42 @@ class DevolucionController extends Controller
             return redirect()->back()->with('error', 'No se encontró el registro de devolucion.');
         }
     
-        $solicitud->devolucion->tiene_pago = $request->pago;
+        $solicitud->devolucion->entrega_fisica = $request->entrega;
         $solicitud->devolucion->save();
+
+         // ✅ Notificar solo si se seleccionó "NO tiene entrega"
+         if (!$request->entrega) {
+            // Usuarios que tienen 'Devolucion_entrega' pero NO 'Anulacion_ejecutar'
+            $usuarios = User::whereHas('roles.permissions', function ($query) {
+                    $query->where('name', 'Devolucion_entrega');
+                })
+                ->whereHas('roles.permissions', function ($query) {
+                    $query->where('name', 'Devolucion_ejecutar');
+                })
+                ->get();
+
+            // Formatear números
+            $destinatarios = $usuarios->map(function ($user) {
+                return [
+                    'telefono' => '+591' . str_pad($user->telefono, 8, '0', STR_PAD_LEFT),
+                    'api_key' => $user->key,
+                ];
+            })->toArray();
+
+            // Mensaje a enviar
+            $message = "⚠️ Se marcó que *NO* hay entrega fisica en la solicitud de *Devolucion*.\n" .
+                    "N° de solicitud: {$solicitud->id}\n" .
+                    "Fecha: " . now()->format('d/m/Y H:i') . "\n" .
+                    "Puede continuar con la ejecucion";
+
+            // Enviar vía WhatsApp
+            $whatsapp->sendWithAPIKey($destinatarios, $message);
+        }
     
-        return redirect()->back()->with('success', 'Verificación de pago registrada correctamente.');
+        return redirect()->back()->with('success', 'Verificación de Entrega registrada correctamente.');
     }
     
-    public function verificarEntrega(Request $request, $id)
+    public function verificarEntrega(Request $request, $id, WhatsAppService $whatsapp)
     {
         $request->validate([
             'entrega' => 'required|boolean',
@@ -251,6 +342,35 @@ class DevolucionController extends Controller
     
         $solicitud->devolucion->tiene_entrega = $request->entrega;
         $solicitud->devolucion->save();
+
+        // ✅ Notificar solo si se seleccionó "NO tiene entrega"
+        if (!$request->entrega) {
+            // Usuarios que tienen 'Anulacion_entrega' pero NO 'Anulacion_ejecutar'
+            $usuarios = User::whereHas('roles.permissions', function ($query) {
+                    $query->where('name', 'Devolucion_entrega');
+                })
+                ->whereDoesntHave('roles.permissions', function ($query) {
+                    $query->where('name', 'Devolucion_ejecutar');
+                })
+                ->get();
+
+            // Formatear números
+            $destinatarios = $usuarios->map(function ($user) {
+                return [
+                    'telefono' => '+591' . str_pad($user->telefono, 8, '0', STR_PAD_LEFT),
+                    'api_key' => $user->key,
+                ];
+            })->toArray();
+
+            // Mensaje a enviar
+            $message = "⚠️ Se marcó que *NO* hay despacho registrado en la solicitud de *Devolucion*.\n" .
+                    "N° de solicitud: {$solicitud->id}\n" .
+                    "Fecha: " . now()->format('d/m/Y H:i') . "\n" .
+                    "Por favor, verifique la entrega";
+
+            // Enviar vía WhatsApp
+            $whatsapp->sendWithAPIKey($destinatarios, $message);
+        }
     
         return redirect()->back()->with('success', 'Verificación de entrega registrada correctamente.');
     }    

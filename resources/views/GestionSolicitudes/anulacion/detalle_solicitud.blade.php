@@ -37,19 +37,34 @@
             </div>
 
             <div class="row p-2">
-                <div class="col-12 col-md-6">
+                <div class="col-12 col-md-4">
                     <p class="mb-1">
                         <strong>Tiene Pago:</strong>
                         {{ is_null($solicitud->anulacion->tiene_pago) ? '---' : ($solicitud->anulacion->tiene_pago ? 'Sí' : 'No') }}
                     </p>
                 </div>
-                <div class="col-12 col-md-6">
+                <div class="col-12 col-md-4">
                     <p class="mb-1">
-                        <strong>Tiene Entrega:</strong>
+                        <strong>Tiene despacho:</strong>
                         {{ is_null($solicitud->anulacion->tiene_entrega) ? '---' : ($solicitud->anulacion->tiene_entrega ? 'Sí' : 'No') }}
                     </p>
                 </div>
+                <div class="col-12 col-md-4">
+                    <p class="mb-1">
+                        <strong>Entrega fisica:</strong>
+                        {{ is_null($solicitud->anulacion->entrega_fisica) ? '---' : ($solicitud->anulacion->entrega_fisica ? 'Sí' : 'No') }}
+                    </p>
+                </div>
             </div>
+            <!-- Mostrar Observación de Pago solo si existe -->
+            @if (!empty($solicitud->anulacion->obs_pago))
+                <div class="col-12">
+                    <p class="mb-1">
+                        <strong>Observación del Pago:</strong>
+                        {{ $solicitud->anulacion->obs_pago }}
+                    </p>
+                </div>
+            @endif
 
             <div class="row p-2">
                 <div class="col-12">

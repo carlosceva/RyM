@@ -110,6 +110,7 @@ class UsuarioController extends Controller
         $usuario = User::findOrFail($id);
     
         // Actualizar los datos del usuario (excepto la contraseña)
+        $usuario->codigo = $request->codigo;
         $usuario->name = $request->name;
         $usuario->telefono = $request->telefono;
         $usuario->email = $request->email;

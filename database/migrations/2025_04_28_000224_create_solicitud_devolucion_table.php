@@ -22,6 +22,8 @@ return new class extends Migration
             $table->string('detalle_productos')->nullable();
             $table->boolean('tiene_pago')->nullable();
             $table->boolean('tiene_entrega')->nullable();
+            $table->boolean('entrega_fisica')->nullable();
+            $table->string('obs_pago')->nullable();
 
             $table->string('estado')->default('pendiente');
             $table->timestamps();

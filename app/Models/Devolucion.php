@@ -12,7 +12,7 @@ class Devolucion extends Model
     protected $table = 'solicitud_devolucion';
 
     protected $fillable = [
-        'id_solicitud', 'nota_venta', 'motivo', 'estado','detalle_productos','almacen','cliente','tiene_pago','tiene_entrega'
+        'id_solicitud', 'nota_venta', 'motivo', 'estado','detalle_productos','almacen','cliente','tiene_pago','tiene_entrega', 'obs_pago', 'entrega_fisica'
     ];
 
     // Relación con la solicitud

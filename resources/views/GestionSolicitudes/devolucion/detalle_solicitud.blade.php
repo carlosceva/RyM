@@ -46,19 +46,34 @@
             </div>
 
             <div class="row p-2">
-                <div class="col-6 d-flex align-items-center">
-                    <p class="me-2 col-md-6">
+                <div class="col-12 col-md-4">
+                    <p class="mb-1">
                         <strong>Tiene Pago:</strong>
                         {{ is_null($solicitud->devolucion->tiene_pago) ? '---' : ($solicitud->devolucion->tiene_pago ? 'Sí' : 'No') }}
                     </p>
                 </div>
-                <div class="col-6 d-flex align-items-center">
-                    <p class="me-2 col-md-6">
-                        <strong>Tiene Entrega:</strong>
+                <div class="col-12 col-md-4">
+                    <p class="mb-1">
+                        <strong>Tiene despacho:</strong>
                         {{ is_null($solicitud->devolucion->tiene_entrega) ? '---' : ($solicitud->devolucion->tiene_entrega ? 'Sí' : 'No') }}
                     </p>
                 </div>
+                <div class="col-12 col-md-4">
+                    <p class="mb-1">
+                        <strong>Entrega fisica:</strong>
+                        {{ is_null($solicitud->devolucion->entrega_fisica) ? '---' : ($solicitud->devolucion->entrega_fisica ? 'Sí' : 'No') }}
+                    </p>
+                </div>
             </div>
+            <!-- Mostrar Observación de Pago solo si existe -->
+            @if (!empty($solicitud->devolucion->obs_pago))
+                <div class="col-12">
+                    <p class="mb-1">
+                        <strong>Observación del Pago:</strong>
+                        {{ $solicitud->devolucion->obs_pago }}
+                    </p>
+                </div>
+            @endif
 
             <div class="row p-2">
                 <div class="d-flex align-items-center">

@@ -97,8 +97,8 @@ class PrecioEspecialController extends Controller
             $phoneNumbers = $phoneNumbers->toArray();
             
             $message = "Se ha creado una nueva solicitud de *Precio especial* y está esperando aprobación.\n" .
-            "Número de solicitud: " . $solicitud->id . "\n" .
-            "Fecha de creación: " . $solicitud->fecha_solicitud->format('d/m/Y H:i') . "\n" .
+            "N° de solicitud: " . $solicitud->id . "\n" .
+            "Fecha: " . $solicitud->fecha_solicitud->format('d/m/Y H:i') . "\n" .
             "Solicitado por: " . auth()->user()->name . ".";
 
             $responses = $whatsapp->sendWithAPIKey($phoneNumbers, $message);
@@ -113,7 +113,7 @@ class PrecioEspecialController extends Controller
         }
     }
 
-    public function aprobar_o_rechazar(Request $request)
+    public function aprobar_o_rechazar(Request $request, WhatsAppService $whatsapp)
     {
         // Validamos la solicitud
         $request->validate([
@@ -132,6 +132,27 @@ class PrecioEspecialController extends Controller
         // Actualizamos el estado dependiendo de la acción
         if ($request->accion === 'aprobar') {
             $solicitud->estado = 'aprobada';
+
+            $usuarioSolicitante = $solicitud->usuario;
+
+            if ($usuarioSolicitante && $usuarioSolicitante->telefono && $usuarioSolicitante->key) {
+                $numero = '+591' . str_pad($usuarioSolicitante->telefono, 8, '0', STR_PAD_LEFT);
+                $apiKey = $usuarioSolicitante->key;
+
+                $mensaje = "✅ Su solicitud de *Precio especial* ha sido *aprobada*.\n" .
+                    "N° de solicitud: {$solicitud->id}\n" .
+                    "Fecha: " . now()->format('d/m/Y H:i') . "\n" .
+                    "Aprobado por: " . auth()->user()->name . ".";
+
+                // Formato esperado por el método `sendWithAPIKey()`
+                $destinatario = [[
+                    'telefono' => $numero,
+                    'api_key' => $apiKey
+                ]];
+
+                $whatsapp->sendWithAPIKey($destinatario, $mensaje);
+            }
+
         } elseif ($request->accion === 'rechazar') {
             $solicitud->estado = 'rechazada';
         }

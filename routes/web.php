@@ -83,7 +83,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/Anulacion/{id}/descargar/pdf', [AnulacionController::class, 'descargarPDF'])->name('anulacion.descargar.pdf');
     Route::get('/Anulacion/{id}/descargar/excel', [AnulacionController::class, 'descargarExcel'])->name('anulacion.descargar.excel');
     Route::post('/Anulacion/{id}/verificar-Entrega', [AnulacionController::class, 'verificarEntrega'])->name('solicitud.anulacion.verificarEntrega');
-    Route::post('/Anulacion/{id}/verificar-Pago', [AnulacionController::class, 'verificarPago'])->name('solicitud.anulacion.verificarPago');
+    Route::post('/Anulacion/{id}/verificar-Entrega-Fisica', [AnulacionController::class, 'verificarEntregaFisica'])->name('solicitud.anulacion.verificarEntregaFisica');
 
     Route::resource('Devolucion', DevolucionController::class)->middleware('can:Devolucion_ver');
     Route::post('Devolucion/aprobar_o_rechazar', [DevolucionController::class, 'aprobar_o_rechazar'])->name('devolucion.aprobar_o_rechazar');
@@ -91,7 +91,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/Devolucion/{id}/descargar/pdf', [DevolucionController::class, 'descargarPDF'])->name('devolucion.descargar.pdf');
     Route::get('/Devolucion/{id}/descargar/excel', [DevolucionController::class, 'descargarExcel'])->name('devolucion.descargar.excel');
     Route::post('/Devolucion/{id}/verificar-Entrega', [DevolucionController::class, 'verificarEntrega'])->name('solicitud.devolucion.verificarEntrega');
-    Route::post('/Devolucion/{id}/verificar-Pago', [DevolucionController::class, 'verificarPago'])->name('solicitud.devolucion.verificarPago');
+    Route::post('/Devolucion/{id}/verificar-Entrega-Fisica', [DevolucionController::class, 'verificarEntregaFisica'])->name('solicitud.devolucion.verificarEntregaFisica');
 
     Route::get('/permisos', [RolPermisoController::class, 'index'])->name('permisos.index')->middleware('can:permisos_ver');;
     Route::post('/permisos/guardar/{id}', [RolPermisoController::class, 'guardar'])->name('permisos.guardar');

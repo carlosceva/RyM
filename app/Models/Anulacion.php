@@ -12,7 +12,7 @@ class Anulacion extends Model
     protected $table = 'solicitud_anulacion';
 
     protected $fillable = [
-        'id_solicitud', 'nota_venta', 'motivo', 'estado'
+        'id_solicitud', 'nota_venta', 'motivo', 'estado', 'tiene_pago', 'obs_pago', 'tiene_entrega', 'entrega_fisica'
     ];
 
     // Relación con la solicitud

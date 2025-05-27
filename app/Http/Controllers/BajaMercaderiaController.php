@@ -122,8 +122,8 @@ class BajaMercaderiaController extends Controller
             $phoneNumbers = $phoneNumbers->toArray();
 
             $message = "Se ha creado una nueva solicitud de *Baja de mercadería* y está esperando aprobación.\n" .
-            "Número de solicitud: " . $solicitud->id . "\n" .
-            "Fecha de creación: " . $solicitud->fecha_solicitud->format('d/m/Y H:i') . "\n" .
+            "N° de solicitud: " . $solicitud->id . "\n" .
+            "Fecha: " . $solicitud->fecha_solicitud->format('d/m/Y H:i') . "\n" .
             "Solicitado por: " . auth()->user()->name . ".";
 
             $responses = $whatsapp->sendWithAPIKey($phoneNumbers, $message);
@@ -139,7 +139,7 @@ class BajaMercaderiaController extends Controller
     }
     
 
-    public function aprobar_o_rechazar(Request $request)
+    public function aprobar_o_rechazar(Request $request, WhatsAppService $whatsapp)
     {
         // Validamos la solicitud
         $request->validate([
@@ -158,6 +158,27 @@ class BajaMercaderiaController extends Controller
         // Actualizamos el estado dependiendo de la acción
         if ($request->accion === 'aprobar') {
             $solicitud->estado = 'aprobada';
+
+            $usuariosResponsables = User::whereHas('roles.permissions', function ($query) {
+                $query->where('name', 'Baja_ejecutar');
+            })->get();
+
+            $phoneNumbers = $usuariosResponsables->map(function ($user) {
+                return [
+                    'telefono' => '+591' . str_pad($user->telefono, 8, '0', STR_PAD_LEFT),
+                    'api_key' => $user->key, 
+                ];
+            });
+
+            $phoneNumbers = $phoneNumbers->toArray();
+
+            $message = "Se ha aprobado una solicitud de *Baja de mercadería* y está esperando su ejecucion.\n" .
+            "N° de solicitud: " . $solicitud->id . "\n" .
+            "Fecha de autorizacion: " . $solicitud->fecha_autorizacion->format('d/m/Y H:i') . "\n" .
+            "Autorizado por: " . $solicitud->autorizador->name . ".";
+
+            $responses = $whatsapp->sendWithAPIKey($phoneNumbers, $message);
+
         } elseif ($request->accion === 'rechazar') {
             $solicitud->estado = 'rechazada';
         }
@@ -174,7 +195,7 @@ class BajaMercaderiaController extends Controller
         return redirect()->route('Baja.index')->with('success', 'La solicitud ha sido ' . $solicitud->estado . ' correctamente.');
     }
 
-    public function ejecutar($id)
+    public function ejecutar($id, WhatsAppService $whatsapp)
     {
         $solicitud = Solicitud::findOrFail($id);
     
@@ -197,6 +218,25 @@ class BajaMercaderiaController extends Controller
         // Cambiar el estado de la solicitud
         $solicitud->estado = 'ejecutada';
         $solicitud->save();
+
+        $usuarioSolicitante = $solicitud->usuario;
+
+        if ($usuarioSolicitante && $usuarioSolicitante->telefono && $usuarioSolicitante->key) {
+            $numero = '+591' . str_pad($usuarioSolicitante->telefono, 8, '0', STR_PAD_LEFT);
+            $apiKey = $usuarioSolicitante->key;
+    
+            $mensaje = "📦 Su solicitud de *Baja de Mercaderia* ha sido *ejecutada*.\n" .
+                       "N° de solicitud: {$solicitud->id}\n" .
+                       "Fecha de ejecución: " . now()->format('d/m/Y H:i') . "\n" .
+                       "Ejecutado por: " . auth()->user()->name . ".";
+    
+            $destinatario = [[
+                'telefono' => $numero,
+                'api_key' => $apiKey
+            ]];
+    
+            $whatsapp->sendWithAPIKey($destinatario, $mensaje);
+        }
     
         return back()->with('success', 'Solicitud ejecutada exitosamente.');
     }

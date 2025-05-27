@@ -116,32 +116,81 @@
                                             </button>
                                             @endcan
                                 @endif
-                                
+
                                 @if ($solicitud->estado === 'aprobada' && !$solicitud->ejecucion)
-                                    @can('Anulacion_ejecutar')
-                                        @if($solicitud->anulacion->tiene_pago !== null && $solicitud->anulacion->tiene_entrega !== null)
+                                    @php
+                                        $anulacion = $solicitud->anulacion;
+                                        $tienePago = $anulacion->tiene_pago;
+                                        $tieneEntrega = $anulacion->tiene_entrega;
+                                        $entregaFisica = $anulacion->entrega_fisica;
+                                    @endphp
+
+                                    @if ($tienePago)
+                                        @can('Anulacion_ejecutar')
+                                            <!-- Si hay pago, se puede ejecutar directamente como devolución -->
                                             <button type="button" class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#modalEjecutar{{ $solicitud->id }}">
                                                 Ejecutar
                                             </button>
                                             &nbsp;
+                                        @endcan
+                                    @else
+                                        {{-- No hay pago --}}
+                                        @if (is_null($tieneEntrega))
+                                            {{-- Aún no se ha verificado entrega --}}
+                                            @can('Anulacion_entrega')
+                                                @can('Anulacion_ejecutar')
+                                                    <button class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#modalEntrega{{ $solicitud->id }}">
+                                                        Confirmar Entrega
+                                                    </button>
+                                                    &nbsp;
+                                                @endcan
+                                            @endcan
+                                        @elseif($tieneEntrega)
+                                            {{-- Ya se confirmó que sí hubo entrega → ejecutar como devolución --}}
+                                            @can('Anulacion_ejecutar')
+                                                <button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#modalEjecutar{{ $solicitud->id }}">
+                                                    Ejecutar
+                                                </button>
+                                                &nbsp;
+                                            @endcan
+                                        @else
+                                            {{-- Se indicó que NO hubo entrega --}}
+                                            @if (is_null($entregaFisica))
+                                                {{-- Aún no confirmado por almacén --}}
+                                                @can('Anulacion_entrega')
+                                                    @cannot('Anulacion_ejecutar')
+                                                        <button class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#modalEntregaF{{ $solicitud->id }}">
+                                                            Registrar Entrega
+                                                        </button>
+                                                        &nbsp;
+                                                    @endcannot
+                                                @endcan
+
+                                                @can('Anulacion_ejecutar')
+                                                    <button class="btn btn-outline-secondary btn-sm" disabled>
+                                                        ⏳ Esperando confirmación
+                                                    </button>
+                                                    &nbsp;
+                                                @endcan
+                                            @elseif($entregaFisica === false || $entregaFisica === 0)
+                                                {{-- Almacén confirmó que NO hubo entrega → ejecutar como anulación --}}
+                                                @can('Anulacion_ejecutar')
+                                                    <button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#modalEjecutar{{ $solicitud->id }}">
+                                                        Ejecutar
+                                                    </button>
+                                                    &nbsp;
+                                                @endcan
+                                            @elseif($entregaFisica === true || $entregaFisica === 1)
+                                                {{-- Almacén corrigió y dijo que SÍ hubo entrega --}}
+                                                @can('Anulacion_ejecutar')
+                                                    <button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#modalEjecutar{{ $solicitud->id }}">
+                                                        Ejecutar
+                                                    </button>
+                                                    &nbsp;
+                                                @endcan
+                                            @endif
                                         @endif
-                                    @endcan
-                                    @can('Anulacion_entrega')
-                                        @if($solicitud->anulacion->tiene_entrega === null)
-                                            <button type="button" class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#modalEntrega{{ $solicitud->id }}">
-                                                Verificar Entrega
-                                            </button>
-                                            &nbsp;
-                                        @endif
-                                    @endcan
-                                    @can('Anulacion_pago')
-                                        @if($solicitud->anulacion->tiene_pago === null)
-                                            <button type="button" class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#modalPago{{ $solicitud->id }}">
-                                                Verificar Pago
-                                            </button>
-                                            &nbsp;
-                                        @endif
-                                    @endcan
+                                    @endif
                                 @endif
 
                               <!-- Botón para ver detalles en formato ticket -->
@@ -177,50 +226,12 @@
         </div>
     </div>
 
-    <!-- Modal para verificar pago solicitud -->
-    <div class="modal fade" id="modalPago{{ $solicitud->id }}" tabindex="-1" aria-labelledby="modalLabel{{ $solicitud->id }}" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content border-0 shadow-sm">
-                <div class="modal-header bg-primary text-white">
-                    <h5 class="modal-title" id="modalLabel{{ $solicitud->id }}">Verificar Pago</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-                </div>
-
-                <form method="POST" action="{{ route('solicitud.anulacion.verificarPago', $solicitud->id) }}">
-                    @csrf
-                    <div class="modal-body">
-
-                        <div class="mb-3">
-                            <label class="form-label">¿Tiene pago registrado?</label>
-                            <div class="form-check">
-                                <input class="form-check-input" type="radio" name="pago" id="pagoSi{{ $solicitud->id }}" value="1">
-                                <label class="form-check-label" for="pagoSi{{ $solicitud->id }}">Sí</label>
-                            </div>
-                            <div class="form-check">
-                                <input class="form-check-input" type="radio" name="pago" id="pagoNo{{ $solicitud->id }}" value="0">
-                                <label class="form-check-label" for="pagoNo{{ $solicitud->id }}">No</label>
-                            </div>
-                        </div>
-
-                        <div id="resultado{{ $solicitud->id }}" class="alert d-none fw-bold text-center"></div>
-
-                    </div>
-
-                    <div class="modal-footer">
-                        <button type="submit" class="btn btn-success">Confirmar verificación</button>
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-
     <!-- Modal para verificar entrega solicitud -->
     <div class="modal fade" id="modalEntrega{{ $solicitud->id }}" tabindex="-1" aria-labelledby="modalLabel{{ $solicitud->id }}" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content border-0 shadow-sm">
                 <div class="modal-header bg-primary text-white">
-                    <h5 class="modal-title" id="modalLabel{{ $solicitud->id }}">Verificar Entrega</h5>
+                    <h5 class="modal-title" id="modalLabel{{ $solicitud->id }}">Verificar Despacho</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                 </div>
 
@@ -229,7 +240,7 @@
                     <div class="modal-body">
 
                         <div class="mb-3">
-                            <label class="form-label">¿Tiene entrega registrada en sistema?</label>
+                            <label class="form-label">¿Tiene despacho en sistema?</label>
                             <div class="form-check">
                                 <input class="form-check-input" type="radio" name="entrega" id="entregaSi{{ $solicitud->id }}" value="1">
                                 <label class="form-check-label" for="entregaSi{{ $solicitud->id }}">Sí</label>
@@ -253,117 +264,125 @@
         </div>
     </div>
 
-    <!-- Modal para ejecutar solicitud -->
-    <div class="modal fade" id="modalEjecutar{{ $solicitud->id }}" tabindex="-1" aria-labelledby="modalLabel{{ $solicitud->id }}" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content border-0 shadow-sm">
-                <form action="{{ route('anulacion.ejecutar', $solicitud->id) }}" method="POST">
-                    @csrf
-                    @method('POST')
-                    <div class="modal-header bg-primary text-white">
-                        <h5 class="modal-title" id="modalLabel{{ $solicitud->id }}">Confirmar Ejecución</h5>
-                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-                    </div>
-
-                    <div class="modal-body">
-                        @php
-                            $anulacion = $solicitud->anulacion;
-                            $tienePago = $anulacion?->tiene_pago;
-                            $tieneEntrega = $anulacion?->tiene_entrega;
-                        @endphp
-
-                        <ul class="list-group mb-3">
-                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                                Pago registrado:
-                                <span class="fw-bold {{ $tienePago ? 'text-success' : 'text-danger' }}">
-                                    {{ $tienePago ? 'Sí' : 'No' }}
-                                </span>
-                            </li>
-                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                                Entrega registrada:
-                                <span class="fw-bold {{ $tieneEntrega ? 'text-success' : 'text-danger' }}">
-                                    {{ $tieneEntrega ? 'Sí' : 'No' }}
-                                </span>
-                            </li>
-                        </ul>
-
-                        @if (!$tienePago && !$tieneEntrega)
-                            <div class="alert alert-danger fw-bold text-center">
-                                Se procederá como <u>anulación</u>.
-                            </div>
-                        @else
-                            <div class="alert alert-warning fw-bold text-center">
-                                Se procederá como <u>devolución</u>.
-                            </div>
-                        @endif
-
-                        <p class="text-center mt-2">¿Está seguro de ejecutar esta acción?</p>
-                    </div>
-
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="submit" class="btn btn-success">Ejecutar</button>
-                    </div>
-                </form>
+<!-- Modal para registrar entrega fisica -->
+<div class="modal fade" id="modalEntregaF{{ $solicitud->id }}" tabindex="-1" aria-labelledby="modalLabel{{ $solicitud->id }}" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-sm">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="modalLabel{{ $solicitud->id }}">Verificar Entrega</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
             </div>
-        </div>
-    </div>
 
-    @endforeach
- 
-    <!-- Vista para crear solicitud -->
-    <div class="modal fade" id="modalNuevaSolicitud" tabindex="-1" aria-labelledby="modalCrearSolicitudLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-        <div class="modal-header">
-            <h5 class="modal-title" id="modalCrearSolicitudLabel">Crear Solicitud de Anulacion de venta</h5>
-            <button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-            <form action="{{ route('Anulacion.store') }}" method="POST" onsubmit="this.querySelector('button[type=submit]').disabled = true;">
-            @csrf
-                <!-- Tipo de Solicitud -->
-                <input type="hidden" name="tipo" value="Anulacion de Venta">
+            <form method="POST" action="{{ route('solicitud.anulacion.verificarEntregaFisica', $solicitud->id) }}">
+                @csrf
+                <div class="modal-body">
 
-                <!-- Usuario que solicita (Oculto porque es el usuario autenticado) -->
-                <input type="hidden" name="id_usuario" value="{{ auth()->id() }}">
-
-                <!-- Fecha de solicitud (Generada automáticamente) -->
-                <div class="mb-3">
-                    <label for="fecha_solicitud" class="form-label">Fecha de Solicitud</label>
-                    <input type="text" class="form-control" id="fecha_solicitud" value="{{ now()->format('Y-m-d H:i:s') }}" disabled>
-                </div>
-
-                <!-- Estado (Se define automáticamente como pendiente) -->
-                <input type="hidden" name="estado" value="pendiente">
-
-                <!-- Nota de venta -->
-                <div class="mb-3">
-                    <label for="nota_venta" class="form-label">Nota de venta</label>
-                    <input type="text" class="form-control" id="nota_venta" name="nota_venta">
-                </div>
-
-                <!-- motivo -->
-                <div class="mb-3">
-                    <label for="motivo" class="form-label">Motivo</label>
-                    <input type="text" class="form-control" id="motivo" name="motivo">
-                </div>
-
-                <!-- Glosa (Descripción o motivo de la solicitud) -->
-                <div class="mb-3">
-                    <label for="glosa" class="form-label">Glosa</label>
-                    <textarea class="form-control" id="glosa" name="glosa" rows="3"></textarea>
+                    <div class="mb-3">
+                        <label class="form-label">¿Tiene Entrega física?</label>
+                        <div class="form-check">
+                            <input class="form-check-input entrega-radio" type="radio" name="entrega" id="entregaSiF{{ $solicitud->id }}" value="1" data-solicitud-id="{{ $solicitud->id }}">
+                            <label class="form-check-label" for="entregaSiF{{ $solicitud->id }}">Sí</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input entrega-radio" type="radio" name="entrega" id="entregaNoF{{ $solicitud->id }}" value="0" data-solicitud-id="{{ $solicitud->id }}">
+                            <label class="form-check-label" for="entregaNoF{{ $solicitud->id }}">No</label>
+                        </div>
+                    </div>
+                    <div id="mensajeEntregaF{{ $solicitud->id }}" class="alert alert-warning mt-3 d-none" role="alert">
+                        ⚠️ Recuerde registrar esta entrega también en su sistema externo.
+                    </div>
                 </div>
 
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-primary">Crear Solicitud</button>
+                    <button type="submit" class="btn btn-success">Confirmar verificación</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                 </div>
             </form>
         </div>
+    </div>
+</div>
+
+<!-- Modal para ejecutar solicitud -->
+<div class="modal fade" id="modalEjecutar{{ $solicitud->id }}" tabindex="-1" aria-labelledby="modalLabel{{ $solicitud->id }}" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-sm">
+            <form action="{{ route('anulacion.ejecutar', $solicitud->id) }}" method="POST">
+                @csrf
+                @method('POST')
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="modalLabel{{ $solicitud->id }}">Confirmar Ejecución</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+
+                <div class="modal-body">
+                    @php
+                        $anulacion = $solicitud->anulacion;
+                        $tienePago = (bool) $anulacion?->tiene_pago;
+                        $tieneEntrega = (bool) $anulacion?->tiene_entrega;
+                        $entregaFisica = $anulacion?->entrega_fisica;
+                        $esAnulacion = !$tienePago && !$tieneEntrega && ($entregaFisica === false || is_null($entregaFisica));
+                    @endphp
+                    
+                    <ul class="list-group mb-3">
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Pago registrado:
+                            <span class="fw-bold {{ $tienePago ? 'text-success' : 'text-danger' }}">
+                                {{ $tienePago ? 'Sí' : 'No' }}
+                            </span>
+                        </li>
+
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Despacho en sistema registrado:
+                            <span class="fw-bold {{ $tieneEntrega ? 'text-success' : 'text-danger' }}">
+                                {{ $tieneEntrega ? 'Sí' : 'No' }}
+                            </span>
+                        </li>
+
+                        @if (!$tieneEntrega)
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                Entrega física confirmada:
+                                <span class="fw-bold 
+                                    @if (is_null($entregaFisica)) text-secondary 
+                                    @elseif ($entregaFisica) text-success 
+                                    @else text-danger 
+                                    @endif">
+                                    @if (is_null($entregaFisica))
+                                        Sin confirmar
+                                    @elseif ($entregaFisica)
+                                        Sí
+                                    @else
+                                        No
+                                    @endif
+                                </span>
+                            </li>
+                        @endif
+                    </ul>
+
+                    @if ($esAnulacion)
+                        <div class="alert alert-danger fw-bold text-center">
+                            Se procederá como <u>anulación</u>.
+                        </div>
+                    @else
+                        <div class="alert alert-warning fw-bold text-center">
+                            Se procederá como <u>devolución</u>.
+                        </div>
+                    @endif
+
+                    <p class="text-center mt-2">¿Está seguro de ejecutar esta acción?</p>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-success">Ejecutar</button>
+                </div>
+            </form>
         </div>
     </div>
-    </div>
+</div>
+
+    @endforeach
+ 
+    @include('GestionSolicitudes.anulacion.create')
 
     <!-- Modal para Agregar Observación -->
     <div class="modal fade" id="observacionModal" tabindex="-1" aria-labelledby="observacionModalLabel" aria-hidden="true">
@@ -410,5 +429,47 @@
             document.getElementById('solicitud_id').value = solicitudId;
         }
     </script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const tienePagoSi = document.getElementById('tiene_pago_si');
+            const tienePagoNo = document.getElementById('tiene_pago_no');
+            const obsPagoGroup = document.getElementById('obs_pago_group');
+
+            function toggleObsPago() {
+                if (tienePagoSi.checked) {
+                    obsPagoGroup.classList.remove('d-none');
+                    document.getElementById('obs_pago').required = true;
+                } else {
+                    obsPagoGroup.classList.add('d-none');
+                    document.getElementById('obs_pago').required = false;
+                    document.getElementById('obs_pago').value = '';
+                }
+            }
+
+            tienePagoSi.addEventListener('change', toggleObsPago);
+            tienePagoNo.addEventListener('change', toggleObsPago);
+        });
+    </script>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const radios = document.querySelectorAll('.entrega-radio');
+
+        radios.forEach(function (radio) {
+            radio.addEventListener('change', function () {
+                const solicitudId = this.dataset.solicitudId;
+                const mensaje = document.getElementById('mensajeEntregaF' + solicitudId);
+
+                if (this.value === "1") {
+                    mensaje?.classList.remove('d-none');
+                } else {
+                    mensaje?.classList.add('d-none');
+                }
+            });
+        });
+    });
+    </script>
+
 
 @endsection

@@ -54,6 +54,30 @@
                         </div>
                     </div>
 
+                    <!-- Tiene pago registrado -->
+                    <div class="mb-3 d-flex align-items-center">
+                        <label class="form-label mb-0 me-3" style="white-space: nowrap;">¿Tiene pago registrado?</label>
+
+                        <div class="d-flex align-items-center">
+                            <div class="form-check form-check-inline d-flex align-items-center me-3">
+                                <input class="form-check-input me-1" type="radio" name="tiene_pago" id="tiene_pago_si" value="1" required>
+                                <label class="form-check-label" for="tiene_pago_si">Sí</label>
+                            </div>
+
+                            <div class="form-check form-check-inline d-flex align-items-center">
+                                <input class="form-check-input me-1" type="radio" name="tiene_pago" id="tiene_pago_no" value="0">
+                                <label class="form-check-label" for="tiene_pago_no">No</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Observación de pago (solo si tiene pago) -->
+                    <div class="mb-3 d-none" id="obs_pago_group">
+                        <label for="obs_pago" class="form-label">Observación del Pago</label>
+                        <small class="text-muted d-block mb-1">Indicar si se abonará a otra nota o se devolverá en efectivo.</small>
+                        <input type="text" class="form-control" name="obs_pago" id="obs_pago">
+                    </div>
+
                     <!-- Inputs para producto, cantidad y precio -->
                     <div class="row g-2 mb-3">
                         <div class="col-md-4">
