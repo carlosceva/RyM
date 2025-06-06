@@ -53,6 +53,15 @@
                         </div>
                     </div>
 
+                    <!-- Rol (usando Spatie) -->
+                    <div class="form-group row">
+                        <label for="rol" class="col-md-2 col-form-label">Rol</label>
+                        <div class="col-md-10">
+                            <input type="text" class="form-control" id="rol" name="rol"
+                                value="{{ Auth::user()->getRoleNames()->implode(', ') }}" disabled>
+                        </div>
+                    </div>
+
                     <!-- Estado -->
                     <div class="form-group row">
                         <label for="estado" class="col-md-2 col-form-label">Estado</label>
@@ -111,6 +120,7 @@
                             <input type="text" class="form-control" id="codigo" name="codigo" value="{{ $user->codigo }}">
                         </div>
                     </div>
+
                     <!-- Estado -->
                     <div class="form-group row">
                         <label for="estado" class="col-md-2 col-form-label">Estado</label>

@@ -8,16 +8,19 @@ use App\Models\SolicitudEjecutada;
 
 class SeguimientoSolicitud extends Component
 {
-    public $solicitudes;
+    public $solicitudId;
 
-    public function mount()
+    public function mount($solicitudId)
     {
-        $this->solicitudes = Solicitud::latest()->get();
+        $this->solicitudId = $solicitudId;
     }
 
     public function render()
     {
-        $this->solicitudes = Solicitud::latest()->get();
-        return view('livewire.seguimiento-solicitud');
+        $solicitud = Solicitud::find($this->solicitudId);  // Buscar la solicitud por ID
+
+        return view('livewire.seguimiento-solicitud-individual', [
+            'solicitud' => $solicitud
+        ]);
     }
 }

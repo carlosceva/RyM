@@ -4,6 +4,6 @@
 
 @section('content')
 <div class="container">
-    <livewire:seguimiento-solicitud />
+
 </div>
 @endsection

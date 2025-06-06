@@ -14,6 +14,7 @@ use App\Http\Controllers\SobregiroController;
 use App\Http\Controllers\AnulacionController;
 use App\Http\Controllers\DevolucionController;
 use App\Http\Controllers\UserProfileController;
+use App\Http\Controllers\BackupController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -23,7 +24,7 @@ Route::get('/', function () {
 //     return view('dashboard');
 // })->middleware(['auth', 'verified'])->name('dashboard');
 Route::get('/dashboard', function () {
-    return view('seguimiento.index'); // Cambia a la vista que tú quieras
+    return view('dashboard'); // Cambia a la vista que tú quieras
 })->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {
@@ -34,6 +35,18 @@ Route::middleware('auth')->group(function () {
         'update' => 'usuario.update',
         'destroy' => 'usuario.destroy',
     ])->middleware('can:usuarios_ver');
+
+    Route::get('/administracion/sistema', [BackupController::class, 'index'])
+    ->name('backup.index')
+    ->middleware('auth');
+
+    Route::post('/administracion/sistema/backup', [BackupController::class, 'realizarBackup'])
+        ->name('backup.realizar')
+        ->middleware('auth');
+
+    Route::post('/administracion/sistema/restore', [BackupController::class, 'restaurarBackup'])
+        ->name('backup.restaurar')
+        ->middleware('auth');
 
     Route::put('usuarios/{user}/asignar-rol', [UsuarioController::class, 'asignarRol'])->name('roles.asignar');
 

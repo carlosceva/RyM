@@ -212,7 +212,7 @@
     @foreach($solicitudes as $solicitud)
     <!-- Modal Ticket -->
     <div class="modal fade" id="modalTicket{{ $solicitud->id }}" tabindex="-1" aria-labelledby="modalTicketLabel{{ $solicitud->id }}" aria-hidden="true">
-        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-dialog modal-dialog-scrollable modal-dialog-centered modal-sm modal-md modal-lg">
             <div class="modal-content">
                 <div class="modal-header bg-dark text-white">
                     <h5 class="modal-title" id="modalTicketLabel{{ $solicitud->id }}">Detalle de Solicitud #{{ $solicitud->id }}</h5>
@@ -221,6 +221,12 @@
                 <div class="modal-body">
                     <!-- Aquí va TODO el contenido de tu ticket -->
                     @include('GestionSolicitudes.anulacion.detalle_solicitud', ['solicitud' => $solicitud])
+
+                    <!-- Aquí agregamos el seguimiento de la solicitud -->
+                    <hr>
+                    <h5 class="mt-4">Seguimiento de Solicitud</h5>
+                    <!-- Seguimiento usando Livewire (o solo vista Blade) -->
+                    <livewire:seguimiento-solicitud :solicitudId="$solicitud->id" />
                 </div>
             </div>
         </div>

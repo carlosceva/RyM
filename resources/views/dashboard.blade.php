@@ -169,6 +169,14 @@
                 </a>
               </li>
               @endcan
+              @can('sistema_ver')
+              <li class="nav-item">
+                <a href="{{ route('backup.index') }}" class="nav-link">
+                  <i class="fa fa-hdd nav-icon"></i>
+                  <p>Backup y Restore</p>
+                </a>
+              </li>
+              @endcan
             </ul>
           </li>
           @endif
@@ -183,12 +191,14 @@
             </a>
             <ul class="nav nav-treeview">
               @role('Administrador')
+              <!--
               <li class="nav-item">
                 <a href="{{route('general.index')}}" class="nav-link">
                   <i class="fas fa-copy nav-icon"></i>
                   <p>Solicitudes en general</p>
                 </a>
               </li>
+              -->
               @endrole
               @can('Devolucion_ver')
               <li class="nav-item">

@@ -201,9 +201,11 @@
                     <a href="{{ route('anulacion.descargar.pdf', $solicitud->id) }}" class="btn btn-sm btn-pdf me-2" target="_blank">
                         <i class="fa fa-file-pdf"></i> PDF
                     </a>
+                    <!--
                     <a href="{{ route('anulacion.descargar.excel', $solicitud->id) }}" class="btn btn-sm btn-excel" target="_blank">
                         <i class="fa fa-file-excel me-1"></i> Excel
                     </a>
+                    -->
                 </div>
             </div>    
         </div>

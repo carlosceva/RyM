@@ -197,9 +197,11 @@
                     <a href="{{ route('baja.descargar.pdf', $solicitud->id) }}" class="btn btn-sm btn-pdf me-2" target="_blank">
                         <i class="fa fa-file-pdf"></i> PDF
                     </a>
+                    <!--
                     <a href="{{ route('baja.descargar.excel', $solicitud->id) }}" class="btn btn-sm btn-excel me-2" target="_blank">
                         <i class="fa fa-file-excel me-1"></i> Excel
                     </a>
+                    -->
                     <!-- Enlace para descargar los archivos adjuntos -->
                     @if($solicitud->adjuntos->count() > 0)
                         @foreach ($solicitud->adjuntos as $adjunto)

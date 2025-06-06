@@ -153,6 +153,11 @@
                 <div class="modal-body">
                     <!-- Aquí va TODO el contenido de tu ticket -->
                     @include('GestionSolicitudes.sobregiro.detalle_solicitud', ['solicitud' => $solicitud])
+                    <!-- Aquí agregamos el seguimiento de la solicitud -->
+                    <hr>
+                    <h5 class="mt-4">Seguimiento de Solicitud</h5>
+                    <!-- Seguimiento usando Livewire (o solo vista Blade) -->
+                    <livewire:seguimiento-solicitud :solicitudId="$solicitud->id" />
                 </div>
             </div>
         </div>
