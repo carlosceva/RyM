@@ -47,7 +47,16 @@
                 </thead>
                 <tbody class="table-group-divider">
                 @foreach ($roles as $rol)
-                    <tr>
+                    @php
+                        $estado = Str::lower(trim($rol->estado));
+                        $claseFila = '';
+
+                        if ($estado === 'i') {
+                            $claseFila = 'table-danger';
+                        }
+                    @endphp
+
+                    <tr class="{{ $claseFila }}">
                         <td>{{ $rol->id }}</td>
                         <td>{{ $rol->name }}</td>
                         <td>

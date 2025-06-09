@@ -23,12 +23,21 @@
             </div>
             <div class="mb-3">
                 <label for="email" class="form-label">E-mail</label>
-                <input type="email" class="form-control" id="email" name="email" required>
+                <input type="email" class="form-control" id="email" name="email">
             </div>
             <div class="mb-3">
                 <label for="key" class="form-label">Key</label>
-                <input type="text" class="form-control" id="key" name="key" required>
+                <input type="text" class="form-control" id="key" name="key">
             </div>
+            <div class="mb-3">
+              <label for="rol" class="form-label">Seleccionar Rol</label>
+              <select name="rol" id="rol" class="form-control" required>
+                  <option value="">Seleccionar Rol</option>
+                  @foreach($roles as $rol)
+                      <option value="{{ $rol->name }}">{{ $rol->name }}</option>
+                  @endforeach
+              </select>
+          </div>
             <div class="mb-3">
                 <label for="password" class="form-label">Contraseña</label>
                 <input type="password" class="form-control" id="password" name="password" required>

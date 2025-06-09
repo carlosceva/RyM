@@ -29,7 +29,7 @@
         <!-- Contenido -->
         <div class="w-full lg:w-1/2 p-8 flex flex-col justify-center">
             <div class="bg-white p-3 rounded shadow w-36 mb-6">
-                <img src="{{ asset('img/rymlogo.png') }}" alt="Logo RyM" class="w-full h-auto object-contain">
+                <img src="{{ asset('img/logonuevo.jpeg') }}" alt="Logo RyM" class="w-full h-auto object-contain">
             </div>
 
             <h1 class="text-3xl font-semibold mb-3 text-[--primary]">Bienvenido a RyM</h1>

@@ -51,7 +51,16 @@
                 </thead>
                 <tbody class="table-group-divider">
                     @foreach ($usuarios as $usuario)
-                    <tr>
+                    @php
+                        $estado = Str::lower(trim($usuario->estado));
+                        $claseFila = '';
+
+                        if ($estado === 'i') {
+                            $claseFila = 'table-danger';
+                        }
+                    @endphp
+
+                    <tr class="{{ $claseFila }}">
                         <td>{{ $usuario->id }}</td>
                         <td>{{ $usuario->codigo }}</td>
                         <td>{{ $usuario->name }}</td>
@@ -73,12 +82,6 @@
                                     <a href="#" data-toggle="modal" data-target="#deleteModal{{ $usuario->id }}" title="Eliminar" style="color:#dc3545"> <i class="fa fa-trash" aria-hidden="true"></i></a>
                                     &nbsp;
                                 @endcan
-                                <!-- Botón para abrir el modal -->
-                                @can('usuarios_crear')
-                                <button type="button" class="btn btn-warning" data-toggle="modal" data-target="#modalAsignarRol{{ $usuario->id }}">
-                                    <i class="fa fa-plus-circle"></i>&nbsp;Rol
-                                </button>
-                                @endcan
                             </td>
                         @endif
                     </tr>
@@ -90,37 +93,5 @@
         </div>
     </div>
     @include('Administracion.usuarios.agregar')
-   <!-- Modal para asignar rol (por cada usuario) -->
-@foreach($usuarios as $usuario)
-<div class="modal fade" id="modalAsignarRol{{ $usuario->id }}" tabindex="-1" aria-labelledby="modalAsignarRolLabel{{ $usuario->id }}" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="modalAsignarRolLabel{{ $usuario->id }}">Asignar Rol a {{ $usuario->name }}</h5>
-                <button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <form action="{{ route('roles.asignar', $usuario->id) }}" method="POST">
-                    @csrf
-                    @method('PUT')
-                    <div class="mb-3">
-                        <label for="rol" class="form-label">Seleccionar Rol:</label>
-                        <select name="rol" id="rol" class="form-control">
-                            <option value="">Seleccionar Rol</option>
-                            @foreach($roles as $rol)
-                                <option value="{{ $rol->name }}">{{ $rol->name }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
-                        <button type="submit" class="btn btn-primary">Asignar</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
-@endforeach
 
 @endsection

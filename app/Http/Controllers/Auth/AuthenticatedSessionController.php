@@ -8,6 +8,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
+use App\Models\User;
 use Illuminate\Validation\ValidationException;
 
 class AuthenticatedSessionController extends Controller
@@ -30,6 +31,15 @@ class AuthenticatedSessionController extends Controller
             'password' => ['required', 'string'],
         ]);
 
+        $user = User::where('codigo', $request->codigo)->first();
+
+        if (!$user || $user->estado !== 'a') {
+            throw ValidationException::withMessages([
+                'codigo' => __('Estas credenciales no coinciden con nuestros registros o el usuario no está activo.'),
+            ]);
+        }
+
+        // Intentar login
         if (! Auth::attempt(['codigo' => $request->codigo, 'password' => $request->password], $request->boolean('remember'))) {
             throw ValidationException::withMessages([
                 'login' => __('Credenciales inválidas.'),

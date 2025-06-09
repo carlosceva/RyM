@@ -28,7 +28,7 @@
 
         <!-- Logo -->
         <div class="bg-white p-3 rounded shadow w-32 mx-auto mb-6">
-            <img src="{{ asset('img/rymlogo.png') }}" alt="Logo RyM" class="w-full h-auto object-contain">
+            <img src="{{ asset('img/logonuevo.jpeg') }}" alt="Logo RyM" class="w-full h-auto object-contain">
         </div>
 
         <!-- Título -->
