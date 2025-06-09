@@ -15,8 +15,8 @@ class UsuarioController extends Controller
      */
     public function index()
     {
-        $usuarios = User::where('estado', 'a')->get();
-        $roles = Role::all();
+        $usuarios = User::all();
+        $roles = Role::where('estado','a')->get();
         return view('Administracion.usuarios.index', compact('usuarios', 'roles'));
     }
 
@@ -45,13 +45,13 @@ class UsuarioController extends Controller
      */
     public function store(Request $request)
     {
-        /*$request->validate([
+        $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email',
             'password' => 'required|string|min:6',
-            'telefono' => 'required|integer',
-            'rol'=>'required',
-        ]);*/
+            'telefono' => 'required|numeric',
+            'codigo' => 'required|string|unique:users,codigo',
+            'rol' => 'required|exists:roles,name', // Validación del rol
+        ]);
         
         try {
             
@@ -65,7 +65,8 @@ class UsuarioController extends Controller
                 'key' => $request->input('key'),
             ]);
 
-            $usuario->save();
+            // Asignar rol
+            $usuario->assignRole($request->rol);
 
             Session::flash('success', 'Usuario agregado exitosamente.');
         } catch (\Exception $e) {
