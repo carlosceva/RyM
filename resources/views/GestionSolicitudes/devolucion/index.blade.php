@@ -86,13 +86,25 @@
                         <td class="d-none">{{ ucfirst($solicitud->tipo) }}</td>      <!-- oculto -->
                         <td>{{ \Carbon\Carbon::parse($solicitud->fecha_solicitud)->format('Y-m-d') }}</td>
                         <td class="d-none">{{ $solicitud->usuario->name ?? 'N/D' }}</td>      <!-- oculto -->
-                        <td>{{ $solicitud->devolucion->nota_venta }}</td>
-                        <td>{{ $solicitud->devolucion->almacen }}</td>
-                        <td>{{ $solicitud->devolucion->motivo }}</td>
+                        <td>{{ $solicitud->devolucion->nota_venta ?? 'N/D' }}</td>
+                        <td>{{ $solicitud->devolucion->almacen ?? 'N/D' }}</td>
+                        <td>{{ $solicitud->devolucion->motivo ?? 'N/D' }}</td>
                         <td class="d-none">{{ $solicitud->glosa ?? 'Sin glosa' }}</td>      <!-- oculto -->
-                        <td class="d-none">{{ $solicitud->devolucion->requiere_abono ? 'Sí' : 'No' }}</td>      <!-- oculto -->
-                        <td class="d-none">{{ $solicitud->devolucion->tiene_entrega ? 'Sí' : 'No' }}</td>       <!-- oculto -->
-                        <td>{{ $solicitud->devolucion->detalle_productos }}</td>
+                        <td class="d-none">
+                            @if($solicitud->devolucion)
+                                {{ $solicitud->devolucion->requiere_abono ? 'Sí' : 'No' }}
+                            @else
+                                N/D
+                            @endif
+                        </td>      <!-- oculto -->
+                        <td class="d-none">
+                            @if($solicitud->devolucion)
+                                {{ $solicitud->devolucion->tiene_entrega ? 'Sí' : 'No' }}
+                            @else
+                                N/D
+                            @endif
+                        </td>       <!-- oculto -->
+                        <td>{{ $solicitud->devolucion->detalle_productos ?? 'N/D' }}</td>
                         <td>{{ ucfirst($estado) }}</td>
                         <td class="d-none">{{ $solicitud->autorizador->name ?? 'Sin autorizar' }}</td>      <!-- oculto -->
                         <td class="d-none">{{ $solicitud->fecha_autorizacion ?? 'N/D' }}</td>      <!-- oculto -->
@@ -125,7 +137,7 @@
                                             @endcan
                                 @endif
 
-                                @if ($solicitud->estado === 'aprobada' && !$solicitud->ejecucion)
+                                @if ($solicitud->estado === 'aprobada' && !$solicitud->ejecucion && $solicitud->devolucion?->tiene_pago !== null)
                                     @php
                                         $devolucion = $solicitud->devolucion;
                                         $tienePago = $devolucion->tiene_pago;
@@ -275,8 +287,8 @@
                                    id="entregaSi{{ $solicitud->id }}"
                                    value="1"
                                    data-solicitud-id="{{ $solicitud->id }}"
-                                   data-tiene-pago="{{ $solicitud->devolucion->tiene_pago ? '1' : '0' }}">
-                            <label class="form-check-label" for="entregaSi{{ $solicitud->id }}">Sí</label>
+                                   data-tiene-pago="{{ isset($solicitud->devolucion) && $solicitud->devolucion->tiene_pago ? '1' : '0' }}">
+                            <label class="form-check-label" for="entregaSi{{ $solicitud?->id ?? 'temp' }}">Sí</label>
                         </div>
                         <div class="form-check">
                             <input class="form-check-input entrega-verificacion-radio"
@@ -285,8 +297,8 @@
                                    id="entregaNo{{ $solicitud->id }}"
                                    value="0"
                                    data-solicitud-id="{{ $solicitud->id }}"
-                                   data-tiene-pago="{{ $solicitud->devolucion->tiene_pago ? '1' : '0' }}">
-                            <label class="form-check-label" for="entregaNo{{ $solicitud->id }}">No</label>
+                                   data-tiene-pago="{{ isset($solicitud->devolucion) && $solicitud->devolucion->tiene_pago ? '1' : '0' }}">
+                            <label class="form-check-label" for="entregaNo{{ $solicitud->id ?? 'temp'}}">No</label>
                         </div>
                     </div>
 

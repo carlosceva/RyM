@@ -44,7 +44,7 @@
                         <th>Key</th>
                         <th>Rol</th>
                         <th>Estado</th>
-                        @if (auth()->user()->can('usuarios_editar') || auth()->user()->can('usuarios_borrar')|| auth()->user()->can('usuarios_crear'))
+                        @if (auth()->user()->can('usuarios_editar') || auth()->user()->can('usuarios_borrar'))
                             <th>Acciones</th>
                         @endif
                     </tr>
@@ -72,18 +72,18 @@
                         <td>
                             <?= $usuario->estado === 'a' ? 'Activo' : ($usuario->estado === 'i' ? 'Inactivo' : '') ?>
                         </td>
-                        @if (auth()->user()->can('usuarios_editar') || auth()->user()->can('usuarios_borrar')|| auth()->user()->can('usuarios_crear'))
-                            <td>
-                                @can('usuarios_editar')
-                                    <a href="#" data-toggle="modal" data-target="#editModal{{ $usuario->id }}" title="Editar" ><i class="fa fa-edit" aria-hidden="true"></i></a>
-                                    &nbsp;
-                                @endcan
-                                @can('usuarios_borrar')
-                                    <a href="#" data-toggle="modal" data-target="#deleteModal{{ $usuario->id }}" title="Eliminar" style="color:#dc3545"> <i class="fa fa-trash" aria-hidden="true"></i></a>
-                                    &nbsp;
-                                @endcan
-                            </td>
-                        @endif
+                            @if (auth()->user()->can('usuarios_editar') || auth()->user()->can('usuarios_borrar'))
+                                <td>
+                                    @can('usuarios_editar')
+                                        <a href="#" data-toggle="modal" data-target="#editModal{{ $usuario->id }}" title="Editar" ><i class="fa fa-edit" aria-hidden="true"></i></a>
+                                        &nbsp;
+                                    @endcan
+                                    @can('usuarios_borrar')
+                                        <a href="#" data-toggle="modal" data-target="#deleteModal{{ $usuario->id }}" title="Eliminar" style="color:#dc3545"> <i class="fa fa-trash" aria-hidden="true"></i></a>
+                                        &nbsp;
+                                    @endcan
+                                </td>
+                            @endif
                     </tr>
                     @include('Administracion.usuarios.modificar', ['usuario' => $usuario])
                     @include('Administracion.usuarios.eliminar', ['usuario' => $usuario])

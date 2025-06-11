@@ -40,7 +40,7 @@
                         <th>ID</th>
                         <th>NOMBRE</th>
                         <th>ESTADO</th>
-                        @if (auth()->user()->can('roles_editar') || auth()->user()->can('roles_borrar')|| auth()->user()->can('roles_crear'))
+                        @if (auth()->user()->can('roles_editar') || auth()->user()->can('roles_borrar'))
                             <th>Acciones</th>
                         @endif
                     </tr>
@@ -62,7 +62,7 @@
                         <td>
                             <?= $rol->estado === 'a' ? 'Activo' : ($rol->estado === 'i' ? 'Inactivo' : '') ?>
                         </td>
-                        @if (auth()->user()->can('roles_editar') || auth()->user()->can('roles_borrar')|| auth()->user()->can('roles_crear'))
+                        @if (auth()->user()->can('roles_editar') || auth()->user()->can('roles_borrar'))
                             <td>    
                                 @can('roles_editar')
                                     <a href="#" data-toggle="modal" data-target="#editModal{{ $rol->id }}" title="Editar"><i class="fa fa-edit" aria-hidden="true"></i></a>

@@ -42,7 +42,7 @@
             <tbody>
                 @php
                     $solicitudes = ['Anulacion', 'Devolucion', 'Precio_especial', 'Sobregiro', 'Baja', 'Muestra', 'usuarios', 'roles','permisos'];
-                    $acciones = ['ver', 'crear', 'borrar', 'aprobar', 'reprobar', 'ejecutar', 'entrega', 'pago'];
+                    $acciones = ['ver', 'crear', 'editar', 'borrar', 'aprobar', 'reprobar', 'ejecutar', 'entrega', 'pago'];
                 @endphp
 
                 @foreach ($roles as $role)

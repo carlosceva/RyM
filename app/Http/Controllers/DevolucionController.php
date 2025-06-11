@@ -22,7 +22,20 @@ class DevolucionController extends Controller
     {
         $user = Auth::user();
 
-        if ($user->hasRole('Administrador') || $user->can('Devolucion_aprobar') || $user->can('Devolucion_reprobar') || $user->can('Devolucion_pago') || $user->can('Devolucion_entrega')) {
+        if ($user->hasRole('Supra Administrador')) {
+            // Puede ver todas las solicitudes, incluso las inactivas
+            $solicitudes = Solicitud::whereHas('devolucion') // asegura que tenga devolución relacionada
+            ->with(['usuario', 'devolucion'])
+            ->orderBy('fecha_solicitud', 'desc')
+            ->get();
+        } elseif (
+            $user->hasRole('Administrador') ||
+            $user->can('Devolucion_aprobar') ||
+            $user->can('Devolucion_reprobar') ||
+            $user->can('Devolucion_pago') ||
+            $user->can('Devolucion_entrega')
+        ) {
+            // Usuarios con ciertos permisos ven solo solicitudes activas
             $solicitudes = Solicitud::where('estado', '!=', 'inactivo')
                 ->whereHas('devolucion', function ($query) {
                     $query->where('estado', '!=', 'inactivo');
@@ -31,8 +44,9 @@ class DevolucionController extends Controller
                     $query->where('estado', '!=', 'inactivo');
                 }])
                 ->orderBy('fecha_solicitud', 'desc')
-                ->get();        
+                ->get();
         } else {
+            // Usuario común solo ve sus propias solicitudes activas
             $solicitudes = Solicitud::where('estado', '!=', 'inactivo')
                 ->where('id_usuario', $user->id)
                 ->whereHas('devolucion', function ($query) {
@@ -42,7 +56,7 @@ class DevolucionController extends Controller
                     $query->where('estado', '!=', 'inactivo');
                 }])
                 ->orderBy('fecha_solicitud', 'asc')
-                ->get();        
+                ->get();
         }
 
         return view('GestionSolicitudes.devolucion.index', compact('solicitudes'));

@@ -33,14 +33,14 @@
                 <div class="col-6 d-flex align-items-center">
                     <strong class="me-2 col-md-4"># Nota:</strong>
                     <div class="col-md-8 border p-2 rounded bg-light small flex-grow-1">
-                        {{ $solicitud->devolucion->nota_venta }}
+                        {{ $solicitud->devolucion->nota_venta ?? 'N/D'}}
                     </div>
                 </div>
 
                 <div class="col-6 d-flex align-items-center">
                     <strong class="me-2 col-md-4">Almacen:</strong>
                     <div class="col-md-8 border p-2 rounded bg-light small flex-grow-1">
-                        {{ $solicitud->devolucion->almacen }}
+                        {{ $solicitud->devolucion->almacen ?? 'N/D'}}
                     </div>
                 </div>
             </div>
@@ -49,21 +49,36 @@
                 <div class="col-12 col-md-4">
                     <p class="mb-1">
                         <strong>Tiene Pago:</strong>
-                        {{ is_null($solicitud->devolucion->tiene_pago) ? '---' : ($solicitud->devolucion->tiene_pago ? 'Sí' : 'No') }}
+                        @if($solicitud->devolucion)
+                            {{ is_null($solicitud->devolucion->tiene_pago) ? '---' : ($solicitud->devolucion->tiene_pago ? 'Sí' : 'No') }}
+                        @else
+                            ---
+                        @endif
                     </p>
                 </div>
+
                 <div class="col-12 col-md-4">
                     <p class="mb-1">
                         <strong>Tiene despacho:</strong>
-                        {{ is_null($solicitud->devolucion->tiene_entrega) ? '---' : ($solicitud->devolucion->tiene_entrega ? 'Sí' : 'No') }}
+                        @if($solicitud->devolucion)
+                            {{ is_null($solicitud->devolucion->tiene_entrega) ? '---' : ($solicitud->devolucion->tiene_entrega ? 'Sí' : 'No') }}
+                        @else
+                            ---
+                        @endif
                     </p>
                 </div>
+
                 <div class="col-12 col-md-4">
                     <p class="mb-1">
-                        <strong>Entrega fisica:</strong>
-                        {{ is_null($solicitud->devolucion->entrega_fisica) ? '---' : ($solicitud->devolucion->entrega_fisica ? 'Sí' : 'No') }}
+                        <strong>Entrega física:</strong>
+                        @if($solicitud->devolucion)
+                            {{ is_null($solicitud->devolucion->entrega_fisica) ? '---' : ($solicitud->devolucion->entrega_fisica ? 'Sí' : 'No') }}
+                        @else
+                            ---
+                        @endif
                     </p>
                 </div>
+
             </div>
             <!-- Mostrar Observación de Pago solo si existe -->
             @if (!empty($solicitud->devolucion->obs_pago))
@@ -79,7 +94,7 @@
                 <div class="d-flex align-items-center">
                     <strong class="me-2 col-md-2">Motivo:</strong>
                     <div class="col-md-10 border p-2 rounded bg-light small flex-grow-1">
-                        {{ $solicitud->devolucion->motivo}}
+                        {{ $solicitud->devolucion->motivo ?? 'N/D'}}
                     </div>
                 </div>
             </div>

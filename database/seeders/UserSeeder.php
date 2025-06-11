@@ -22,15 +22,15 @@ class UserSeeder extends Seeder
         // Crear el usuario
         $user = DB::table('users')->insertGetId([
             'email' => 'admin@rym.com',
-            'name' => 'Administrador',
+            'name' => 'Supra Administrador',
             'telefono' => 77012345,
-            'codigo' => 'admin',
+            'codigo' => 'supra',
             'password' => Hash::make('secret'),
             'estado' => 'a'
         ]);
 
         // Obtener el rol de Administrador
-        $adminRole = Role::firstOrCreate(['name' => 'Administrador', 'estado' => 'a']);
+        $adminRole = Role::firstOrCreate(['name' => 'Supra Administrador', 'estado' => 'a']);
 
         // Encontrar el usuario recién creado
         $user = User::find($user);

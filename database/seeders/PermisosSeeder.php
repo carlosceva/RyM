@@ -14,7 +14,7 @@ class PermisosSeeder extends Seeder
      */
     public function run()
     {
-        $adminRole = Role::firstOrCreate(['name' => 'Administrador', 'estado' => 'a']);
+        $adminRole = Role::firstOrCreate(['name' => 'Supra Administrador', 'estado' => 'a']);
 
         $solicitudes = ['Precio_especial', 'Anulacion', 'Devolucion', 'Sobregiro', 'Baja', 'Muestra'];
         $acciones = ['ver', 'crear', 'borrar', 'aprobar', 'reprobar', 'ejecutar'];
@@ -77,7 +77,7 @@ class PermisosSeeder extends Seeder
             $adminRole->givePermissionTo($permisoObj);
         }
 
-        $adminRole = Role::firstOrCreate(['name' => 'Administrador']);
+        $adminRole = Role::firstOrCreate(['name' => 'Supra Administrador']);
 
         $adminRole->syncPermissions(Permission::all());
     }
