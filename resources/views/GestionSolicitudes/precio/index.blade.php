@@ -46,7 +46,7 @@
                       <th class="d-none">Solicitante</th>           <!-- oculto -->
                       <th>Cliente</th>
                       <th class="d-none">Motivo</th>                <!-- oculto -->
-                      <th>Productos</th>
+                      <th class="d-none">Productos</th>
                       <th>Estado</th>
                       <th class="d-none">Autorizador</th>           <!-- oculto -->
                       <th class="d-none">Fecha autorizacion</th>    <!-- oculto -->
@@ -61,9 +61,13 @@
                         $claseFila = '';
 
                         if ($estado === 'aprobada') {
-                            $claseFila = 'table-success';
+                            $claseFila = 'table-primary';
                         } elseif ($estado === 'rechazada') {
                             $claseFila = 'table-danger';
+                        }elseif ($estado === 'ejecutada') {
+                            $claseFila = 'table-success';
+                        }elseif ($estado === 'pendiente') {
+                            $claseFila = 'table-warning';
                         }
                     @endphp
 
@@ -74,7 +78,7 @@
                         <td class="d-none">{{ $solicitud->usuario->name ?? 'N/D' }}</td>      <!-- oculto -->
                         <td>{{ $solicitud->precioEspecial?->cliente ?? 'No asignado' }}</td>
                         <td class="d-none">{{ $solicitud->glosa ?? 'Sin glosa' }}</td>      <!-- oculto -->
-                        <td>{{ $solicitud->precioEspecial?->detalle_productos ?? 'Sin detalle de productos' }}</td>
+                        <td class="d-none">{{ $solicitud->precioEspecial?->detalle_productos ?? 'Sin detalle de productos' }}</td>
                         <td>{{ ucfirst($estado) }}</td>
                         <td class="d-none">{{ $solicitud->autorizador->name ?? 'Sin autorizar' }}</td>      <!-- oculto -->
                         <td class="d-none">{{ $solicitud->fecha_autorizacion ?? 'N/D' }}</td>      <!-- oculto -->
@@ -89,9 +93,13 @@
                                                     style="width: 36px; height: 36px;"
                                                     data-bs-toggle="modal" data-bs-target="#observacionModal"
                                                     title="Aprobar"
-                                                    onclick="setAccionAndSolicitudId('aprobar', {{ $solicitud->id }})">
+                                                    data-detalle="{{ $solicitud->precioEspecial?->detalle_productos ?? 'Sin detalle de productos' }}"
+                                                    data-cliente="{{ $solicitud->precioEspecial?->cliente ?? 'No asignado' }}"
+                                                    data-glosa="{{ $solicitud->glosa ?? 'Sin glosa' }}"
+                                                    onclick="setAccionAndSolicitudId('aprobar', {{ $solicitud->id }}, this)">
                                                 <i class="fa fa-check"></i>
                                             </button>
+
                                             @endcan
                                             @can('Precio_especial_reprobar')
                                             <!-- Rechazar con modal -->
@@ -104,6 +112,14 @@
                                             </button>
                                             @endcan
                                 @endif
+                                @can('Precio_especial_ejecutar')
+                                @if ($solicitud->estado === 'aprobada' && !$solicitud->ejecucion)
+                                      <button type="button" class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#modalEjecutar{{ $solicitud->id }}">
+                                          Ejecutar
+                                      </button>
+                                  @endif
+                                @endcan
+                                &nbsp;
 
                               <!-- Botón para ver detalles en formato ticket -->
                               <button class="btn btn-sm btn-primary d-flex align-items-center justify-content-center"
@@ -142,47 +158,183 @@
             </div>
         </div>
     </div>
+
+    <!-- Modal para ejecutar solicitud -->
+    <div class="modal fade" id="modalEjecutar{{ $solicitud->id }}" tabindex="-1" aria-labelledby="modalLabel{{ $solicitud->id }}" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <form action="{{ route('precioEspecial.ejecutar', $solicitud->id) }}" method="POST">
+                    @csrf
+                    @method('POST')
+                    <div class="modal-header">
+                    <h5 class="modal-title" id="modalLabel{{ $solicitud->id }}">Confirmar Ejecución</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                    </div>
+                    <div class="modal-body">
+                    <p>¿Está seguro de registrar esta acción?</p>
+                    </div>
+                    <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-success">Ejecutar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
     @endforeach
  
     @include('GestionSolicitudes.precio.create')
 
-<!-- Modal para Agregar Observación -->
-<div class="modal fade" id="observacionModal" tabindex="-1" aria-labelledby="observacionModalLabel" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="observacionModalLabel">Agregar Observación</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        <form id="formObservacion" action="{{ route('precioespecial.aprobar_o_rechazar') }}" method="POST">
-          @csrf
-          <!-- Campo oculto para la solicitud_id -->
-          <input type="hidden" name="solicitud_id" id="solicitud_id" value="">
-          <input type="hidden" name="accion" id="accion" value="">
+    <!-- Modal para Agregar Observación -->
+    <div class="modal fade" id="observacionModal" tabindex="-1" aria-labelledby="observacionModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div id="observacionModalHeader" class="modal-header">
+                    <h5 class="modal-title" id="observacionModalLabel">Agregar Observación</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="formObservacion" action="{{ route('precioespecial.aprobar_o_rechazar') }}" method="POST">
+                    @csrf
+                    <!-- Campo oculto para la solicitud_id -->
+                    <input type="hidden" name="solicitud_id" id="solicitud_id" value="">
+                    <input type="hidden" name="accion" id="accion" value="">
 
-          <div class="mb-3">
-            <label for="observacion" class="form-label">Observación</label>
-            <textarea name="observacion" class="form-control" rows="3"></textarea>
-          </div>
+                    <div class="row mb-3 align-items-center">
+                        <div class="col-auto">
+                            <label for="clienteModal" class="col-form-label"><strong>Cliente:</strong></label>
+                        </div>
+                        <div class="col">
+                            <input type="text" readonly class="form-control" id="clienteModal" />
+                        </div>
+                    </div>
 
-          <div class="d-flex justify-content-end">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-            <button type="submit" class="btn btn-primary ms-2">Aceptar</button>
-          </div>
-        </form>
-      </div>
+                    <div class="row mb-3 align-items-center">
+                        <div class="col-auto">
+                            <label for="glosaModal" class="col-form-label"><strong>Motivo:</strong></label>
+                        </div>
+                        <div class="col">
+                            <input type="text" readonly class="form-control" id="glosaModal" />
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Detalle de Productos</label>
+                        <div class="table-responsive">
+                            <table class="table table-bordered" id="tablaProductosEditar">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>Producto</th>
+                                        <th>Cantidad</th>
+                                        <th>Precio</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- Se llenará dinámicamente -->
+                                </tbody>
+                            </table>
+                        </div>
+                        <!-- Campo oculto para enviar los productos actualizados -->
+                        <input type="hidden" name="detalle_productos_editado" id="detalle_productos_editado">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="observacion" class="form-label">Observación</label>
+                        <textarea name="observacion" class="form-control" rows="3"></textarea>
+                    </div>
+
+                    <div class="d-flex justify-content-end">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary ms-2">Aceptar</button>
+                    </div>
+                    </form>
+                </div>
+            </div>
+        </div>
     </div>
-  </div>
-</div>
 
 <script>
-    function setAccionAndSolicitudId(accion, solicitudId) {
-        // Asigna la acción al campo oculto 'accion'
-        document.getElementById('accion').value = accion;
-        // Asigna la ID de la solicitud al campo oculto 'solicitud_id'
-        document.getElementById('solicitud_id').value = solicitudId;
+function setAccionAndSolicitudId(accion, solicitudId, boton = null) {
+    document.getElementById('accion').value = accion;
+    document.getElementById('solicitud_id').value = solicitudId;
+
+    const header = document.getElementById('observacionModalHeader');
+    const title = document.getElementById('observacionModalLabel');
+
+    // Limpiar clases anteriores
+    header.classList.remove('bg-primary', 'bg-danger', 'text-white');
+
+    if (accion === 'aprobar') {
+        header.classList.add('bg-primary', 'text-white');
+        title.textContent = 'Aprobar Solicitud';
+    } else if (accion === 'rechazar') {
+        header.classList.add('bg-danger', 'text-white');
+        title.textContent = 'Rechazar Solicitud';
+    } else {
+        title.textContent = 'Agregar Observación';
     }
+
+    if (boton) {
+        const detalle = boton.getAttribute('data-detalle');
+        const cliente = boton.getAttribute('data-cliente') || 'No asignado';
+        const glosa = boton.getAttribute('data-glosa') || 'Sin glosa';
+
+        // Mostrar cliente y glosa en el modal
+        document.getElementById('clienteModal').value = cliente;
+        document.getElementById('glosaModal').value = glosa;
+
+        if (detalle) {
+            cargarProductosParaEditar(detalle);
+        }
+    }
+}
 </script>
+
+<script>
+function cargarProductosParaEditar(detalleString) {
+    const productos = detalleString.split(',').map(item => {
+        const [producto, cantidad, precio] = item.split('-');
+        return { producto, cantidad, precio };
+    });
+
+    const tbody = document.querySelector("#tablaProductosEditar tbody");
+    tbody.innerHTML = "";
+
+    productos.forEach((item, index) => {
+        const fila = `
+        <tr>
+            <td>${item.producto}</td>
+            <td>${item.cantidad}</td>
+            <td>
+                <input type="number" step="0.01" min="0" class="form-control precio-input" 
+                       value="${item.precio}" data-index="${index}">
+            </td>
+        </tr>`;
+        tbody.innerHTML += fila;
+    });
+
+    // Guarda en un dataset para usarlo al enviar
+    document.getElementById('tablaProductosEditar').dataset.productos = JSON.stringify(productos);
+}
+
+function actualizarDetalleProductosEditado() {
+    const precios = document.querySelectorAll('.precio-input');
+    const productos = JSON.parse(document.getElementById('tablaProductosEditar').dataset.productos);
+
+    precios.forEach(input => {
+        const index = input.dataset.index;
+        productos[index].precio = parseFloat(input.value).toFixed(2);
+    });
+
+    const detalleCadena = productos.map(p => `${p.producto}-${p.cantidad}-${p.precio}`).join(",");
+    document.getElementById('detalle_productos_editado').value = detalleCadena;
+}
+
+// Antes de enviar el formulario, actualiza el campo oculto
+document.getElementById('formObservacion').addEventListener('submit', function (e) {
+    actualizarDetalleProductosEditado();
+});
+</script>
+
 
 @endsection

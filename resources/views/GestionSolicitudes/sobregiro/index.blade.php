@@ -36,13 +36,7 @@
 @endif
     <div class="card table-responsive">
         <div class="card-body">
-            <div class="mb-3 d-flex align-items-center gap-3">
-                <label for="fechaInicio" class="mb-0">Desde:</label>
-                <input type="date" id="fechaInicio" class="form-control" style="max-width: 200px;">
-                
-                <label for="fechaFin" class="mb-0 ms-3">Hasta:</label>
-                <input type="date" id="fechaFin" class="form-control" style="max-width: 200px;">
-            </div>
+            
             <table class="table table-hover table-bordered" id="solicitud_sobregiro">
                 <thead class="table-dark">
                     <tr>
@@ -59,6 +53,7 @@
                       <th class="d-none">Ejecutado por</th>                  <!-- oculto -->
                       <th class="d-none">Fecha ejecucion</th>                  <!-- oculto -->
                       <th>Observacion</th>
+                      <th>Codigo</th>
                       <th>Acciones</th>
                     </tr>
                 </thead>
@@ -69,11 +64,13 @@
                         $claseFila = '';
 
                         if ($estado === 'aprobada') {
-                            $claseFila = 'table-success';
+                            $claseFila = 'table-primary';
                         } elseif ($estado === 'rechazada') {
                             $claseFila = 'table-danger';
                         }elseif ($estado === 'ejecutada') {
                             $claseFila = 'table-success';
+                        }elseif ($estado === 'pendiente') {
+                            $claseFila = 'table-warning';
                         }
                     @endphp
 
@@ -83,7 +80,7 @@
                         <td>{{ \Carbon\Carbon::parse($solicitud->fecha_solicitud)->format('Y-m-d') }}</td>
                         <td class="d-none">{{ $solicitud->usuario->name ?? 'N/D' }}</td>      <!-- oculto -->
                         <td>{{ $solicitud->sobregiro?->cliente ?? 'No asignado' }}</td>
-                        <td>{{ $solicitud->sobregiro?->importe ?? '00.00' }}</td>
+                        <td>{{ $solicitud->sobregiro?->importe ? number_format($solicitud->sobregiro->importe, 2, ',', '.') : '0,00' }}</td>
                         <td class="d-none">{{ $solicitud->glosa ?? 'Sin glosa' }}</td>      <!-- oculto -->
                         <td>{{ ucfirst($estado) }}</td>
                         <td class="d-none">{{ $solicitud->autorizador->name ?? 'Sin autorizar' }}</td>      <!-- oculto -->
@@ -91,6 +88,7 @@
                         <td class="d-none">{{ $solicitud->ejecucion->usuario->name ?? 'Sin ejecutar' }}</td>      <!-- oculto -->
                         <td class="d-none">{{ $solicitud->ejecucion->fecha_ejecucion ?? 'N/D' }}</td>      <!-- oculto -->
                         <td>{{ $solicitud->observacion ?? 'Sin observación' }}</td>
+                        <td>{{ $solicitud->sobregiro?->cod_sobregiro ?? 'N/D' }}</td>
                         <td>
                             <div class="d-flex flex-column flex-sm-row justify-content-center align-items-center">
                                 
@@ -176,6 +174,13 @@
                 </div>
                 <div class="modal-body">
                 <p>¿Está seguro de registrar esta acción?</p>
+
+                <div class="mb-3">
+                    <label for="cod_sobregiro_{{ $solicitud->id }}" class="form-label">Código de Sobregiro</label>
+                    <input type="text" class="form-control" id="cod_sobregiro_{{ $solicitud->id }}" name="cod_sobregiro" 
+                        value="{{ old('cod_sobregiro', $solicitud->cod_sobregiro ?? '') }}" required>
+                </div>
+
                 </div>
                 <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
@@ -185,6 +190,7 @@
             </div>
         </div>
     </div>
+
     @endforeach
  
     <!-- Vista para crear solicitud -->
@@ -249,7 +255,7 @@
 <div class="modal fade" id="observacionModal" tabindex="-1" aria-labelledby="observacionModalLabel" aria-hidden="true">
   <div class="modal-dialog">
     <div class="modal-content">
-      <div class="modal-header">
+      <div id="observacionModalHeader" class="modal-header">
         <h5 class="modal-title" id="observacionModalLabel">Agregar Observación</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
@@ -288,6 +294,22 @@
         document.getElementById('accion').value = accion;
         // Asigna la ID de la solicitud al campo oculto 'solicitud_id'
         document.getElementById('solicitud_id').value = solicitudId;
+
+        const header = document.getElementById('observacionModalHeader');
+        const title = document.getElementById('observacionModalLabel');
+
+        // Limpiar clases anteriores
+        header.classList.remove('bg-primary', 'bg-danger', 'text-white');
+
+        if (accion === 'aprobar') {
+            header.classList.add('bg-primary', 'text-white');
+            title.textContent = 'Aprobar Solicitud';
+        } else if (accion === 'rechazar') {
+            header.classList.add('bg-danger', 'text-white');
+            title.textContent = 'Rechazar Solicitud';
+        } else {
+            title.textContent = 'Agregar Observación';
+        }
     }
 </script>
 

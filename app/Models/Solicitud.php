@@ -72,4 +72,15 @@ class Solicitud extends Model
         return $this->hasMany(Adjuntos::class, 'id_solicitud');
     }
 
+    public function scopePendientes($query)
+    {
+        return $query->where('estado', 'pendiente');
+    }
+
+    public function scopeAprobadasNoEjecutadas($query)
+    {
+        return $query->where('estado', 'aprobada')
+                    ->whereDoesntHave('ejecucion');
+    }
+
 }

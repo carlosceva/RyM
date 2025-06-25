@@ -15,6 +15,9 @@ use App\Http\Controllers\AnulacionController;
 use App\Http\Controllers\DevolucionController;
 use App\Http\Controllers\UserProfileController;
 use App\Http\Controllers\BackupController;
+use App\Http\Controllers\AlmacenController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\NotificacionController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -23,9 +26,7 @@ Route::get('/', function () {
 // Route::get('/dashboard', function () {
 //     return view('dashboard');
 // })->middleware(['auth', 'verified'])->name('dashboard');
-Route::get('/dashboard', function () {
-    return view('dashboard'); // Cambia a la vista que tú quieras
-})->middleware(['auth', 'verified'])->name('dashboard');
+Route::get('/dashboard', [DashboardController::class, 'index'])->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {
 
@@ -68,6 +69,7 @@ Route::middleware('auth')->group(function () {
     Route::post('PrecioEspecial/aprobar_o_rechazar', [PrecioEspecialController::class, 'aprobar_o_rechazar'])->name('precioespecial.aprobar_o_rechazar');
     Route::get('/PrecioEspecial/{id}/descargar/pdf', [PrecioEspecialController::class, 'descargarPDF'])->name('precioEspecial.descargar.pdf');
     Route::get('/PrecioEspecial/{id}/descargar/excel', [PrecioEspecialController::class, 'descargarExcel'])->name('precioEspecial.descargar.excel');
+    Route::post('/PrecioEspecial/{id}/ejecutar', [PrecioEspecialController::class, 'ejecutar'])->name('precioEspecial.ejecutar');
 
     Route::get('/general', [SolicitudController::class, 'index'])->name('general.index')->middleware('admin');
     Route::post('general/aprobar_o_rechazar', [SolicitudController::class, 'aprobar_o_rechazar'])->name('general.aprobar_o_rechazar');
@@ -113,6 +115,14 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile/edit', [UserProfileController::class, 'edit'])->name('profile.edit');
     Route::put('/profile/update', [UserProfileController::class, 'update'])->name('profile.update');
     Route::post('/profile/change-password', [UserProfileController::class, 'changePassword'])->name('profile.changePassword');
+
+    Route::resource('almacen', AlmacenController::class);
+
+    Route::post('/notificaciones/marcarleidas', [NotificacionController::class, 'marcarComoLeidas'])->name('notificaciones.leer');
+    Route::get('/notificacion/ver/{id}', [NotificacionController::class, 'ver'])->name('notificacion.ver');
+    Route::get('/notificaciones/leidas', [NotificacionController::class, 'obtenerNotificacionesLeidas']);
+
+
 });
 
 

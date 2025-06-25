@@ -10,6 +10,7 @@
         .bg-success { background-color: #28a745; }
         .bg-danger { background-color: #dc3545; }
         .bg-warning { background-color: #ffc107; color: black; }
+        .bg-primary { background-color: #0d6efd; color: black; }
         .card-body { padding: 20px; }
         .border { border: 1px solid #ccc; }
         .rounded { border-radius: 5px; }
@@ -33,11 +34,24 @@
 <body>
     <div class="card">
         <!-- Header -->
-        <div class="card-header 
-            @if($solicitud->estado === 'aprobada' || $solicitud->estado === 'ejecutada') bg-success 
-            @elseif($solicitud->estado === 'rechazada') bg-danger 
-            @else bg-warning 
-            @endif">
+         @php 
+            $clase_color = '';
+            $clase_color_ejecucion = $solicitud->ejecucion ? 'bg-success' : 'bg-warning';
+
+            if($solicitud->estado === 'aprobada') {
+                    $clase_color = 'bg-primary'; 
+            }elseif($solicitud->estado === 'rechazada'){ 
+                    $clase_color = 'bg-danger';
+            }elseif($solicitud->estado === 'ejecutada'){ 
+                    $clase_color = 'bg-success'; 
+            }elseif($solicitud->estado === 'pendiente'){ 
+                    $clase_color = 'bg-warning'; 
+            }elseif($solicitud->estado === 'convertida'){ 
+                    $clase_color = 'bg-secondary'; 
+            }
+            
+        @endphp
+        <div class="card-header {{ $clase_color }}">
             <div class="d-flex justify-between">
                 <span>#{{ $solicitud->id }}</span>
                 <span>{{ $solicitud->fecha_solicitud }}</span>
@@ -79,21 +93,29 @@
             </div>
 
             <!-- Autorización -->
-            <div class="border-top pt-2 mt-3">
-                <div class="d-flex justify-between flex-wrap small">
-                    <span><strong>Autorizado por:</strong> {{ $solicitud->autorizador->name ?? 'Sin autorizar' }}</span>
-                    <span><strong>Estado:</strong> {{ ucfirst($solicitud->estado) }}</span>
-                    <span><strong>Fecha Autorización:</strong> {{ $solicitud->fecha_autorizacion ?? 'N/D' }}</span>
+            <div class="row mt-2">
+                <div class="col-12 border-top pt-2">
+                    <div style="display: flex; justify-content: space-between; flex-wrap: wrap;" class="small">
+                        <span><strong>Autorizado por:</strong> {{ $solicitud->autorizador->name ?? 'Sin autorizar' }}</span>
+                        <span class="badge {{ $clase_color }}">
+                            {{ ucfirst($solicitud->estado) }}
+                        </span>
+                        <span>{{ $solicitud->fecha_autorizacion ?? 'N/D' }}</span>
+                    </div>
                 </div>
             </div>
 
-            <!-- Ejecución -->
-            @if($solicitud->estado === 'ejecutada')
-            <div class="border-top pt-2 mt-2">
-                <div class="d-flex justify-between flex-wrap small">
-                    <span><strong>Ejecutado por:</strong> {{ $solicitud->ejecucion->usuario->name ?? 'Sin ejecutar' }}</span>
-                    <span><strong>Estado:</strong> Ejecutada</span>
-                    <span><strong>Fecha Ejecución:</strong> {{ $solicitud->ejecucion->fecha_ejecucion ?? 'N/D' }}</span>
+            <!-- Ejecución --> 
+            @if($solicitud->estado !== 'rechazada' && $solicitud->estado !== 'convertida')
+            <div class="row mt-2">
+                <div class="col-12 border-top pt-2">
+                    <div style="display: flex; justify-content: space-between; flex-wrap: wrap;" class="small">
+                        <span><strong>Ejecutado por:</strong> {{ $solicitud->ejecucion->usuario->name ?? 'Sin ejecutar' }}</span>
+                        <span class="badge {{ $clase_color_ejecucion }}">
+                            {{ $solicitud->ejecucion ? 'Ejecutada' : 'Pendiente' }}
+                        </span>
+                        <span>{{ $solicitud->ejecucion->fecha_ejecucion ?? 'N/D' }}</span>
+                    </div>
                 </div>
             </div>
             @endif

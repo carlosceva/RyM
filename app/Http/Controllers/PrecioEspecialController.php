@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Solicitud;
 use App\Models\SolicitudPrecioEspecial;
+use App\Models\SolicitudEjecutada;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -61,11 +62,12 @@ class PrecioEspecialController extends Controller
 
     public function store(Request $request, WhatsAppService $whatsapp)
     {
+        
         $request->validate([
             'tipo' => 'required|string',
             'glosa' => 'nullable|string',
         ]);
-
+        
         DB::beginTransaction();
     
         try {
@@ -76,7 +78,7 @@ class PrecioEspecialController extends Controller
                 'estado' => 'pendiente',
                 'glosa' => $request->glosa,
             ]);
-    
+            
             $solicitudPrecioEspecial = SolicitudPrecioEspecial::create([
                 'id_solicitud' => $solicitud->id,
                 'cliente' => $request->cliente,
@@ -113,60 +115,173 @@ class PrecioEspecialController extends Controller
         }
     }
 
+    // public function aprobar_o_rechazar(Request $request, WhatsAppService $whatsapp)
+    // {
+    //     // Validamos la solicitud
+    //     $request->validate([
+    //         'solicitud_id' => 'required|exists:solicitudes,id',
+    //         'accion' => 'required|in:aprobar,rechazar',
+    //         'observacion' => 'nullable|string',
+    //     ]);
+    
+    //     // Obtenemos la solicitud
+    //     $solicitud = Solicitud::findOrFail($request->solicitud_id);
+    
+    //     // Asignamos el autorizador y la fecha de autorización
+    //     $solicitud->id_autorizador = Auth::id();
+    //     $solicitud->fecha_autorizacion = now();
+    
+    //     // Actualizamos el estado dependiendo de la acción
+    //     if ($request->accion === 'aprobar') {
+    //         $solicitud->estado = 'aprobada';
+
+    //         $usuarioSolicitante = $solicitud->usuario;
+
+    //         if ($usuarioSolicitante && $usuarioSolicitante->telefono && $usuarioSolicitante->key) {
+    //             $numero = '+591' . str_pad($usuarioSolicitante->telefono, 8, '0', STR_PAD_LEFT);
+    //             $apiKey = $usuarioSolicitante->key;
+
+    //             $mensaje = "✅ Su solicitud de *Precio especial* ha sido *aprobada*.\n" .
+    //                 "N° de solicitud: {$solicitud->id}\n" .
+    //                 "Fecha: " . now()->format('d/m/Y H:i') . "\n" .
+    //                 "Aprobado por: " . auth()->user()->name . ".";
+
+    //             // Formato esperado por el método `sendWithAPIKey()`
+    //             $destinatario = [[
+    //                 'telefono' => $numero,
+    //                 'api_key' => $apiKey
+    //             ]];
+
+    //             $whatsapp->sendWithAPIKey($destinatario, $mensaje);
+    //         }
+
+    //     } elseif ($request->accion === 'rechazar') {
+    //         $solicitud->estado = 'rechazada';
+    //     }
+    
+    //     // Si se proporciona una observación, la guardamos
+    //     if ($request->observacion) {
+    //         $solicitud->observacion = $request->observacion;
+    //     }
+    
+    //     // Guardamos los cambios en la base de datos
+    //     $solicitud->save();
+    
+    //     // Redirigimos al usuario con un mensaje de éxito
+    //     return redirect()->route('PrecioEspecial.index')->with('success', 'La solicitud ha sido ' . $solicitud->estado . ' correctamente.');
+    // }
+
     public function aprobar_o_rechazar(Request $request, WhatsAppService $whatsapp)
     {
-        // Validamos la solicitud
         $request->validate([
             'solicitud_id' => 'required|exists:solicitudes,id',
             'accion' => 'required|in:aprobar,rechazar',
             'observacion' => 'nullable|string',
         ]);
-    
-        // Obtenemos la solicitud
-        $solicitud = Solicitud::findOrFail($request->solicitud_id);
-    
-        // Asignamos el autorizador y la fecha de autorización
-        $solicitud->id_autorizador = Auth::id();
-        $solicitud->fecha_autorizacion = now();
-    
-        // Actualizamos el estado dependiendo de la acción
-        if ($request->accion === 'aprobar') {
-            $solicitud->estado = 'aprobada';
 
-            $usuarioSolicitante = $solicitud->usuario;
+        DB::beginTransaction();
 
-            if ($usuarioSolicitante && $usuarioSolicitante->telefono && $usuarioSolicitante->key) {
-                $numero = '+591' . str_pad($usuarioSolicitante->telefono, 8, '0', STR_PAD_LEFT);
-                $apiKey = $usuarioSolicitante->key;
+        try {
+            $solicitud = Solicitud::findOrFail($request->solicitud_id);
 
-                $mensaje = "✅ Su solicitud de *Precio especial* ha sido *aprobada*.\n" .
-                    "N° de solicitud: {$solicitud->id}\n" .
-                    "Fecha: " . now()->format('d/m/Y H:i') . "\n" .
-                    "Aprobado por: " . auth()->user()->name . ".";
+            // Cargamos la relación PrecioEspecial
+            $precioEspecial = $solicitud->precioEspecial;
 
-                // Formato esperado por el método `sendWithAPIKey()`
-                $destinatario = [[
-                    'telefono' => $numero,
-                    'api_key' => $apiKey
-                ]];
+            // Asignamos datos de autorización
+            $solicitud->id_autorizador = Auth::id();
+            $solicitud->fecha_autorizacion = now();
 
-                $whatsapp->sendWithAPIKey($destinatario, $mensaje);
+            if ($request->accion === 'aprobar') {
+                $solicitud->estado = 'aprobada';
+
+                $usuariosResponsables = User::whereHas('roles.permissions', function ($query) {
+                    $query->where('name', 'Precio_especial_ejecutar');
+                })->get();
+
+                $phoneNumbers = $usuariosResponsables->map(function ($user) {
+                    return [
+                        'telefono' => '+591' . str_pad($user->telefono, 8, '0', STR_PAD_LEFT),
+                        'api_key' => $user->key,
+                    ];
+                })->toArray();
+
+                $message = "Se ha aprobado una solicitud de *Precio especial de venta* y está esperando su ejecución.\n" .
+                    "N° de solicitud: " . $solicitud->id . "\n" .
+                    "Fecha de autorización: " . $solicitud->fecha_autorizacion->format('d/m/Y H:i') . "\n" .
+                    "Autorizado por: " . $solicitud->autorizador->name . ".";
+
+                $responses = $whatsapp->sendWithAPIKey($phoneNumbers, $message);
+            } elseif ($request->accion === 'rechazar') {
+                $solicitud->estado = 'rechazada';
             }
 
-        } elseif ($request->accion === 'rechazar') {
-            $solicitud->estado = 'rechazada';
+            // Guardamos la observación si se proporcionó
+            if ($request->observacion) {
+                $solicitud->observacion = $request->observacion;
+            }
+
+            // ✅ Guardamos los productos editados en la relación PrecioEspecial
+            if ($precioEspecial && $request->filled('detalle_productos_editado')) {
+                $precioEspecial->detalle_productos = $request->detalle_productos_editado;
+                $precioEspecial->save();
+            }
+
+            $solicitud->save();
+
+            DB::commit();
+
+            return redirect()->route('PrecioEspecial.index')
+                ->with('success', 'La solicitud ha sido ' . $solicitud->estado . ' correctamente.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Hubo un error al procesar la solicitud. Intenta nuevamente.');
+        }
+    }
+
+    public function ejecutar($id, WhatsAppService $whatsapp)
+    {
+        $solicitud = Solicitud::findOrFail($id);
+    
+        // Solo puede ejecutarse si está aprobada y aún no ha sido ejecutada
+        if ($solicitud->estado !== 'aprobada') {
+            return back()->with('error', 'Solo las solicitudes aprobadas pueden ser ejecutadas.');
         }
     
-        // Si se proporciona una observación, la guardamos
-        if ($request->observacion) {
-            $solicitud->observacion = $request->observacion;
+        if ($solicitud->ejecucion) {
+            return back()->with('error', 'Esta solicitud ya fue ejecutada.');
         }
     
-        // Guardamos los cambios en la base de datos
+        // Registrar ejecución
+        SolicitudEjecutada::create([
+            'solicitud_id' => $solicitud->id,
+            'ejecutado_por' => Auth::id(),
+            'fecha_ejecucion' => now(),
+        ]);
+
+        // Cambiar el estado de la solicitud
+        $solicitud->estado = 'ejecutada';
         $solicitud->save();
+
+        $usuarioSolicitante = $solicitud->usuario;
+
+        if ($usuarioSolicitante && $usuarioSolicitante->telefono && $usuarioSolicitante->key) {
+            $numero = '+591' . str_pad($usuarioSolicitante->telefono, 8, '0', STR_PAD_LEFT);
+            $apiKey = $usuarioSolicitante->key;
     
-        // Redirigimos al usuario con un mensaje de éxito
-        return redirect()->route('PrecioEspecial.index')->with('success', 'La solicitud ha sido ' . $solicitud->estado . ' correctamente.');
+            $mensaje = "📦 Su solicitud de *Precio especial de venta* ha sido *ejecutada*.\n" .
+                       "N° de solicitud: {$solicitud->id}\n" .
+                       "Fecha de ejecución: " . now()->format('d/m/Y H:i') . "\n" .
+                       "Ejecutado por: " . auth()->user()->name . ".";
+    
+            $destinatario = [[
+                'telefono' => $numero,
+                'api_key' => $apiKey
+            ]];
+    
+            $whatsapp->sendWithAPIKey($destinatario, $mensaje);
+        }
+    
+        return back()->with('success', 'Solicitud ejecutada exitosamente.');
     }
 
     public function descargarPDF($id)

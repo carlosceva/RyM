@@ -51,18 +51,28 @@
                 
             </div>
 
-            <!-- Inputs para cod-sai, producto, cantidad -->
             <div class="row g-2 mb-3">
-                <div class="col-md-4">
-                    <input type="text" id="codsai" class="form-control" placeholder="Cod-SAI">
+                <!-- Columna 1: Inputs -->
+                <div class="col-12 col-md-10">
+                    <div class="row g-2">
+                        <div class="col-12 col-md-3">
+                            <input type="text" id="codsai" class="form-control" step="0.01" placeholder="codsai">
+                        </div>
+                        <div class="col-12 col-md-3">
+                            <input type="text" id="producto" class="form-control" placeholder="Producto">
+                        </div>
+                        <div class="col-12 col-md-3">
+                            <input type="number" id="cantidad" class="form-control" placeholder="Cantidad">
+                        </div>
+                        <div class="col-12 col-md-3">
+                            <input type="text" id="medida" class="form-control" placeholder="Ud. medida">
+                        </div>
+                        
+                    </div>
                 </div>
-                <div class="col-md-3">
-                    <input type="text" id="producto" class="form-control" placeholder="Producto">
-                </div>
-                <div class="col-md-3">
-                    <input type="number" id="cantidad" class="form-control" placeholder="Cantidad">
-                </div>
-                <div class="col-md-2">
+
+                <!-- Columna 2: Botón -->
+                <div class="col-12 col-md-2">
                     <button type="button" class="btn btn-primary w-100" onclick="agregarProducto()">Agregar</button>
                 </div>
             </div>
@@ -75,6 +85,7 @@
                             <th>Cod-SAI</th>
                             <th>Producto</th>
                             <th>Cantidad</th>
+                            <th>Ud. Medida</th>
                             <th>Acción</th>
                         </tr>
                     </thead>
@@ -102,9 +113,10 @@ let productos = [];
 function agregarProducto() {
     const codsai = document.getElementById('codsai').value.trim();
     const producto = document.getElementById('producto').value.trim();
+    const medida = document.getElementById('medida').value.trim();
     const cantidad = parseInt(document.getElementById('cantidad').value.trim());
 
-    if (!producto || isNaN(cantidad)) {
+    if (!producto || isNaN(cantidad) || !medida) {
         alert("Por favor complete todos los campos correctamente.");
         return;
     }
@@ -118,7 +130,8 @@ function agregarProducto() {
     productos.push({ 
         codsai,
         producto, 
-        cantidad, 
+        cantidad,
+        medida, 
     });
 
     actualizarTabla();
@@ -139,12 +152,13 @@ function actualizarTabla() {
             <td>${item.codsai}</td>
             <td>${item.producto}</td>
             <td>${item.cantidad}</td>
+            <td>${item.medida}</td>
             <td><button type="button" class="btn btn-danger btn-sm" onclick="eliminarProducto(${index})">Eliminar</button></td>
         </tr>`;
         tbody.innerHTML += fila;
     });
 
-    const detalleCadena = productos.map(p => `${p.codsai}-${p.producto}-${p.cantidad}`).join(",");
+    const detalleCadena = productos.map(p => `${p.codsai}-${p.producto}-${p.cantidad}-${p.medida}`).join(",");
     document.getElementById('detalle_productos').value = detalleCadena;
 }
 
@@ -152,6 +166,7 @@ function limpiarInputs() {
     document.getElementById('codsai').value = '';
     document.getElementById('producto').value = '';
     document.getElementById('cantidad').value = '';
+    document.getElementById('medida').value = '';
 }
 
 function validarProductos() {

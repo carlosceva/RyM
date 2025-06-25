@@ -1,12 +1,23 @@
 <!-- Ticket -->
 <div>
     <div class="card shadow-sm h-100 ">
+        @php 
+            $clase_color = '';
+            $clase_color_ejecucion = $solicitud->ejecucion ? 'bg-success' : 'bg-warning';
+
+            if($solicitud->estado === 'aprobada') {
+                    $clase_color = 'bg-primary'; 
+            }elseif($solicitud->estado === 'rechazada'){ 
+                    $clase_color = 'bg-danger';
+            }elseif($solicitud->estado === 'ejecutada'){ 
+                    $clase_color = 'bg-success'; 
+            }elseif($solicitud->estado === 'pendiente'){ 
+                    $clase_color = 'bg-warning'; 
+            }
+            
+        @endphp
         <!-- Header -->
-        <div class="card-header @if($solicitud->estado === 'aprobada') 
-                bg-success 
-            @elseif($solicitud->estado === 'rechazada') 
-                bg-danger 
-            @endif">
+        <div class="card-header {{ $clase_color }}">
             <!-- Fila 1: ID y Fecha -->
             <div class="d-flex justify-content-between">
                 <span>#{{ $solicitud->id }}</span>
@@ -22,19 +33,23 @@
         <div class="card-body">
             <div class="row">
                 <!-- Columna izquierda -->
-                <div class="col-12 col-md-6">
+                <div class="col-12">
                     <p class="mb-1"><strong>Solicitante:</strong> {{ $solicitud->usuario->name ?? 'N/D' }}</p>
 
-                    <p><strong>Motivo:</strong></p>
-                    <div class="border p-2 rounded bg-light small">
-                        {{ $solicitud->glosa ?? 'Sin glosa' }}
+                    <div class="d-flex align-items-center mb-2">
+                        <strong class="me-2">Motivo:</strong>
+                        <div class="border p-2 rounded bg-light small flex-fill">
+                            {{ $solicitud->glosa ?? 'Sin glosa' }}
+                        </div>
                     </div>
                 </div>
 
                 <!-- Columna derecha -->
-                <div class="col-12 col-md-6 mt-3 mt-md-0">
+                
                     @if($solicitud->precioEspecial)
-                    <p class="mb-2"><strong>{{ $solicitud->precioEspecial->cliente ?? 'Sin cliente' }}</strong></p>
+                    <p class="mb-2"><strong>Cliente:</strong> {{ $solicitud->precioEspecial->cliente ?? 'Sin cliente' }}</p>
+
+                    <p class="mb-1"><strong>Detalle de productos:</strong></p>
                     <div class="border p-2 rounded bg-light small">
                         <table class="table table-borderless table-sm mb-0">
                             <thead>
@@ -42,6 +57,7 @@
                                     <th scope="col">#</th>
                                     <th scope="col">Producto</th>
                                     <th scope="col">Cantidad</th>
+
                                     <th scope="col">Precio</th>
                                 </tr>
                             </thead>
@@ -53,12 +69,14 @@
                                             $partes = explode('-', $item);
                                             $producto = trim($partes[0] ?? '');
                                             $cantidad = trim($partes[1] ?? '');
+
                                             $precio = trim($partes[2] ?? '');
                                         @endphp
                                         <tr>
                                             <td>{{ $index + 1 }}</td>
                                             <td>{{ $producto }}</td>
                                             <td>{{ $cantidad }}</td>
+
                                             <td>{{ $precio }}</td>
                                         </tr>
                                     @endforeach
@@ -71,7 +89,7 @@
                         </table>
                     </div>
                     @endif
-                </div>
+                
 
             </div>
 
@@ -80,13 +98,28 @@
                 <div class="col-12 border-top pt-2">
                     <div class="d-flex justify-content-between flex-wrap small">
                         <span><strong>Autorizado por:</strong> {{ $solicitud->autorizador->name ?? 'Sin autorizar' }}</span>
-                        <span class="badge bg-{{ $solicitud->estado === 'aprobada' ? 'success' : ($solicitud->estado === 'rechazada' ? 'danger' : 'warning') }}">
+                        <span class="badge {{ $clase_color }}">
                             {{ ucfirst($solicitud->estado) }}
                         </span>
                         <span>{{ $solicitud->fecha_autorizacion ?? 'N/D' }}</span>
                     </div>
                 </div>
             </div>
+
+            <!-- Ejecución -->
+            @if($solicitud->estado !=='rechazada')
+            <div class="row mt-2">
+                <div class="col-12 border-top pt-2">
+                    <div class="d-flex justify-content-between flex-wrap small">
+                        <span><strong>Ejecutado por:</strong> {{ $solicitud->ejecucion->usuario->name ?? 'Sin ejecutar' }}</span>
+                        <span class="badge {{ $clase_color_ejecucion }}">
+                            {{ $solicitud->ejecucion ? 'Ejecutada' : 'Pendiente' }}
+                        </span>
+                        <span>{{ $solicitud->ejecucion->fecha_ejecucion ?? 'N/D' }}</span>
+                    </div>
+                </div>
+            </div>
+            @endif
 
             <!-- Observación -->
             <div class="row mt-2">
@@ -149,23 +182,10 @@
             .btn-pdf:hover i {
                 color: white !important; /* Icono blanco en hover */
             }
-
-            /* Fondo de los botones en el footer dependiendo del estado */
-            .footer-aprobada {
-                background-color: #198754 !important; /* Verde para aprobado */
-            }
-
-            .footer-rechazada {
-                background-color: #dc3545 !important; /* Rojo para rechazada */
-            }
         </style>
 
         <!-- Footer con acciones -->
-        <div class="card-footer @if($solicitud->estado === 'aprobada' || $solicitud->estado === 'ejecutada') 
-                                    footer-aprobada 
-                                @elseif($solicitud->estado === 'rechazada') 
-                                    footer-rechazada 
-                                @endif">
+        <div class="card-footer {{ $clase_color }}">
             <div class="row">
                 @can('Precio_especial_borrar')
                 <!-- Columna izquierda -->

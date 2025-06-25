@@ -123,24 +123,21 @@ class SobregiroController extends Controller
 
     public function aprobar_o_rechazar(Request $request, WhatsAppService $whatsapp)
     {
-        // Validamos la solicitud
+        // Validación
         $request->validate([
             'solicitud_id' => 'required|exists:solicitudes,id',
             'accion' => 'required|in:aprobar,rechazar',
             'observacion' => 'nullable|string',
         ]);
-    
-        // Obtenemos la solicitud
+
         $solicitud = Solicitud::findOrFail($request->solicitud_id);
-    
-        // Asignamos el autorizador y la fecha de autorización
         $solicitud->id_autorizador = Auth::id();
         $solicitud->fecha_autorizacion = now();
-    
-        // Actualizamos el estado dependiendo de la acción
+
         if ($request->accion === 'aprobar') {
             $solicitud->estado = 'aprobada';
 
+            // Notificar a usuarios responsables
             $usuariosResponsables = User::whereHas('roles.permissions', function ($query) {
                 $query->where('name', 'Sobregiro_ejecutar');
             })->get();
@@ -148,48 +145,92 @@ class SobregiroController extends Controller
             $phoneNumbers = $usuariosResponsables->map(function ($user) {
                 return [
                     'telefono' => '+591' . str_pad($user->telefono, 8, '0', STR_PAD_LEFT),
-                    'api_key' => $user->key, 
+                    'api_key' => $user->key,
                 ];
-            });
+            })->toArray();
 
-            $phoneNumbers = $phoneNumbers->toArray();
+            $message = "Se ha aprobado una solicitud de *Sobregiro de Venta* y está esperando su ejecución.\n" .
+                    "N° de solicitud: " . $solicitud->id . "\n" .
+                    "Fecha de autorización: " . $solicitud->fecha_autorizacion->format('d/m/Y H:i') . "\n" .
+                    "Autorizado por: " . $solicitud->autorizador->name . ".";
 
-            $message = "Se ha aprobado una solicitud de *Sobregiro de Venta* y está esperando su ejecucion.\n" .
-            "N° de solicitud: " . $solicitud->id . "\n" .
-            "Fecha de autorizacion: " . $solicitud->fecha_autorizacion->format('d/m/Y H:i') . "\n" .
-            "Autorizado por: " . $solicitud->autorizador->name . ".";
-
-            $responses = $whatsapp->sendWithAPIKey($phoneNumbers, $message);
+            $whatsapp->sendWithAPIKey($phoneNumbers, $message);
 
         } elseif ($request->accion === 'rechazar') {
             $solicitud->estado = 'rechazada';
         }
-    
-        // Si se proporciona una observación, la guardamos
+
+        // Guardar observación si existe
         if ($request->observacion) {
             $solicitud->observacion = $request->observacion;
         }
-    
-        // Guardamos los cambios en la base de datos
+
         $solicitud->save();
-    
-        // Redirigimos al usuario con un mensaje de éxito
+
+        // Enviar mensaje al solicitante con la observación
+        $usuarioSolicitante = $solicitud->usuario;
+
+        if ($usuarioSolicitante && $usuarioSolicitante->telefono && $usuarioSolicitante->key) {
+            $numero = '+591' . str_pad($usuarioSolicitante->telefono, 8, '0', STR_PAD_LEFT);
+            $apiKey = $usuarioSolicitante->key;
+
+            $estadoTexto = $solicitud->estado === 'aprobada' ? 'aprobada' : 'rechazada';
+            $fechaTexto = now()->format('d/m/Y H:i');
+            $usuarioEjecutor = auth()->user()->name;
+            $observacionTexto = $request->observacion ? "\nObservación: " . $request->observacion : '';
+
+            $mensaje = "📦 Su solicitud de *Sobregiro de Venta* ha sido *{$estadoTexto}*.\n" .
+                    "N° de solicitud: {$solicitud->id}\n" .
+                    "Fecha: {$fechaTexto}\n" .
+                    "Aprobado por: {$usuarioEjecutor}." .
+                    $observacionTexto;
+
+            $destinatario = [[
+                'telefono' => $numero,
+                'api_key' => $apiKey
+            ]];
+
+            $whatsapp->sendWithAPIKey($destinatario, $mensaje);
+        }
+
         return redirect()->route('Sobregiro.index')->with('success', 'La solicitud ha sido ' . $solicitud->estado . ' correctamente.');
     }
 
-    public function ejecutar($id, WhatsAppService $whatsapp)
+    public function ejecutar(Request $request, $id, WhatsAppService $whatsapp)
     {
+        $request->validate([
+            'cod_sobregiro' => 'nullable|string|max:255',
+        ]);
+
         $solicitud = Solicitud::findOrFail($id);
-    
-        // Solo puede ejecutarse si está aprobada y aún no ha sido ejecutada
+
         if ($solicitud->estado !== 'aprobada') {
             return back()->with('error', 'Solo las solicitudes aprobadas pueden ser ejecutadas.');
         }
-    
+
         if ($solicitud->ejecucion) {
             return back()->with('error', 'Esta solicitud ya fue ejecutada.');
         }
-    
+
+        // Guardar o actualizar código de sobregiro en la tabla solicitud_sobregiro (asumo que es otra tabla)
+        // Si tienes relación definida, por ejemplo:
+        $sobregiro = $solicitud->sobregiro; // relación hasOne o similar
+
+        if ($sobregiro) {
+            $sobregiro->cod_sobregiro = $request->cod_sobregiro;
+            $sobregiro->save();
+        } else {
+            // Si no existe y necesitas crearlo
+            // SolicitudSobregiro es el modelo para la tabla solicitud_sobregiro
+            Sobregiro::create([
+                'id_solicitud' => $solicitud->id,
+                'cod_sobregiro' => $request->cod_sobregiro,
+                'cliente' => $solicitud->cliente,  // ajusta si es necesario
+                'importe' => $solicitud->importe,  // ajusta si es necesario
+                'estado' => $solicitud->estado,
+            ]);
+        }
+
         // Registrar ejecución
         SolicitudEjecutada::create([
             'solicitud_id' => $solicitud->id,
@@ -197,29 +238,30 @@ class SobregiroController extends Controller
             'fecha_ejecucion' => now(),
         ]);
 
-        // Cambiar el estado de la solicitud
         $solicitud->estado = 'ejecutada';
         $solicitud->save();
 
+        // Enviar notificación WhatsApp incluyendo el código de sobregiro
         $usuarioSolicitante = $solicitud->usuario;
 
         if ($usuarioSolicitante && $usuarioSolicitante->telefono && $usuarioSolicitante->key) {
             $numero = '+591' . str_pad($usuarioSolicitante->telefono, 8, '0', STR_PAD_LEFT);
             $apiKey = $usuarioSolicitante->key;
-    
+
             $mensaje = "📦 Su solicitud de *Sobregiro de Venta* ha sido *ejecutada*.\n" .
-                       "N° de solicitud: {$solicitud->id}\n" .
-                       "Fecha de ejecución: " . now()->format('d/m/Y H:i') . "\n" .
-                       "Ejecutado por: " . auth()->user()->name . ".";
-    
+                    "N° de solicitud: {$solicitud->id}\n" .
+                    "Código Sobregiro: {$request->cod_sobregiro}\n" .
+                    "Fecha de ejecución: " . now()->format('d/m/Y H:i') . "\n" .
+                    "Ejecutado por: " . auth()->user()->name . ".";
+
             $destinatario = [[
                 'telefono' => $numero,
                 'api_key' => $apiKey
             ]];
-    
+
             $whatsapp->sendWithAPIKey($destinatario, $mensaje);
         }
-    
+
         return back()->with('success', 'Solicitud ejecutada exitosamente.');
     }
 

@@ -1,12 +1,23 @@
 <!-- Ticket -->
 <div class="col">
     <div class="card shadow-sm h-100 ">
+        @php 
+            $clase_color = '';
+            $clase_color_ejecucion = $solicitud->ejecucion ? 'bg-success' : 'bg-warning';
+
+            if($solicitud->estado === 'aprobada') {
+                    $clase_color = 'bg-primary'; 
+            }elseif($solicitud->estado === 'rechazada'){ 
+                    $clase_color = 'bg-danger';
+            }elseif($solicitud->estado === 'ejecutada'){ 
+                    $clase_color = 'bg-success'; 
+            }elseif($solicitud->estado === 'pendiente'){ 
+                    $clase_color = 'bg-warning'; 
+            }
+            
+        @endphp
         <!-- Header -->
-        <div class="card-header @if($solicitud->estado === 'aprobada' || $solicitud->estado === 'ejecutada') 
-                bg-success 
-            @elseif($solicitud->estado === 'rechazada') 
-                bg-danger 
-            @endif">
+        <div class="card-header {{ $clase_color }}">
             <!-- Fila 1: ID y Fecha -->
             <div class="d-flex justify-content-between">
                 <span>#{{ $solicitud->id }}</span>
@@ -82,7 +93,7 @@
                 <div class="col-12 border-top pt-2">
                     <div class="d-flex justify-content-between flex-wrap small">
                         <span><strong>Autorizado por:</strong> {{ $solicitud->autorizador->name ?? 'Sin autorizar' }}</span>
-                        <span class="badge bg-{{ ($solicitud->estado === 'aprobada' || $solicitud->estado === 'ejecutada') ? 'success' : ($solicitud->estado === 'rechazada' ? 'danger' : 'warning') }}">
+                        <span class="badge {{ $clase_color }}">
                             {{ ucfirst($solicitud->estado) }}
                         </span>
                         <span>{{ $solicitud->fecha_autorizacion ?? 'N/D' }}</span>
@@ -96,7 +107,7 @@
                 <div class="col-12 border-top pt-2">
                     <div class="d-flex justify-content-between flex-wrap small">
                         <span><strong>Ejecutado por:</strong> {{ $solicitud->ejecucion->usuario->name ?? 'Sin ejecutar' }}</span>
-                        <span class="badge bg-{{ $solicitud->ejecucion ? 'success' : 'secondary' }}">
+                        <span class="badge {{ $clase_color_ejecucion }}">
                             {{ $solicitud->ejecucion ? 'Ejecutada' : 'Pendiente' }}
                         </span>
                         <span>{{ $solicitud->ejecucion->fecha_ejecucion ?? 'N/D' }}</span>
@@ -178,11 +189,7 @@
         </style>
 
         <!-- Footer con acciones -->
-        <div class="card-footer @if($solicitud->estado === 'aprobada' || $solicitud->estado === 'ejecutada') 
-                                    footer-aprobada 
-                                @elseif($solicitud->estado === 'rechazada') 
-                                    footer-rechazada 
-                                @endif">
+        <div class="card-footer {{ $clase_color }}">
             <div class="row">
                 @can('Anulacion_borrar')
                 <!-- Columna izquierda -->

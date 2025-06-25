@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Auth;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\DB;
 use App\Models\User;
+use App\Models\Almacen;
 use App\Services\WhatsAppService;
 
 class DevolucionController extends Controller
@@ -21,6 +22,8 @@ class DevolucionController extends Controller
     public function index()
     {
         $user = Auth::user();
+
+        $almacenes = Almacen::where('estado','a')->get();
 
         if ($user->hasRole('Supra Administrador')) {
             // Puede ver todas las solicitudes, incluso las inactivas
@@ -59,7 +62,7 @@ class DevolucionController extends Controller
                 ->get();
         }
 
-        return view('GestionSolicitudes.devolucion.index', compact('solicitudes'));
+        return view('GestionSolicitudes.devolucion.index', compact('solicitudes','almacenes'));
     }
 
     /**
@@ -207,11 +210,23 @@ class DevolucionController extends Controller
         }
     
         $devolucion = $solicitud->devolucion;
-    
-        $tieneEntrega = (bool) $devolucion->tiene_entrega;
-        $tienePago = (bool) $devolucion->tiene_pago;
-        $entregaFisica = $devolucion->entrega_fisica;
-        $esAnulacion = !$tienePago && !$tieneEntrega && $entregaFisica === false;
+
+        if (!$devolucion) {
+            return back()->with('error', 'No se encontró la información de devolucion asociada a esta solicitud.');
+        }
+
+        // ⚠️ Manejo seguro de valores booleanos, compatible con MySQL y PostgreSQL
+        $tienePago = filter_var($devolucion->tiene_pago, FILTER_VALIDATE_BOOLEAN);
+        $tieneEntrega = filter_var($devolucion->tiene_entrega, FILTER_VALIDATE_BOOLEAN);
+
+        if (is_null($devolucion->entrega_fisica)) {
+            $entregaFisica = null;
+        } else {
+            $entregaFisica = filter_var($devolucion->entrega_fisica, FILTER_VALIDATE_BOOLEAN);
+        }
+
+        // ✅ Evaluación segura de anulación
+        $esAnulacion = !$tienePago && !$tieneEntrega && ($entregaFisica === false || is_null($entregaFisica));
 
         $usuarioSolicitante = $solicitud->usuario;
     
@@ -228,7 +243,7 @@ class DevolucionController extends Controller
                 // Crear nueva solicitud tipo anulación
                 $nuevaSolicitud = Solicitud::create([
                     'id_usuario' => $solicitud->id_usuario,
-                    'tipo' => 'Anulación de Venta',
+                    'tipo' => 'Anulacion de Venta',
                     'fecha_solicitud' => now(),
                     'estado' => 'pendiente',
                     'observacion' => 'Generada automáticamente desde solicitud de devolución #' . $solicitud->id,

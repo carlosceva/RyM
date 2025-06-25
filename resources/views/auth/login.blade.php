@@ -41,7 +41,11 @@
             <!-- Código -->
             <div class="mb-4">
                 <label for="codigo" class="block text-sm font-medium text-gray-700">Código</label>
-                <input id="codigo" name="codigo" type="text" required autofocus class="mt-1 block w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[--primary]" value="{{ old('codigo') }}">
+                <input id="codigo" name="codigo" type="text" required autofocus
+                    class="mt-1 block w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[--primary]"
+                    value="{{ old('codigo') }}"
+                    oninput="this.value = this.value.toLowerCase();">
+
                 @error('codigo')
                     <div class="text-sm text-red-600 mt-1">{{ $message }}</div>
                 @enderror

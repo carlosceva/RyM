@@ -10,6 +10,7 @@
         .bg-success { background-color: #28a745; }
         .bg-danger { background-color: #dc3545; }
         .bg-warning { background-color: #ffc107; color: black; }
+        .bg-primary { background-color: #0d6efd; color: black; }
         .border { border: 1px solid #ccc; }
         .rounded { border-radius: 5px; }
         .small { font-size: 11px; }
@@ -26,11 +27,22 @@
 </head>
 <body>
     <div class="card">
-        <div class="card-header 
-            @if($solicitud->estado === 'aprobada' || $solicitud->estado === 'ejecutada') bg-success 
-            @elseif($solicitud->estado === 'rechazada') bg-danger 
-            @else bg-warning 
-            @endif">
+        @php 
+            $clase_color = '';
+            $clase_color_ejecucion = $solicitud->ejecucion ? 'bg-success' : 'bg-warning';
+
+            if($solicitud->estado === 'aprobada') {
+                    $clase_color = 'bg-primary'; 
+            }elseif($solicitud->estado === 'rechazada'){ 
+                    $clase_color = 'bg-danger';
+            }elseif($solicitud->estado === 'ejecutada'){ 
+                    $clase_color = 'bg-success'; 
+            }elseif($solicitud->estado === 'pendiente'){ 
+                    $clase_color = 'bg-warning'; 
+            }
+            
+        @endphp
+        <div class="card-header {{ $clase_color }}">
             <div class="d-flex">
                 <span>#{{ $solicitud->id }}</span>
                 <span> - Fecha: {{ $solicitud->fecha_solicitud }}</span>
@@ -56,8 +68,10 @@
                     <thead>
                         <tr>
                             <th>#</th>
+                            <th>Cod-SAI</th>
                             <th>Producto</th>
                             <th>Cantidad</th>
+                            <th>Medida</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -67,13 +81,17 @@
                         @foreach($productos as $index => $item)
                             @php
                                 $partes = explode('-', $item);
-                                $producto = trim($partes[0] ?? '');
-                                $cantidad = trim($partes[1] ?? '');
+                                $codsai = trim($partes[0] ?? '');
+                                $producto = trim($partes[1] ?? '');
+                                $cantidad = trim($partes[2] ?? '');
+                                $medida = trim($partes[3] ?? '');
                             @endphp
                             <tr>
                                 <td>{{ $index + 1 }}</td>
+                                <td>{{ $codsai }}</td>
                                 <td>{{ $producto }}</td>
                                 <td>{{ $cantidad }}</td>
+                                <td>{{ $medida }}</td>
                             </tr>
                         @endforeach
                     </tbody>
@@ -81,11 +99,33 @@
             </div>
             @endif
 
-            <div class="mt-3">
-                <p><strong>Autorizado por:</strong> {{ $solicitud->autorizador->name ?? 'Sin autorizar' }}</p>
-                <p><strong>Estado:</strong> {{ ucfirst($solicitud->estado) }}</p>
-                <p><strong>Fecha Autorización:</strong> {{ $solicitud->fecha_autorizacion ?? 'N/D' }}</p>
+            <!-- Autorización -->
+            <div class="row mt-2">
+                <div class="col-12 border-top pt-2">
+                    <div style="display: flex; justify-content: space-between; flex-wrap: wrap;" class="small">
+                        <span><strong>Autorizado por:</strong> {{ $solicitud->autorizador->name ?? 'Sin autorizar' }}</span>
+                        <span class="badge {{ $clase_color }}">
+                            {{ ucfirst($solicitud->estado) }}
+                        </span>
+                        <span>{{ $solicitud->fecha_autorizacion ?? 'N/D' }}</span>
+                    </div>
+                </div>
             </div>
+
+            <!-- Ejecución -->
+            @if($solicitud->estado !== 'rechazada')
+            <div class="row mt-2">
+                <div class="col-12 border-top pt-2">
+                    <div style="display: flex; justify-content: space-between; flex-wrap: wrap;" class="small">
+                        <span><strong>Ejecutado por:</strong> {{ $solicitud->ejecucion->usuario->name ?? 'Sin ejecutar' }}</span>
+                        <span class="badge {{ $clase_color_ejecucion }}">
+                            {{ $solicitud->ejecucion ? 'Ejecutada' : 'Pendiente' }}
+                        </span>
+                        <span>{{ $solicitud->ejecucion->fecha_ejecucion ?? 'N/D' }}</span>
+                    </div>
+                </div>
+            </div>
+            @endif
 
             <div class="mt-2">
                 <p><strong>Observación:</strong></p>

@@ -1,197 +1,45 @@
 @extends('dashboard')
 
-@section('title', 'G. CASO DE USO')
+@section('title', 'Dashboard')
 
 @section('content')
-<div class="card-header">
-    <h1 class="card-title" style="font-size: 1.8rem;">
-        <i class="fas fa-image mr-1"></i>
-        <span>Gestionar Caso de uso</span>
-    </h1>
-    
-    <div class="float-right d-sm-block"> 
-        <div class="btn-group" role="group" aria-label="Basic mixed styles example">
-            <a href="#" data-toggle="modal" data-target="#addModal" class="btn btn-success"><i class="fa fa-plus"></i>&nbsp; Agregar</a>
-        </div> 
+<div class="card">
+    <div class="card-header">
+        <h1 class="card-title" style="font-size: 1.8rem;">
+            <i class="fas fa-image mr-1"></i>
+            <span>Dashboard</span>
+        </h1>
     </div>
-                
-</div>
-    
-@if (session('success'))
-    <div class="alert alert-success">
-        {{ session('success') }}
-    </div>
-@endif
 
-@if ($errors->any())
-    <div class="alert alert-danger">
-        <ul>
-            @foreach ($errors->all() as $error)
-                <li>{{ $error }}</li>
+    <div class="card-body">
+        <div class="row">
+            @foreach($tarjetas as $card)
+                <div class="col-md-4 mb-4">
+                    <div class="card shadow-sm">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="mr-3" style="font-size: 2rem;">
+                                    {!! $card['icono'] !!}
+                                </div>
+                                <div>
+                                    <h5 class="mb-0">{{ $card['total'] }} solicitudes</h5>
+                                    <h4 class="text-muted">{{ $card['titulo'] }}</h4>
+                                </div>
+                            </div>
+
+                            <div class="mt-3">
+                                <a href="{{ route($card['ruta'], ['estado' => 'pendiente']) }}" class="btn btn-warning btn-sm d-block mb-2 text-left">
+                                    Ver {{ $card['pendientes'] }} pendientes →
+                                </a>
+                                <a href="{{ route($card['ruta'], ['estado' => 'por_ejecutar']) }}" class="btn btn-success btn-sm d-block text-left">
+                                    Ver {{ $card['por_ejecutar'] }} por ejecutar →
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             @endforeach
-        </ul>
-    </div>
-@endif
-    <div class="card table-responsive">
-        <div class="card-body">
-            <table class="table table-hover table-bordered" id="tabla1">
-                <thead class="table-dark">
-                    <tr>
-                        <th>ID</th>
-                        <th>NOMBRE</th>
-                        <th>USUARIO</th>
-                        <th>DIRECCION</th>
-                        <th>TELEFONO</th>
-                        <th>ESTADO</th>
-                        <th>ACCIONES</th>
-                    </tr>
-                </thead>
-                <tbody class="table-group-divider">
-                    
-                    <tr>
-                        <td>1</td>
-                        <td>Usuario 1</td>
-                        <td>usuario1@netcrow.com</td>
-                        <td>Orgrimar</td>
-                        <td>77813264</td>
-                        <td>Activo</td>
-                        <td>
-                                <a href="#" data-toggle="modal" data-target=""><i class="fa fa-edit" aria-hidden="true"></i></a>
-                            &nbsp;
-                                <a href="#" data-toggle="modal" data-target=""> <i class="fa fa-trash" aria-hidden="true"></i></a>
-                            
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>2</td>
-                        <td>Usuario 1</td>
-                        <td>usuario1@netcrow.com</td>
-                        <td>Orgrimar</td>
-                        <td>77813264</td>
-                        <td>Activo</td>
-                        <td>
-                                <a href="#" data-toggle="modal" data-target=""><i class="fa fa-edit" aria-hidden="true"></i></a>
-                            &nbsp;
-                                <a href="#" data-toggle="modal" data-target=""> <i class="fa fa-trash" aria-hidden="true"></i></a>
-                            
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>3</td>
-                        <td>Usuario 1</td>
-                        <td>usuario1@netcrow.com</td>
-                        <td>Orgrimar</td>
-                        <td>77813264</td>
-                        <td>Activo</td>
-                        <td>
-                                <a href="#" data-toggle="modal" data-target=""><i class="fa fa-edit" aria-hidden="true"></i></a>
-                            &nbsp;
-                                <a href="#" data-toggle="modal" data-target=""> <i class="fa fa-trash" aria-hidden="true"></i></a>
-                            
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>4</td>
-                        <td>Usuario 1</td>
-                        <td>usuario1@netcrow.com</td>
-                        <td>Orgrimar</td>
-                        <td>77813264</td>
-                        <td>Activo</td>
-                        <td>
-                                <a href="#" data-toggle="modal" data-target=""><i class="fa fa-edit" aria-hidden="true"></i></a>
-                            &nbsp;
-                                <a href="#" data-toggle="modal" data-target=""> <i class="fa fa-trash" aria-hidden="true"></i></a>
-                            
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>5</td>
-                        <td>Usuario 1</td>
-                        <td>usuario1@netcrow.com</td>
-                        <td>Orgrimar</td>
-                        <td>77813264</td>
-                        <td>Activo</td>
-                        <td>
-                                <a href="#" data-toggle="modal" data-target=""><i class="fa fa-edit" aria-hidden="true"></i></a>
-                            &nbsp;
-                                <a href="#" data-toggle="modal" data-target=""> <i class="fa fa-trash" aria-hidden="true"></i></a>
-                            
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>6</td>
-                        <td>Usuario 1</td>
-                        <td>usuario1@netcrow.com</td>
-                        <td>Orgrimar</td>
-                        <td>77813264</td>
-                        <td>Activo</td>
-                        <td>
-                                <a href="#" data-toggle="modal" data-target=""><i class="fa fa-edit" aria-hidden="true"></i></a>
-                            &nbsp;
-                                <a href="#" data-toggle="modal" data-target=""> <i class="fa fa-trash" aria-hidden="true"></i></a>
-                            
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>7</td>
-                        <td>Usuario 1</td>
-                        <td>usuario1@netcrow.com</td>
-                        <td>Orgrimar</td>
-                        <td>77813264</td>
-                        <td>Activo</td>
-                        <td>
-                                <a href="#" data-toggle="modal" data-target=""><i class="fa fa-edit" aria-hidden="true"></i></a>
-                            &nbsp;
-                                <a href="#" data-toggle="modal" data-target=""> <i class="fa fa-trash" aria-hidden="true"></i></a>
-                            
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>8</td>
-                        <td>Usuario 1</td>
-                        <td>usuario1@netcrow.com</td>
-                        <td>Orgrimar</td>
-                        <td>77813264</td>
-                        <td>Activo</td>
-                        <td>
-                                <a href="#" data-toggle="modal" data-target=""><i class="fa fa-edit" aria-hidden="true"></i></a>
-                            &nbsp;
-                                <a href="#" data-toggle="modal" data-target=""> <i class="fa fa-trash" aria-hidden="true"></i></a>
-                            
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>9</td>
-                        <td>Usuario 1</td>
-                        <td>usuario1@netcrow.com</td>
-                        <td>Orgrimar</td>
-                        <td>77813264</td>
-                        <td>Activo</td>
-                        <td>
-                                <a href="#" data-toggle="modal" data-target=""><i class="fa fa-edit" aria-hidden="true"></i></a>
-                            &nbsp;
-                                <a href="#" data-toggle="modal" data-target=""> <i class="fa fa-trash" aria-hidden="true"></i></a>
-                            
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>10</td>
-                        <td>Usuario 1</td>
-                        <td>usuario1@netcrow.com</td>
-                        <td>Orgrimar</td>
-                        <td>77813264</td>
-                        <td>Activo</td>
-                        <td>
-                                <a href="#" data-toggle="modal" data-target=""><i class="fa fa-edit" aria-hidden="true"></i></a>
-                            &nbsp;
-                                <a href="#" data-toggle="modal" data-target=""> <i class="fa fa-trash" aria-hidden="true"></i></a>
-                            
-                        </td>
-                    </tr>
-                    
-                </tbody>
-            </table>
         </div>
     </div>
-    
+</div>
 @endsection

@@ -10,6 +10,7 @@
         .bg-success { background-color: #28a745; }
         .bg-danger { background-color: #dc3545; }
         .bg-warning { background-color: #ffc107; color: black; }
+        .bg-primary { background-color: #0d6efd; color: black; }
         .card-body { padding: 20px; }
         .border { border: 1px solid #ccc; }
         .rounded { border-radius: 5px; }
@@ -32,12 +33,23 @@
 </head>
 <body>
     <div class="card">
+        @php 
+            $clase_color = '';
+            $clase_color_ejecucion = $solicitud->ejecucion ? 'bg-success' : 'bg-warning';
+
+            if($solicitud->estado === 'aprobada') {
+                    $clase_color = 'bg-primary'; 
+            }elseif($solicitud->estado === 'rechazada'){ 
+                    $clase_color = 'bg-danger';
+            }elseif($solicitud->estado === 'ejecutada'){ 
+                    $clase_color = 'bg-success'; 
+            }elseif($solicitud->estado === 'pendiente'){ 
+                    $clase_color = 'bg-warning'; 
+            }
+            
+        @endphp
         <!-- Header -->
-        <div class="card-header 
-            @if($solicitud->estado === 'aprobada' || $solicitud->estado === 'ejecutada') bg-success 
-            @elseif($solicitud->estado === 'rechazada') bg-danger 
-            @else bg-warning 
-            @endif">
+        <div class="card-header {{ $clase_color }}">
             <div class="d-flex justify-between">
                 <span>#{{ $solicitud->id }}</span>
                 <span>{{ $solicitud->fecha_solicitud }}</span>
@@ -52,7 +64,7 @@
             <div class="d-flex justify-between w-100 mb-2">
                 <p class="mb-1"><strong>Solicitante:</strong> {{ $solicitud->usuario->name ?? 'N/D' }}</p>
                 @if($solicitud->sobregiro)
-                    <p class="mb-1"><strong>Importe:</strong> {{ $solicitud->sobregiro->importe }}</p>
+                    <p class="mb-1"><strong>Importe:</strong> {{ $solicitud->sobregiro?->importe ? number_format($solicitud->sobregiro->importe, 2, ',', '.') : '0,00' }}</p>
                 @endif
             </div>
 
@@ -64,21 +76,33 @@
                 </div>
             </div>
 
+            <!-- codigo -->
+            <div class="d-flex align-center mb-2">
+                <strong class="me-2">Codigo de sobregiro:</strong>
+                <div class="border p-2 rounded bg-light small flex-grow">
+                    {{ $solicitud->sobregiro->cod_sobregiro ?? 'N/D' }}
+                </div>
+            </div>
+
             <!-- Autorización -->
             <div class="border-top pt-2 mt-3">
                 <div class="d-flex justify-between flex-wrap small">
                     <span><strong>Autorizado por:</strong> {{ $solicitud->autorizador->name ?? 'Sin autorizar' }}</span>
-                    <span><strong>Estado:</strong> {{ ucfirst($solicitud->estado) }}</span>
+                    <span class="badge {{ $clase_color }}">
+                            {{ ucfirst($solicitud->estado) }}
+                        </span>
                     <span><strong>Fecha Autorización:</strong> {{ $solicitud->fecha_autorizacion ?? 'N/D' }}</span>
                 </div>
             </div>
 
             <!-- Ejecución -->
-            @if($solicitud->estado === 'ejecutada')
+            @if($solicitud->estado !== 'rechazada')
             <div class="border-top pt-2 mt-2">
                 <div class="d-flex justify-between flex-wrap small">
                     <span><strong>Ejecutado por:</strong> {{ $solicitud->ejecucion->usuario->name ?? 'Sin ejecutar' }}</span>
-                    <span><strong>Estado:</strong> Ejecutada</span>
+                    <span class="badge {{ $clase_color_ejecucion }}">
+                            {{ $solicitud->ejecucion ? 'Ejecutada' : 'Pendiente' }}
+                        </span>
                     <span><strong>Fecha Ejecución:</strong> {{ $solicitud->ejecucion->fecha_ejecucion ?? 'N/D' }}</span>
                 </div>
             </div>

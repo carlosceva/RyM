@@ -194,11 +194,18 @@ class AnulacionController extends Controller
         if (!$anulacion) {
             return back()->with('error', 'No se encontró la información de anulación asociada a esta solicitud.');
         }
-    
-        $tienePago = (bool) $anulacion->tiene_pago;
-        $tieneEntrega = (bool) $anulacion->tiene_entrega;
-        $entregaFisica = $anulacion->entrega_fisica;
-    
+
+         // ⚠️ Manejo seguro de valores booleanos, compatible con MySQL y PostgreSQL
+        $tienePago = filter_var($anulacion->tiene_pago, FILTER_VALIDATE_BOOLEAN);
+        $tieneEntrega = filter_var($anulacion->tiene_entrega, FILTER_VALIDATE_BOOLEAN);
+
+        if (is_null($anulacion->entrega_fisica)) {
+            $entregaFisica = null;
+        } else {
+            $entregaFisica = filter_var($anulacion->entrega_fisica, FILTER_VALIDATE_BOOLEAN);
+        }
+
+        // ✅ Evaluación segura de anulación
         $esAnulacion = !$tienePago && !$tieneEntrega && ($entregaFisica === false || is_null($entregaFisica));
 
         $usuarioSolicitante = $solicitud->usuario;

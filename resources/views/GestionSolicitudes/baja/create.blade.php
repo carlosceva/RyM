@@ -34,11 +34,16 @@
                 </div>
             </div>
 
-            <!-- Almacen -->
-            <div class="mb-3 row">
-                <label for="almacen" class="col-sm-2 col-form-label">Almacen: </label>
-                <div class="col-sm-10">
-                    <input type="text" class="form-control" id="almacen" name="almacen" required>
+            <!-- Almacén -->
+            <div class="row mb-2 align-items-center">
+                <label for="almacen" class="col-md-2 col-form-label">Almacén</label>
+                <div class="col-md-10">
+                    <select name="almacen" id="almacen" class="form-select" required>
+                        <option value="">-- Seleccione un almacén --</option>
+                        @foreach($almacenes as $almacen)
+                            <option value="{{ $almacen->nombre }}">{{ $almacen->nombre }}</option>
+                        @endforeach
+                    </select>
                 </div>
             </div>
 

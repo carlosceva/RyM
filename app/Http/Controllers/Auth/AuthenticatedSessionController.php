@@ -24,14 +24,18 @@ class AuthenticatedSessionController extends Controller
     /**
      * Handle an incoming authentication request.
      */
-    public function store(Request  $request): RedirectResponse
+    public function store(Request $request): RedirectResponse
     {
         $request->validate([
             'codigo' => ['required', 'string'],
             'password' => ['required', 'string'],
         ]);
 
-        $user = User::where('codigo', $request->codigo)->first();
+        // Normaliza el código a minúsculas
+        $codigo = strtolower($request->input('codigo'));
+
+        // Busca al usuario en minúsculas (asume que en DB también están guardados así)
+        $user = User::whereRaw('LOWER(codigo) = ?', [$codigo])->first();
 
         if (!$user || $user->estado !== 'a') {
             throw ValidationException::withMessages([
@@ -39,8 +43,8 @@ class AuthenticatedSessionController extends Controller
             ]);
         }
 
-        // Intentar login
-        if (! Auth::attempt(['codigo' => $request->codigo, 'password' => $request->password], $request->boolean('remember'))) {
+        // Intentar login usando el código en minúsculas
+        if (!Auth::attempt(['codigo' => $codigo, 'password' => $request->input('password')], $request->boolean('remember'))) {
             throw ValidationException::withMessages([
                 'login' => __('Credenciales inválidas.'),
             ]);

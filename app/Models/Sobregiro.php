@@ -12,7 +12,7 @@ class Sobregiro extends Model
     protected $table = 'solicitud_sobregiro';
 
     protected $fillable = [
-        'id_solicitud', 'cliente', 'importe', 'estado'
+        'id_solicitud', 'cliente', 'importe', 'estado', 'cod_sobregiro'
     ];
 
     // Relación con la solicitud

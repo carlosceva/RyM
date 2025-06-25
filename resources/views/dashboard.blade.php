@@ -13,7 +13,7 @@
   <!-- Ionicons -->
   <link rel="stylesheet" href="https://code.ionicframework.com/ionicons/2.0.1/css/ionicons.min.css">
   <!-- Tempusdominus Bootstrap 4 -->
-  <link rel="stylesheet" href="{{ asset('plugins/tempusdominus-bootstrap-4/css/tempusdominus-bootstrap-4.min.css') }}">
+   <link rel="stylesheet" href="{{ asset('plugins/tempusdominus-bootstrap-4/css/tempusdominus-bootstrap-4.min.css') }}"> 
   <!-- iCheck -->
   <link rel="stylesheet" href="{{ asset('plugins/icheck-bootstrap/icheck-bootstrap.min.css') }}">
   <!-- JQVMap -->
@@ -26,7 +26,7 @@
   <link rel="stylesheet" href="{{ asset('plugins/daterangepicker/daterangepicker.css') }}">
   <!-- summernote -->
   <link rel="stylesheet" href="{{ asset('plugins/summernote/summernote-bs4.min.css') }}">
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+ <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
   <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css">
   @livewireStyles
   <!-- DataTables y Buttons -->
@@ -51,10 +51,6 @@
       </li>
       <li class="nav-item d-none d-sm-inline-block">
         <a href="{{ route('dashboard')}}" class="nav-link">Home</a>
-      </li>
-      <li class="nav-item d-none d-sm-inline-block">
-        <a href="#" class="nav-link">Contact</a> 
-             
       </li>
     </ul>
 
@@ -85,7 +81,10 @@
         </div>
       </li>
 
-      
+      <!-- Notifications Dropdown Menu -->
+
+        @include('partials.navbar')
+
       <!-- Notifications Dropdown Menu -->
       <li class="nav-item dropdown">
         <div class="dropdown">
@@ -177,6 +176,14 @@
                 </a>
               </li>
               @endcan
+              @can('usuarios_ver')
+              <li class="nav-item">
+                <a href="{{ route('almacen.index') }}" class="nav-link">
+                  <i class="fas fa-file nav-icon"></i>
+                  <p>Almacenes</p>
+                </a>
+              </li>
+              @endcan
             </ul>
           </li>
           @endif
@@ -203,7 +210,7 @@
               @can('Devolucion_ver')
               <li class="nav-item">
                 <a href="{{route('Devolucion.index')}}" class="nav-link">
-                  <i class="nav-icon far fa-file-alt"></i>
+                  <i class="nav-icon fas fa-undo"></i>
                   <p>Devolucion de venta</p>
                 </a>
               </li>
@@ -244,7 +251,7 @@
               <li class="nav-item">
                 <a href="{{route('Baja.index')}}" class="nav-link">
                   <i class="nav-icon far fa-trash-alt"></i>
-                  <p>Baja de mercadería</p>
+                  <p>Ajuste de inventario</p>
                 </a>
               </li>
               @endcan
@@ -318,7 +325,7 @@
   $.widget.bridge('uibutton', $.ui.button)
 </script>
 <!-- Bootstrap 4 -->
-<script src="{{asset('plugins/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
+ <script src="{{asset('plugins/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
 <!-- ChartJS -->
 <script src="{{asset('plugins/chart.js/Chart.min.js') }}"></script>
 <!-- Sparkline -->
@@ -356,597 +363,184 @@
   $('#clientes').DataTable();
   $('#solicitud').DataTable();
 
-//------------------------ Para baja con exportación PDF/Excel --------------------------
-  $(document).ready(function () {
-      // Agrega la función de filtrado personalizada
-      $.fn.dataTable.ext.search.push(function (settings, data, dataIndex) {
-          var min = $('#fechaInicio').val();
-          var max = $('#fechaFin').val();
-          var fecha = data[2]; 
-
-          if (min) min = new Date(min);
-          if (max) max = new Date(max);
-          var fechaData = new Date(fecha);
-
-          if (
-              (!min && !max) ||
-              (!min && fechaData <= max) ||
-              (min <= fechaData && !max) ||
-              (min <= fechaData && fechaData <= max)
-          ) {
-              return true;
-          }
-          return false;
-      });
-
-      // Inicializa la tabla con los botones de exportación
-      var table = $('#solicitud_baja').DataTable({
-          dom: 'Bfrtip',
-          buttons: [
-              {
-                  extend: 'excelHtml5',
-                  className: 'btn btn-success',
-                  text: 'Exportar Excel',
-                  title: null,
-                  filename: function () {
-                      const f1 = $('#fechaInicio').val()?.replaceAll('-', '_') ;
-                      const f2 = $('#fechaFin').val()?.replaceAll('-', '_') ;
-                      return `baja_${f1}-${f2}`;
-                  },
-                  exportOptions: {
-                      columns: [0,1,2,3,4,5,6,7,8,9,10,11,12]
-                  }
-              },
-              {
-                  extend: 'pdfHtml5',
-                  className: 'btn btn-danger',
-                  text: 'Exportar PDF',
-                  title: 'Solicitud de Baja de Mercaderia',
-                  filename: function () {
-                      const f1 = $('#fechaInicio').val()?.replaceAll('-', '_') ;
-                      const f2 = $('#fechaFin').val()?.replaceAll('-', '_') ;
-                      return `baja_${f1}-${f2}`;
-                  },
-                  orientation: 'landscape', // ✅ orientación horizontal
-                  pageSize: 'A4',
-                  exportOptions: {
-                      columns: [0,1,2,3,4,5,6,7,8,9,10,11,12]
-                  },
-                  customize: function (doc) {
-                      doc.styles.tableHeader.alignment = 'left';
-                      doc.defaultStyle.fontSize = 8;
-                  }
-              },
-              {
-                  extend: 'print',
-                  className: 'btn btn-primary',
-                  text: 'Imprimir',
-                  exportOptions: {
-                      columns: [0,1,2,3,4,5,6,7,8,9,10,11,12]
-                  },
-                  customize: function (win) {
-                      const css = '@page { size: landscape; }';
-                      const head = win.document.head || win.document.getElementsByTagName('head')[0];
-                      const style = win.document.createElement('style');
-                      style.type = 'text/css';
-                      style.media = 'print';
-
-                      if (style.styleSheet){
-                          style.styleSheet.cssText = css;
-                      } else {
-                          style.appendChild(win.document.createTextNode(css));
-                      }
-
-                      head.appendChild(style);
-                  }
-              }
-          ],
-          order: [[0, 'desc']],
-          paging: true,
-          searching: true,
-          lengthChange: true
-      });
-
-      // Redibuja la tabla cada vez que cambian los inputs de fecha
-      $('#fechaInicio, #fechaFin').on('change', function () {
-          table.draw();
-      });
-  });
-
-//------------------------ Para Muestra con exportación PDF/Excel --------------------------
 $(document).ready(function () {
-      // Agrega la función de filtrado personalizada
-      $.fn.dataTable.ext.search.push(function (settings, data, dataIndex) {
-          var min = $('#fechaInicio').val();
-          var max = $('#fechaFin').val();
-          var fecha = data[2]; 
+  const urlParams = new URLSearchParams(window.location.search);
+  const estadoFilter = urlParams.get('estado') || '';
+  const filtroId = urlParams.get('filtro_id') || '';
 
-          if (min) min = new Date(min);
-          if (max) max = new Date(max);
-          var fechaData = new Date(fecha);
+  // Filtro por fecha (columna 2 asumida como fecha)
+  $.fn.dataTable.ext.search.push(function (settings, data, dataIndex) {
+    const min = $('#fechaInicio').val();
+    const max = $('#fechaFin').val();
+    const fecha = data[2];
 
-          if (
-              (!min && !max) ||
-              (!min && fechaData <= max) ||
-              (min <= fechaData && !max) ||
-              (min <= fechaData && fechaData <= max)
-          ) {
-              return true;
-          }
-          return false;
-      });
+    if (!fecha) return true;
 
-      // Inicializa la tabla con los botones de exportación
-      var table = $('#solicitud_muestra').DataTable({
-          dom: 'Bfrtip',
-          buttons: [
-              {
-                  extend: 'excelHtml5',
-                  className: 'btn btn-success',
-                  text: 'Exportar Excel',
-                  title: null,
-                  filename: function () {
-                      const f1 = $('#fechaInicio').val()?.replaceAll('-', '_') ;
-                      const f2 = $('#fechaFin').val()?.replaceAll('-', '_') ;
-                      return `muestra_${f1}-${f2}`;
-                  },
-                  exportOptions: {
-                      columns: [0,1,2,3,4,5,6,7,8,9,10,11,12]
-                  }
-              },
-              {
-                  extend: 'pdfHtml5',
-                  className: 'btn btn-danger',
-                  text: 'Exportar PDF',
-                  title: 'Solicitud de Muestra de Mercaderia',
-                  filename: function () {
-                      const f1 = $('#fechaInicio').val()?.replaceAll('-', '_') ;
-                      const f2 = $('#fechaFin').val()?.replaceAll('-', '_') ;
-                      return `muestra_${f1}-${f2}`;
-                  },
-                  orientation: 'landscape', // ✅ orientación horizontal
-                  pageSize: 'A4',
-                  exportOptions: {
-                      columns: [0,1,2,3,4,5,6,7,8,9,10,11,12]
-                  },
-                  customize: function (doc) {
-                      doc.styles.tableHeader.alignment = 'left';
-                      doc.defaultStyle.fontSize = 8;
-                  }
-              },
-              {
-                  extend: 'print',
-                  className: 'btn btn-primary',
-                  text: 'Imprimir',
-                  exportOptions: {
-                      columns: [0,1,2,3,4,5,6,7,8,9,10,11,12]
-                  },
-                  customize: function (win) {
-                      const css = '@page { size: landscape; }';
-                      const head = win.document.head || win.document.getElementsByTagName('head')[0];
-                      const style = win.document.createElement('style');
-                      style.type = 'text/css';
-                      style.media = 'print';
+    const fechaData = new Date(fecha);
+    if (min && new Date(min) > fechaData) return false;
+    if (max && new Date(max) < fechaData) return false;
 
-                      if (style.styleSheet){
-                          style.styleSheet.cssText = css;
-                      } else {
-                          style.appendChild(win.document.createTextNode(css));
-                      }
-
-                      head.appendChild(style);
-                  }
-              }
-          ],
-          order: [[0, 'desc']],
-          paging: true,
-          searching: true,
-          lengthChange: true
-      });
-
-      // Redibuja la tabla cada vez que cambian los inputs de fecha
-      $('#fechaInicio, #fechaFin').on('change', function () {
-          table.draw();
-      });
+    return true;
   });
 
-  //------------------------ Para precio especial con exportación PDF/Excel --------------------------
-  $(document).ready(function () {
-    $.fn.dataTable.ext.search.push(function (settings, data, dataIndex) {
-        var min = $('#fechaInicio').val();
-        var max = $('#fechaFin').val();
-        var fecha = data[2];
+  // DOM con filtros y botones en una fila
+  const customDom =
+    "<'row align-items-center mb-2'<'col-12 col-md-8 d-flex flex-wrap align-items-center gap-2 dt-custom-toolbar'B><'col-12 col-md-4 text-end'f>>" +
+    "<'row'<'col-sm-12'tr>>" +
+    "<'row'<'col-sm-5'i><'col-sm-7'p>>";
 
-        if (min) min = new Date(min);
-        if (max) max = new Date(max);
-        var fechaData = new Date(fecha);
+  const filtrosFechas = `
+    <input type="date" id="fechaInicio" class="form-control form-control-sm mb-2 mb-md-0" placeholder="Desde" style="max-width: 160px;">
+    <input type="date" id="fechaFin" class="form-control form-control-sm" placeholder="Hasta" style="max-width: 160px;">
+  `;
 
-        if (
-            (!min && !max) ||
-            (!min && fechaData <= max) ||
-            (min <= fechaData && !max) ||
-            (min <= fechaData && fechaData <= max)
-        ) {
-            return true;
-        }
-        return false;
-    });
+  function initDataTable(tableId, exportPrefix, pdfTitle, exportCols) {
+    const table = $(tableId).DataTable({
+      dom: customDom,
+      buttons: [
+        {
+          extend: 'excelHtml5',
+          className: 'btn btn-success',
+          text: '<i class="fas fa-file-excel"></i> Excel',
+          title: null,
+          filename: function () {
+            const f1 = $('#fechaInicio').val()?.replaceAll('-', '_') || 'start';
+            const f2 = $('#fechaFin').val()?.replaceAll('-', '_') || 'end';
+            return `${exportPrefix}_${f1}-${f2}`;
+          },
+          exportOptions: {
+            columns: exportCols
+          }
+        },
+        {
+          extend: 'pdfHtml5',
+          className: 'btn btn-danger',
+          text: '<i class="fas fa-file-pdf"></i> PDF',
+          title: pdfTitle,
+          filename: function () {
+            const f1 = $('#fechaInicio').val()?.replaceAll('-', '_') || 'start';
+            const f2 = $('#fechaFin').val()?.replaceAll('-', '_') || 'end';
+            return `${exportPrefix}_${f1}-${f2}`;
+          },
+          orientation: 'landscape',
+          pageSize: 'A4',
+          exportOptions: {
+            columns: exportCols
+          },
+          customize: function (doc) {
+            doc.styles.tableHeader.alignment = 'left';
+            doc.defaultStyle.fontSize = 8;
+          }
+        },
+        {
+          extend: 'print',
+          className: 'btn btn-primary',
+          text: '<i class="fas fa-print"></i> Imprimir',
+          exportOptions: {
+            columns: exportCols
+          },
+          customize: function (win) {
+            const css = '@page { size: landscape; }';
+            const head = win.document.head || win.document.getElementsByTagName('head')[0];
+            const style = win.document.createElement('style');
+            style.type = 'text/css';
+            style.media = 'print';
 
-    var table = $('#solicitud_precio').DataTable({
-        dom: "<'row align-items-center mb-2'<'col-12 col-md-8 d-flex flex-wrap align-items-center gap-2 dt-custom-toolbar'B><'col-12 col-md-4 text-end'f>>" +
-             "<'row'<'col-sm-12'tr>>" +
-             "<'row'<'col-sm-5'i><'col-sm-7'p>>",
-        buttons: [
-            {
-                extend: 'excelHtml5',
-                className: 'btn btn-success',
-                text: '<i class="fas fa-file-excel"></i> Excel',
-                title: null,
-                filename: function () {
-                    const f1 = $('#fechaInicio').val()?.replaceAll('-', '_');
-                    const f2 = $('#fechaFin').val()?.replaceAll('-', '_');
-                    return `Precio_Especial_${f1}-${f2}`;
-                },
-                exportOptions: {
-                    columns: [0,1,2,3,4,5,6,7,8,9,10]
-                }
-            },
-            {
-                extend: 'pdfHtml5',
-                className: 'btn btn-danger',
-                text: '<i class="fas fa-file-pdf"></i> PDF',
-                title: 'Solicitud de Precio Especial de Venta',
-                filename: function () {
-                    const f1 = $('#fechaInicio').val()?.replaceAll('-', '_');
-                    const f2 = $('#fechaFin').val()?.replaceAll('-', '_');
-                    return `Precio_Especial_${f1}-${f2}`;
-                },
-                orientation: 'landscape',
-                pageSize: 'A4',
-                exportOptions: {
-                    columns: [0,1,2,3,4,5,6,7,8,9,10]
-                },
-                customize: function (doc) {
-                    doc.styles.tableHeader.alignment = 'left';
-                    doc.defaultStyle.fontSize = 8;
-                }
-            },
-            {
-                extend: 'print',
-                className: 'btn btn-primary',
-                text: '<i class="fas fa-print"></i> Imprimir',
-                exportOptions: {
-                    columns: [0,1,2,3,4,5,6,7,8,9,10]
-                },
-                customize: function (win) {
-                    const css = '@page { size: landscape; }';
-                    const head = win.document.head || win.document.getElementsByTagName('head')[0];
-                    const style = win.document.createElement('style');
-                    style.type = 'text/css';
-                    style.media = 'print';
-
-                    if (style.styleSheet){
-                        style.styleSheet.cssText = css;
-                    } else {
-                        style.appendChild(win.document.createTextNode(css));
-                    }
-
-                    head.appendChild(style);
-                }
+            if (style.styleSheet) {
+              style.styleSheet.cssText = css;
+            } else {
+              style.appendChild(win.document.createTextNode(css));
             }
-        ],
-        order: [[0, 'desc']],
-        paging: true,
-        searching: true,
-        lengthChange: true
+            head.appendChild(style);
+          }
+        }
+      ],
+      order: [[0, 'desc']],
+      paging: true,
+      searching: true,
+      lengthChange: true,
+      initComplete: function () {
+        $('.dt-custom-toolbar').prepend(filtrosFechas);
+        if (estadoFilter !== '') {
+          this.api().search(estadoFilter).draw();
+        }
+        const filtroId = urlParams.get('filtro_id');
+        if (filtroId) {
+          // Busca solo en la columna del ID (columna 0)
+          this.api().column(0).search(filtroId).draw();
+        }
+      }
     });
 
-    // Inputs de fecha (sin labels, con placeholders)
-    const filtrosFechas = `
-        <input type="date" id="fechaInicio" class="form-control form-control-sm mb-2 mb-md-0" placeholder="Desde" style="max-width: 160px;">
-        <input type="date" id="fechaFin" class="form-control form-control-sm" placeholder="Hasta" style="max-width: 160px;">
-    `;
-
-    // Insertar antes de los botones
-    $('.dt-custom-toolbar').prepend(filtrosFechas);
-
-    // Redibujar al cambiar fechas
-    $(document).on('change', '#fechaInicio, #fechaFin', function () {
-        table.draw();
+    $('#fechaInicio, #fechaFin').on('change', function () {
+      table.draw();
     });
+
+    return table;
+  }
+
+  // Inicializar todas las tablas con su configuración
+  initDataTable('#solicitud_baja', 'Baja', 'Solicitud de Baja de Mercaderia', [0,1,2,3,4,5,6,7,8,9,10,11,12]);
+  initDataTable('#solicitud_muestra', 'Muestra', 'Solicitud de Muestra de Mercaderia', [0,1,2,3,4,5,6,7,8,9,10,11,12]);
+  initDataTable('#solicitud_sobregiro', 'Sobregiro', 'Solicitud de Sobregiro de Venta', [0,1,2,3,4,5,6,7,8,9,10,11,12]);
+  initDataTable('#solicitud_devolucion', 'Devolucion', 'Solicitud de Devolucion de Venta', [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16]);
+  initDataTable('#solicitud_anulacion', 'Anulacion', 'Solicitud de Anulacion de Venta', [0,1,2,3,4,5,6,7,8,9,10,11,12]);
+  initDataTable('#solicitud_precio', 'Precio_Especial', 'Solicitud de Precio Especial de Venta', [0,1,2,3,4,5,6,7,8,9,10]);
 });
 
+</script>
 
-  //------------------------ Para sobregiro con exportación PDF/Excel --------------------------
-  $(document).ready(function () {
-      // Agrega la función de filtrado personalizada
-      $.fn.dataTable.ext.search.push(function (settings, data, dataIndex) {
-          var min = $('#fechaInicio').val();
-          var max = $('#fechaFin').val();
-          var fecha = data[2]; 
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const toggleBtn = document.getElementById('toggleNotificacionesLeidas');
+    const contenedorLeidas = document.getElementById('contenedorLeidas');
 
-          if (min) min = new Date(min);
-          if (max) max = new Date(max);
-          var fechaData = new Date(fecha);
+    if (toggleBtn && contenedorLeidas) {
+        toggleBtn.addEventListener('click', function (e) {
+            e.preventDefault();
+            e.stopPropagation();  // Previene que el dropdown se cierre
 
-          if (
-              (!min && !max) ||
-              (!min && fechaData <= max) ||
-              (min <= fechaData && !max) ||
-              (min <= fechaData && fechaData <= max)
-          ) {
-              return true;
-          }
-          return false;
-      });
+            const visible = contenedorLeidas.style.display === 'block';
+            contenedorLeidas.style.display = visible ? 'none' : 'block';
+            toggleBtn.textContent = visible ? 'Ver notificaciones leídas' : 'Ocultar notificaciones leídas';
 
-      // Inicializa la tabla con los botones de exportación
-      var table = $('#solicitud_sobregiro').DataTable({
-          dom: 'Bfrtip',
-          buttons: [
-              {
-                  extend: 'excelHtml5',
-                  className: 'btn btn-success',
-                  text: 'Exportar Excel',
-                  title: null,
-                  filename: function () {
-                      const f1 = $('#fechaInicio').val()?.replaceAll('-', '_') ;
-                      const f2 = $('#fechaFin').val()?.replaceAll('-', '_') ;
-                      return `Sobregiro_${f1}-${f2}`;
-                  },
-                  exportOptions: {
-                      columns: [0,1,2,3,4,5,6,7,8,9,10,11,12]
-                  }
-              },
-              {
-                  extend: 'pdfHtml5',
-                  className: 'btn btn-danger',
-                  text: 'Exportar PDF',
-                  title: 'Solicitud de Sobregiro de Venta',
-                  filename: function () {
-                      const f1 = $('#fechaInicio').val()?.replaceAll('-', '_') ;
-                      const f2 = $('#fechaFin').val()?.replaceAll('-', '_') ;
-                      return `Sobregiro_${f1}-${f2}`;
-                  },
-                  orientation: 'landscape', // ✅ orientación horizontal
-                  pageSize: 'A4',
-                  exportOptions: {
-                      columns: [0,1,2,3,4,5,6,7,8,9,10,11,12]
-                  },
-                  customize: function (doc) {
-                      doc.styles.tableHeader.alignment = 'left';
-                      doc.defaultStyle.fontSize = 8;
-                  }
-              },
-              {
-                  extend: 'print',
-                  className: 'btn btn-primary',
-                  text: 'Imprimir',
-                  exportOptions: {
-                      columns: [0,1,2,3,4,5,6,7,8,9,10,11,12]
-                  },
-                  customize: function (win) {
-                      const css = '@page { size: landscape; }';
-                      const head = win.document.head || win.document.getElementsByTagName('head')[0];
-                      const style = win.document.createElement('style');
-                      style.type = 'text/css';
-                      style.media = 'print';
+            if (!visible) {
+                // Añadir un loader mientras se cargan las notificaciones
+                contenedorLeidas.innerHTML = '<div class="text-center"><i class="fa fa-spinner fa-spin"></i> Cargando...</div>';
 
-                      if (style.styleSheet){
-                          style.styleSheet.cssText = css;
-                      } else {
-                          style.appendChild(win.document.createTextNode(css));
-                      }
+                // Realizamos la petición AJAX para obtener las notificaciones leídas
+                fetch('/notificaciones/leidas')  // La URL que definimos en la ruta
+                    .then(response => response.json())
+                    .then(data => {
+                        // Limpiamos el contenedor y agregamos las notificaciones leídas
+                        contenedorLeidas.innerHTML = ''; // Limpiar el loader
 
-                      head.appendChild(style);
-                  }
-              }
-          ],
-          order: [[0, 'desc']],
-          paging: true,
-          searching: true,
-          lengthChange: true
-      });
+                        if (data.notifications.length === 0) {
+                            contenedorLeidas.innerHTML = '<div class="text-center">No hay notificaciones leídas.</div>';
+                        } else {
+                            data.notifications.forEach(noti => {
+                                const notificationItem = document.createElement('a');
+                                notificationItem.classList.add('dropdown-item', 'text-wrap', 'text-muted');
+                                notificationItem.href = noti.link;  // O la URL que necesites
+                                notificationItem.innerHTML = `<i class="fas fa-file mr-2"></i> ${noti.mensaje}`;
 
-      // Redibuja la tabla cada vez que cambian los inputs de fecha
-      $('#fechaInicio, #fechaFin').on('change', function () {
-          table.draw();
-      });
-  });
+                                const divider = document.createElement('div');
+                                divider.classList.add('dropdown-divider');
+                                
+                                contenedorLeidas.appendChild(notificationItem);
+                                contenedorLeidas.appendChild(divider);
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error al cargar las notificaciones leídas:', error);
+                        contenedorLeidas.innerHTML = '<div class="text-center text-danger">Error al cargar las notificaciones.</div>';
+                    });
+            }
+        });
+    }
+});
 
-//------------------------ Para devolucion con exportación PDF/Excel --------------------------
-  $(document).ready(function () {
-      // Agrega la función de filtrado personalizada
-      $.fn.dataTable.ext.search.push(function (settings, data, dataIndex) {
-          var min = $('#fechaInicio').val();
-          var max = $('#fechaFin').val();
-          var fecha = data[2]; 
-
-          if (min) min = new Date(min);
-          if (max) max = new Date(max);
-          var fechaData = new Date(fecha);
-
-          if (
-              (!min && !max) ||
-              (!min && fechaData <= max) ||
-              (min <= fechaData && !max) ||
-              (min <= fechaData && fechaData <= max)
-          ) {
-              return true;
-          }
-          return false;
-      });
-
-      // Inicializa la tabla con los botones de exportación
-      var table = $('#solicitud_devolucion').DataTable({
-          dom: 'Bfrtip',
-          buttons: [
-              {
-                  extend: 'excelHtml5',
-                  className: 'btn btn-success',
-                  text: 'Exportar Excel',
-                  title: null,
-                  filename: function () {
-                      const f1 = $('#fechaInicio').val()?.replaceAll('-', '_') ;
-                      const f2 = $('#fechaFin').val()?.replaceAll('-', '_') ;
-                      return `Devolucion_${f1}-${f2}`;
-                  },
-                  exportOptions: {
-                      columns: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16]
-                  }
-              },
-              {
-                  extend: 'pdfHtml5',
-                  className: 'btn btn-danger',
-                  text: 'Exportar PDF',
-                  title: 'Solicitud de Devolucion de Venta',
-                  filename: function () {
-                      const f1 = $('#fechaInicio').val()?.replaceAll('-', '_') ;
-                      const f2 = $('#fechaFin').val()?.replaceAll('-', '_') ;
-                      return `Devolucion_${f1}-${f2}`;
-                  },
-                  orientation: 'landscape', // ✅ orientación horizontal
-                  pageSize: 'A4',
-                  exportOptions: {
-                      columns: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16]
-                  },
-                  customize: function (doc) {
-                      doc.styles.tableHeader.alignment = 'left';
-                      doc.defaultStyle.fontSize = 8;
-                  }
-              },
-              {
-                  extend: 'print',
-                  className: 'btn btn-primary',
-                  text: 'Imprimir',
-                  exportOptions: {
-                      columns: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16]
-                  },
-                  customize: function (win) {
-                      const css = '@page { size: landscape; }';
-                      const head = win.document.head || win.document.getElementsByTagName('head')[0];
-                      const style = win.document.createElement('style');
-                      style.type = 'text/css';
-                      style.media = 'print';
-
-                      if (style.styleSheet){
-                          style.styleSheet.cssText = css;
-                      } else {
-                          style.appendChild(win.document.createTextNode(css));
-                      }
-
-                      head.appendChild(style);
-                  }
-              }
-          ],
-          order: [[0, 'desc']],
-          paging: true,
-          searching: true,
-          lengthChange: true
-      });
-
-      // Redibuja la tabla cada vez que cambian los inputs de fecha
-      $('#fechaInicio, #fechaFin').on('change', function () {
-          table.draw();
-      });
-  });
-
-//------------------------ Para anulacion con exportación PDF/Excel --------------------------
-$(document).ready(function () {
-      // Agrega la función de filtrado personalizada
-      $.fn.dataTable.ext.search.push(function (settings, data, dataIndex) {
-          var min = $('#fechaInicio').val();
-          var max = $('#fechaFin').val();
-          var fecha = data[2]; 
-
-          if (min) min = new Date(min);
-          if (max) max = new Date(max);
-          var fechaData = new Date(fecha);
-
-          if (
-              (!min && !max) ||
-              (!min && fechaData <= max) ||
-              (min <= fechaData && !max) ||
-              (min <= fechaData && fechaData <= max)
-          ) {
-              return true;
-          }
-          return false;
-      });
-
-      // Inicializa la tabla con los botones de exportación
-      var table = $('#solicitud_anulacion').DataTable({
-          dom: 'Bfrtip',
-          buttons: [
-              {
-                  extend: 'excelHtml5',
-                  className: 'btn btn-success',
-                  text: 'Exportar Excel',
-                  title: null,
-                  filename: function () {
-                      const f1 = $('#fechaInicio').val()?.replaceAll('-', '_') ;
-                      const f2 = $('#fechaFin').val()?.replaceAll('-', '_') ;
-                      return `Anulacion_${f1}-${f2}`;
-                  },
-                  exportOptions: {
-                      columns: [0,1,2,3,4,5,6,7,8,9,10,11,12]
-                  }
-              },
-              {
-                  extend: 'pdfHtml5',
-                  className: 'btn btn-danger',
-                  text: 'Exportar PDF',
-                  title: 'Solicitud de Anulacion de Venta',
-                  filename: function () {
-                      const f1 = $('#fechaInicio').val()?.replaceAll('-', '_') ;
-                      const f2 = $('#fechaFin').val()?.replaceAll('-', '_') ;
-                      return `Anulacion_${f1}-${f2}`;
-                  },
-                  orientation: 'landscape', // ✅ orientación horizontal
-                  pageSize: 'A4',
-                  exportOptions: {
-                      columns: [0,1,2,3,4,5,6,7,8,9,10,11,12]
-                  },
-                  customize: function (doc) {
-                      doc.styles.tableHeader.alignment = 'left';
-                      doc.defaultStyle.fontSize = 8;
-                  }
-              },
-              {
-                  extend: 'print',
-                  className: 'btn btn-primary',
-                  text: 'Imprimir',
-                  exportOptions: {
-                      columns: [0,1,2,3,4,5,6,7,8,9,10,11,12]
-                  },
-                  customize: function (win) {
-                      const css = '@page { size: landscape; }';
-                      const head = win.document.head || win.document.getElementsByTagName('head')[0];
-                      const style = win.document.createElement('style');
-                      style.type = 'text/css';
-                      style.media = 'print';
-
-                      if (style.styleSheet){
-                          style.styleSheet.cssText = css;
-                      } else {
-                          style.appendChild(win.document.createTextNode(css));
-                      }
-
-                      head.appendChild(style);
-                  }
-              }
-          ],
-          order: [[0, 'desc']],
-          paging: true,
-          searching: true,
-          lengthChange: true
-      });
-
-      // Redibuja la tabla cada vez que cambian los inputs de fecha
-      $('#fechaInicio, #fechaFin').on('change', function () {
-          table.draw();
-      });
-  });
 </script>
 
 @livewireScripts

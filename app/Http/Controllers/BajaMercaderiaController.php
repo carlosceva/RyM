@@ -11,6 +11,7 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use App\Models\Adjuntos;
 use Illuminate\Support\Facades\DB;
 use App\Models\User;
+use App\Models\Almacen;
 use App\Services\WhatsAppService;
 
 class BajaMercaderiaController extends Controller
@@ -21,6 +22,8 @@ class BajaMercaderiaController extends Controller
     public function index()
     {
         $user = Auth::user();
+
+        $almacenes = Almacen::where('estado','a')->get();
 
         if ($user->hasRole('Administrador') || $user->can('Baja_aprobar') || $user->can('Baja_reprobar') || $user->can('Baja_ejecutar')) {
             $solicitudes = Solicitud::where('estado', '!=', 'inactivo')
@@ -45,7 +48,7 @@ class BajaMercaderiaController extends Controller
                 ->get();        
         }
     
-        return view('GestionSolicitudes.baja.index', compact('solicitudes'));
+        return view('GestionSolicitudes.baja.index', compact('solicitudes','almacenes'));
     }
     
 

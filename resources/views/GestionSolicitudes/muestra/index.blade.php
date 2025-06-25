@@ -36,13 +36,7 @@
 @endif
     <div class="card table-responsive">
         <div class="card-body">
-            <div class="mb-3 d-flex align-items-center gap-3">
-                <label for="fechaInicio" class="mb-0">Desde:</label>
-                <input type="date" id="fechaInicio" class="form-control" style="max-width: 200px;">
-                
-                <label for="fechaFin" class="mb-0 ms-3">Hasta:</label>
-                <input type="date" id="fechaFin" class="form-control" style="max-width: 200px;">
-            </div>
+            
             <table class="table table-hover table-bordered" id="solicitud_muestra">
                 <thead class="table-dark">
                     <tr>
@@ -69,11 +63,13 @@
                         $claseFila = '';
 
                         if ($estado === 'aprobada') {
-                            $claseFila = 'table-success';
+                            $claseFila = 'table-primary';
                         } elseif ($estado === 'rechazada') {
                             $claseFila = 'table-danger';
                         }elseif ($estado === 'ejecutada') {
                             $claseFila = 'table-success';
+                        }elseif ($estado === 'pendiente') {
+                            $claseFila = 'table-warning';
                         }
                     @endphp
 
@@ -193,7 +189,7 @@
 <div class="modal fade" id="observacionModal" tabindex="-1" aria-labelledby="observacionModalLabel" aria-hidden="true">
   <div class="modal-dialog">
     <div class="modal-content">
-      <div class="modal-header">
+      <div id="observacionModalHeader" class="modal-header">
         <h5 class="modal-title" id="observacionModalLabel">Agregar Observación</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
@@ -227,6 +223,22 @@
         document.getElementById('accion').value = accion;
         // Asigna la ID de la solicitud al campo oculto 'solicitud_id'
         document.getElementById('solicitud_id').value = solicitudId;
+        
+        const header = document.getElementById('observacionModalHeader');
+        const title = document.getElementById('observacionModalLabel');
+
+        // Limpiar clases anteriores
+        header.classList.remove('bg-primary', 'bg-danger', 'text-white');
+
+        if (accion === 'aprobar') {
+            header.classList.add('bg-primary', 'text-white');
+            title.textContent = 'Aprobar Solicitud';
+        } else if (accion === 'rechazar') {
+            header.classList.add('bg-danger', 'text-white');
+            title.textContent = 'Rechazar Solicitud';
+        } else {
+            title.textContent = 'Agregar Observación';
+        }
     }
 </script>
 

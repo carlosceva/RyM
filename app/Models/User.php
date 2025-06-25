@@ -56,4 +56,9 @@ class User extends Authenticatable
         return 'codigo';
     }
 
+    public function setCodigoAttribute($value)
+    {
+        $this->attributes['codigo'] = strtolower($value);
+    }
+
 }

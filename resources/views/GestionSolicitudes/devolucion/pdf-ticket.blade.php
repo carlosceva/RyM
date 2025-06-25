@@ -7,9 +7,11 @@
         body { font-family: DejaVu Sans, sans-serif; font-size: 12px; margin: 0; padding: 20px; }
         .card { border: 1px solid #ccc; border-radius: 5px; margin-bottom: 20px; }
         .card-header, .card-footer { padding: 10px; color: white; font-weight: bold; }
-        .bg-success { background-color: #198754; }
+        .bg-success { background-color: #28a745; }
         .bg-danger { background-color: #dc3545; }
         .bg-warning { background-color: #ffc107; color: black; }
+        .bg-primary { background-color: #0d6efd; color: black; }
+        .bg-secondary { background-color: #6c757d; color: black; }
         .card-body { padding: 15px; }
 
         .row { clear: both; width: 100%; margin-bottom: 10px; }
@@ -36,11 +38,24 @@
 <body>
     <div class="card">
         <!-- Header -->
-        <div class="card-header
-            @if($solicitud->estado === 'aprobada' || $solicitud->estado === 'ejecutada') bg-success
-            @elseif($solicitud->estado === 'rechazada') bg-danger
-            @else bg-warning
-            @endif">
+        @php 
+            $clase_color = '';
+            $clase_color_ejecucion = $solicitud->ejecucion ? 'bg-success' : 'bg-warning';
+
+            if($solicitud->estado === 'aprobada') {
+                    $clase_color = 'bg-primary'; 
+            }elseif($solicitud->estado === 'rechazada'){ 
+                    $clase_color = 'bg-danger';
+            }elseif($solicitud->estado === 'ejecutada'){ 
+                    $clase_color = 'bg-success'; 
+            }elseif($solicitud->estado === 'pendiente'){ 
+                    $clase_color = 'bg-warning'; 
+            }elseif($solicitud->estado === 'convertida'){ 
+                    $clase_color = 'bg-secondary'; 
+            }
+            
+        @endphp
+        <div class="card-header {{ $clase_color }}">
             <div style="display: flex; justify-content: space-between;">
                 <span>#{{ $solicitud->id }}</span>
                 <span>{{ $solicitud->fecha_solicitud }}</span>
@@ -130,7 +145,7 @@
                 <div class="col-12 border-top pt-2">
                     <div style="display: flex; justify-content: space-between; flex-wrap: wrap;" class="small">
                         <span><strong>Autorizado por:</strong> {{ $solicitud->autorizador->name ?? 'Sin autorizar' }}</span>
-                        <span class="badge bg-{{ ($solicitud->estado === 'aprobada' || $solicitud->estado === 'ejecutada') ? 'success' : ($solicitud->estado === 'rechazada' ? 'danger' : 'warning') }}">
+                        <span class="badge {{ $clase_color }}">
                             {{ ucfirst($solicitud->estado) }}
                         </span>
                         <span>{{ $solicitud->fecha_autorizacion ?? 'N/D' }}</span>
@@ -138,13 +153,13 @@
                 </div>
             </div>
 
-            <!-- Ejecución -->
-            @if($solicitud->estado !== 'rechazada')
+            <!-- Ejecución --> 
+            @if($solicitud->estado !== 'rechazada' && $solicitud->estado !== 'convertida')
             <div class="row mt-2">
                 <div class="col-12 border-top pt-2">
                     <div style="display: flex; justify-content: space-between; flex-wrap: wrap;" class="small">
                         <span><strong>Ejecutado por:</strong> {{ $solicitud->ejecucion->usuario->name ?? 'Sin ejecutar' }}</span>
-                        <span class="badge bg-{{ $solicitud->ejecucion ? 'success' : 'secondary' }}">
+                        <span class="badge {{ $clase_color_ejecucion }}">
                             {{ $solicitud->ejecucion ? 'Ejecutada' : 'Pendiente' }}
                         </span>
                         <span>{{ $solicitud->ejecucion->fecha_ejecucion ?? 'N/D' }}</span>

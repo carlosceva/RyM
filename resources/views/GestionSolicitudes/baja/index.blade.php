@@ -36,13 +36,7 @@
 @endif
     <div class="card table-responsive">
         <div class="card-body">
-            <div class="mb-3 d-flex align-items-center gap-3">
-                <label for="fechaInicio" class="mb-0">Desde:</label>
-                <input type="date" id="fechaInicio" class="form-control" style="max-width: 200px;">
-                
-                <label for="fechaFin" class="mb-0 ms-3">Hasta:</label>
-                <input type="date" id="fechaFin" class="form-control" style="max-width: 200px;">
-            </div>
+            
             <table class="table table-hover table-bordered" id="solicitud_baja">
                 <thead class="table-dark">
                     <tr>

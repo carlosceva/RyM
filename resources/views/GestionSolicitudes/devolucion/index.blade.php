@@ -36,13 +36,7 @@
 @endif
     <div class="card table-responsive">
         <div class="card-body">
-            <div class="mb-3 d-flex align-items-center gap-3">
-                <label for="fechaInicio" class="mb-0">Desde:</label>
-                <input type="date" id="fechaInicio" class="form-control" style="max-width: 200px;">
-                
-                <label for="fechaFin" class="mb-0 ms-3">Hasta:</label>
-                <input type="date" id="fechaFin" class="form-control" style="max-width: 200px;">
-            </div>
+            
             <table class="table table-hover table-bordered" id="solicitud_devolucion">
                 <thead class="table-dark">
                     <tr>
@@ -73,11 +67,13 @@
                         $claseFila = '';
 
                         if ($estado === 'aprobada') {
-                            $claseFila = 'table-success';
+                            $claseFila = 'table-primary';
                         } elseif ($estado === 'rechazada') {
                             $claseFila = 'table-danger';
                         }elseif ($estado === 'ejecutada') {
                             $claseFila = 'table-success';
+                        }elseif ($estado === 'pendiente') {
+                            $claseFila = 'table-warning';
                         }
                     @endphp
 
@@ -115,117 +111,109 @@
                             <div class="d-flex flex-column flex-sm-row justify-content-center align-items-center">
                                 
                                 @if($solicitud->estado == 'pendiente')
-                                            @can('Devolucion_aprobar')
-                                            <!-- Aprobar con modal -->
-                                            <button class="btn btn-sm btn-success mb-2 mb-sm-0 me-sm-2 d-flex align-items-center justify-content-center"
-                                                    style="width: 36px; height: 36px;"
-                                                    data-bs-toggle="modal" data-bs-target="#observacionModal"
-                                                    title="Aprobar"
-                                                    onclick="setAccionAndSolicitudId('aprobar', {{ $solicitud->id }})">
-                                                <i class="fa fa-check"></i>
-                                            </button>
-                                            @endcan
-                                            @can('Devolucion_reprobar')
-                                            <!-- Rechazar con modal -->
-                                            <button class="btn btn-sm btn-danger mb-2 mb-sm-0 me-sm-2 d-flex align-items-center justify-content-center"
-                                                    style="width: 36px; height: 36px;"
-                                                    data-bs-toggle="modal" data-bs-target="#observacionModal"
-                                                    title="Rechazar"
-                                                    onclick="setAccionAndSolicitudId('rechazar', {{ $solicitud->id }})">
-                                                <i class="fa fa-times"></i>
-                                            </button>
-                                            @endcan
+                                    @can('Devolucion_aprobar')
+                                    <!-- Aprobar con modal -->
+                                    <button class="btn btn-sm btn-success mb-2 mb-sm-0 me-sm-2 d-flex align-items-center justify-content-center"
+                                            style="width: 36px; height: 36px;"
+                                            data-bs-toggle="modal" data-bs-target="#observacionModal"
+                                            title="Aprobar"
+                                            onclick="setAccionAndSolicitudId('aprobar', {{ $solicitud->id }})">
+                                        <i class="fa fa-check"></i>
+                                    </button>
+                                    @endcan
+                                    @can('Devolucion_reprobar')
+                                    <!-- Rechazar con modal -->
+                                    <button class="btn btn-sm btn-danger mb-2 mb-sm-0 me-sm-2 d-flex align-items-center justify-content-center"
+                                            style="width: 36px; height: 36px;"
+                                            data-bs-toggle="modal" data-bs-target="#observacionModal"
+                                            title="Rechazar"
+                                            onclick="setAccionAndSolicitudId('rechazar', {{ $solicitud->id }})">
+                                        <i class="fa fa-times"></i>
+                                    </button>
+                                    @endcan
                                 @endif
 
-                                @if ($solicitud->estado === 'aprobada' && !$solicitud->ejecucion && $solicitud->devolucion?->tiene_pago !== null)
-                                    @php
-                                        $devolucion = $solicitud->devolucion;
-                                        $tienePago = $devolucion->tiene_pago;
-                                        $tieneEntrega = $devolucion->tiene_entrega;
-                                        $entregaFisica = $devolucion->entrega_fisica;
-                                    @endphp
+                                @php
+                                    $devolucion = $solicitud->devolucion;
 
-                                    {{-- ⚠️ Aseguramos que tiene_pago está definido --}}
-                                    @if (!is_null($tienePago))
+                                    $tienePago = $devolucion?->tiene_pago;
+                                    $tieneEntrega = $devolucion?->tiene_entrega;
+                                    $entregaFisica = $devolucion?->entrega_fisica;
+                                @endphp
 
-                                        {{-- ➤ Paso 1: Confirmar entrega si no se ha marcado --}}
-                                        @if (is_null($tieneEntrega))
-                                            @can('Devolucion_entrega')
-                                                @can('Devolucion_ejecutar')
-                                                    <button type="button" class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#modalEntrega{{ $solicitud->id }}">
-                                                        Confirmar Entrega
-                                                    </button>
-                                                    &nbsp;
-                                                @endcan
-                                            @endcan
+                                @if ($solicitud->estado === 'aprobada' && !$solicitud->ejecucion && !is_null($tienePago))
 
-                                        {{-- ➤ Paso 2: Ya se marcó que SÍ hubo entrega --}}
-                                        @elseif ($tieneEntrega)
+                                    {{-- Paso 1: Aún no se marcó si hubo entrega --}}
+                                    @if (is_null($tieneEntrega))
+                                        @can('Devolucion_entrega')
                                             @can('Devolucion_ejecutar')
-                                                <button type="button" class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#modalEjecutar{{ $solicitud->id }}">
-                                                    Ejecutar
+                                                <button type="button" class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#modalEntrega{{ $solicitud->id }}">
+                                                    Confirmar Entrega
                                                 </button>
                                                 &nbsp;
                                             @endcan
+                                        @endcan
 
-                                        {{-- ➤ Paso 3: Se indicó que NO hubo entrega --}}
-                                        @else
-                                            {{-- Si tiene_pago es true: solo alerta y no se puede guardar --}}
-                                            @if ($tienePago)
+                                    {{-- Paso 2: Sí hubo entrega --}}
+                                    @elseif ($tieneEntrega)
+                                        @can('Devolucion_ejecutar')
+                                            <button type="button" class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#modalEjecutar{{ $solicitud->id }}">
+                                                Ejecutar
+                                            </button>
+                                            &nbsp;
+                                        @endcan
+
+                                    {{-- Paso 3: No hubo entrega --}}
+                                    @else
+                                        @if ($tienePago)
+                                            @can('Devolucion_entrega')
+                                                @can('Devolucion_ejecutar')
+                                                    <div class="alert alert-warning p-2 mb-2 text-sm">
+                                                        ⚠️ Debe registrar la entrega en el sistema externo antes de continuar.
+                                                    </div>
+                                                @endcan
+                                            @endcan
+
+                                        @elseif (!$tienePago)
+                                            @if (is_null($entregaFisica))
+                                                {{-- Esperando confirmación del almacén --}}
                                                 @can('Devolucion_entrega')
-                                                    @can('Devolucion_ejecutar')
-                                                        <div class="alert alert-warning p-2 mb-2 text-sm">
-                                                            ⚠️ Debe registrar la entrega en el sistema externo antes de continuar.
-                                                        </div>
-                                                    @endcan
+                                                    @cannot('Devolucion_ejecutar')
+                                                        <button class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#modalEntregaF{{ $solicitud->id }}">
+                                                            Registrar Entrega
+                                                        </button>
+                                                        &nbsp;
+                                                    @endcannot
                                                 @endcan
 
-                                            {{-- Si tiene_pago es false: activar flujo de entrega física --}}
-                                            @elseif (!$tienePago)
-                                                @if (is_null($entregaFisica))
-                                                    {{-- Esperando confirmación del almacén --}}
-                                                    @can('Devolucion_entrega')
-                                                        @cannot('Devolucion_ejecutar')
-                                                            <button class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#modalEntregaF{{ $solicitud->id }}">
-                                                                Registrar Entrega
-                                                            </button>
-                                                            &nbsp;
-                                                        @endcannot
-                                                    @endcan
+                                                @can('Devolucion_ejecutar')
+                                                    <button class="btn btn-outline-secondary btn-sm" disabled>
+                                                        ⏳ Esperando confirmación
+                                                    </button>
+                                                    &nbsp;
+                                                @endcan
 
-                                                    @can('Devolucion_ejecutar')
-                                                        <button class="btn btn-outline-secondary btn-sm" disabled>
-                                                            ⏳ Esperando confirmación
-                                                        </button>
-                                                        &nbsp;
-                                                    @endcan
+                                            @elseif($entregaFisica === false)
+                                                {{-- No hubo entrega física → ejecutar como anulación --}}
+                                                @can('Devolucion_ejecutar')
+                                                    <button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#modalEjecutar{{ $solicitud->id }}">
+                                                        Ejecutar
+                                                    </button>
+                                                    &nbsp;
+                                                @endcan
 
-                                                @elseif($entregaFisica === false)
-                                                    {{-- No hubo entrega física → ejecutar como anulación --}}
-                                                    @can('Devolucion_ejecutar')
-                                                        <button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#modalEjecutar{{ $solicitud->id }}">
-                                                            Ejecutar
-                                                        </button>
-                                                        &nbsp;
-                                                    @endcan
-
-                                                @elseif($entregaFisica === true)
-                                                    {{-- Sí hubo entrega física → ejecutar como devolución --}}
-                                                    @can('Devolucion_ejecutar')
-                                                        <button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#modalEjecutar{{ $solicitud->id }}">
-                                                            Ejecutar
-                                                        </button>
-                                                        &nbsp;
-                                                    @endcan
-                                                @endif
+                                            @elseif($entregaFisica === true)
+                                                {{-- Sí hubo entrega física → ejecutar como devolución --}}
+                                                @can('Devolucion_ejecutar')
+                                                    <button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#modalEjecutar{{ $solicitud->id }}">
+                                                        Ejecutar
+                                                    </button>
+                                                    &nbsp;
+                                                @endcan
                                             @endif
                                         @endif
-
-                                    @else
-                                        {{-- ❌ No debería suceder, pero podrías mostrar un fallback aquí si lo deseas --}}
                                     @endif
                                 @endif
-
 
                               <!-- Botón para ver detalles en formato ticket -->
                               <button class="btn btn-sm btn-primary d-flex align-items-center justify-content-center"
@@ -443,7 +431,7 @@
     <div class="modal fade" id="observacionModal" tabindex="-1" aria-labelledby="observacionModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
-            <div class="modal-header">
+            <div id="observacionModalHeader" class="modal-header">
                 <h5 class="modal-title" id="observacionModalLabel">Agregar Observación</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
@@ -476,14 +464,30 @@
         });
     </script>
 
-    <script>
-        function setAccionAndSolicitudId(accion, solicitudId) {
-            // Asigna la acción al campo oculto 'accion'
-            document.getElementById('accion').value = accion;
-            // Asigna la ID de la solicitud al campo oculto 'solicitud_id'
-            document.getElementById('solicitud_id').value = solicitudId;
+<script>
+    function setAccionAndSolicitudId(accion, solicitudId) {
+        // Asigna la acción al campo oculto 'accion'
+        document.getElementById('accion').value = accion;
+        // Asigna la ID de la solicitud al campo oculto 'solicitud_id'
+        document.getElementById('solicitud_id').value = solicitudId;
+        
+        const header = document.getElementById('observacionModalHeader');
+        const title = document.getElementById('observacionModalLabel');
+
+        // Limpiar clases anteriores
+        header.classList.remove('bg-primary', 'bg-danger', 'text-white');
+
+        if (accion === 'aprobar') {
+            header.classList.add('bg-primary', 'text-white');
+            title.textContent = 'Aprobar Solicitud';
+        } else if (accion === 'rechazar') {
+            header.classList.add('bg-danger', 'text-white');
+            title.textContent = 'Rechazar Solicitud';
+        } else {
+            title.textContent = 'Agregar Observación';
         }
-    </script>
+    }
+</script>
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {

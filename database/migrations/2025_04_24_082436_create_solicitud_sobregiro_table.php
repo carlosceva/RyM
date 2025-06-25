@@ -15,7 +15,8 @@ return new class extends Migration
             $table->id();
             $table->foreignId('id_solicitud')->constrained('solicitudes');
             $table->string('cliente');
-            $table->decimal('importe', 10, 4);
+            $table->decimal('importe', 10, 2);
+            $table->string('cod_sobregiro')->nullable()->after('id_solicitud');
             $table->string('estado')->default('pendiente');
             $table->timestamps();
         });
