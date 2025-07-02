@@ -11,5 +11,10 @@ class Almacen extends Model
 
     protected $table = 'almacen';
 
-    protected $fillable = ['nombre', 'estado'];
+    protected $fillable = ['nombre', 'estado', 'id_encargado'];
+
+    public function encargado()
+    {
+        return $this->belongsTo(User::class, 'id_encargado');
+    }
 }

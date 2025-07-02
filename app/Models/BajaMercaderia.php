@@ -12,7 +12,7 @@ class BajaMercaderia extends Model
     protected $table = 'solicitud_bajas_mercaderia';
 
     protected $fillable = [
-        'id_solicitud', 'almacen', 'detalle_productos', 'estado', 'motivo'
+        'id_solicitud', 'almacen', 'detalle_productos', 'estado', 'motivo', 'tipo', 'id_autorizador'. 'fecha_autorizacion'
     ];
 
     // Relación con la solicitud
@@ -20,4 +20,10 @@ class BajaMercaderia extends Model
     {
         return $this->belongsTo(Solicitud::class, 'id_solicitud');
     }
+
+    public function autorizador()
+    {
+        return $this->belongsTo(User::class, 'id_autorizador');
+    }
+
 }

@@ -63,12 +63,8 @@ class PermisosSeeder extends Seeder
 
         //los ejecutar
         $ejecutarPermisos = [
-            'Anulacion_ejecutar',
-            'Devolucion_ejecutar',
-            'Precio_especial_ejecutar', 
-            'Sobregiro_ejecutar', 
-            'Baja_ejecutar', 
-            'Muestra_ejecutar'
+            'Baja_confirmar',
+            'Sobregiro_confirmar',
         ];
 
         foreach ($ejecutarPermisos as $nuevos) {

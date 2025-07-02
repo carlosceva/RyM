@@ -7,11 +7,12 @@
     // Colores por estado
     $solicitudClass = 'bg-primary text-white'; // siempre visible
 
-    $aprobacionRealizada = in_array($estado, ['aprobada', 'ejecutada', 'rechazada']);
+    $aprobacionRealizada = in_array($estado, ['aprobada', 'ejecutada', 'rechazada', 'confirmada']);
     $aprobacionClass = match($estado) {
         'pendiente' => 'bg-warning text-dark',
         'aprobada', 'ejecutada' => 'bg-primary text-white',
         'rechazada' => 'bg-danger text-white',
+        'confirmada' => 'bg-primary text-white',
         default => 'bg-light text-muted'
     };
 
@@ -22,7 +23,7 @@
 
     $tipo = Str::lower(trim($solicitud->tipo));
     $col = '';
-    if($tipo === 'devolucion de venta' || $tipo === 'anulacion de venta'){
+    if($tipo === 'devolucion de venta' || $tipo === 'anulacion de venta' || $tipo === 'baja de mercaderia' || $tipo === 'sobregiro de venta'){
         $col = 'col-md-3';
     }else{
         $col = 'col-md-4';
@@ -32,10 +33,17 @@
 <div class="container-fluid">
     <div class="row text-center mb-2">
         <div class="{{ $col }}"><strong>Solicitud #{{ $solicitud->id }}</strong></div>
-        <div class="{{ $col }}"><strong>Aprobación</strong></div>
-        @if($tipo === 'devolucion de venta' || $tipo === 'anulacion de venta')
+
+        @if($tipo === 'baja de mercaderia')
             <div class="{{ $col }}"><strong>Confirmación</strong></div>
         @endif
+
+        <div class="{{ $col }}"><strong>Aprobación</strong></div>
+
+        @if($tipo === 'devolucion de venta' || $tipo === 'anulacion de venta' || $tipo === 'sobregiro de venta')
+            <div class="{{ $col }}"><strong>Confirmación</strong></div>
+        @endif
+
         <div class="{{ $col }}"><strong>Ejecución</strong></div>
     </div>
 
@@ -50,17 +58,43 @@
             </div>
         </div>
 
+        @if($tipo === 'baja de mercaderia')
+            <div class="{{ $col }} mb-3">
+                <div class="card {{ $aprobacionClass }} shadow border-0 ">
+                    <div class="card-body text-center">
+                        @if( $solicitud->estado == 'pendiente')
+                            <p class="mb-0">Pendiente</p>
+                        @elseif($solicitud->estado == 'confirmada' || $solicitud->estado == 'ejecutada' || $solicitud->estado == 'aprobada')
+                            <p>{{ $solicitud->bajaMercaderia->autorizador->name ?? '---' }}</p>
+                            <p> {{ $solicitud->bajaMercaderia->fecha_autorizacion ?? 'N/D' }} </p>
+                        @else
+                            <p> {{ ucfirst($solicitud->estado) }} </p>
+                            <p>{{ $solicitud->fecha_autorizacion ?? '---' }}</p>
+                        @endif
+                    </div>
+                </div>
+            </div>
+        @endif
+
         {{-- Bloque 2: Aprobación --}}
         <div class="{{ $col }} mb-3">
             <div class="card {{ $aprobacionClass }} shadow border-0 ">
                 <div class="card-body text-center">
                     @if($aprobacionRealizada)
-                        @if($estado === 'aprobada' || $estado === 'ejecutada')
-                            <p>{{ optional($solicitud->autorizador)->name ?? '---' }}</p>
-                            <p>{{ $solicitud->fecha_autorizacion ?? '---' }}</p>
-                        @elseif($estado === 'rechazada')
-                            <p>Rechazada</p>
-                            <p>{{ $solicitud->fecha_autorizacion ?? '---' }}</p>
+                        @if($tipo !== 'sobregiro de venta')
+                            @if($estado === 'aprobada' || $estado === 'ejecutada')
+                                <p>{{ optional($solicitud->autorizador)->name ?? '---' }}</p>
+                                <p>{{ $solicitud->fecha_autorizacion ?? '---' }}</p>
+                            @elseif($estado === 'rechazada')
+                                <p>Rechazada</p>
+                                <p>{{ $solicitud->fecha_autorizacion ?? '---' }}</p>
+                            @elseif($estado === 'confirmada')
+                                <p class="mb-0">Pendiente</p>
+                            @endif
+                        @else
+                                <p>{{ optional($solicitud->autorizador)->name ?? '---' }}</p>
+                                <p>{{ $solicitud->fecha_autorizacion ?? '---' }}</p>
+
                         @endif
                     @else
                         <p class="mb-0">Pendiente</p>
@@ -150,6 +184,24 @@
                                 </div>
                             </div>
                         </div>
+                    </div>
+                </div>
+            </div>
+        @endif
+
+        @if($tipo === 'sobregiro de venta')
+            <div class="{{ $col }} mb-3">
+                <div class="card {{ $aprobacionClass }} shadow border-0 ">
+                    <div class="card-body text-center">
+                        @if( $solicitud->estado == 'pendiente' || $solicitud->estado == 'aprobada')
+                            <p class="mb-0">Pendiente</p>
+                        @elseif($solicitud->estado == 'confirmada' || $solicitud->estado == 'ejecutada')
+                            <p>{{ $solicitud->sobregiro->confirmador->name ?? '---' }}</p>
+                            <p> {{ $solicitud->sobregiro->fecha_confirmacion ?? 'N/D' }} </p>
+                        @else
+                            <p> {{ ucfirst($solicitud->estado) }} </p>
+                            <p>{{ $solicitud->fecha_autorizacion ?? '---' }}</p>
+                        @endif
                     </div>
                 </div>
             </div>

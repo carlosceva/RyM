@@ -258,7 +258,7 @@ class AnulacionController extends Controller
                 'nota_venta' => $anulacion->nota_venta,
                 'motivo' => 'Conversión automática desde solicitud de anulación',
                 'cliente' => '',
-                'almacen' => '',
+                'almacen' => 'No definido',
                 'detalle_productos' => '',
                 'tiene_pago' => $anulacion->tiene_pago,
                 'tiene_entrega' => $anulacion->tiene_entrega,

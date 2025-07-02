@@ -1,13 +1,13 @@
 
 @extends('dashboard')
 
-@section('title', 'Baja de Mercaderia')
+@section('title', 'Ajuste de inventario')
 
 @section('content')
 <div class="card-header">
     <h1 class="card-title" style="font-size: 1.8rem;">
         <i class="fas fa-copy mr-1"></i>
-        <span>Solicitud de Baja de Mercaderia</span>
+        <span>Solicitud de Ajuste de inventario</span>
     </h1>
     
     @can('Baja_crear')
@@ -45,8 +45,9 @@
                       <th>Fecha</th>
                       <th class="d-none">Solicitante</th>           <!-- oculto -->
                       <th>Almacen</th>
+                      <th>Tipo Ajuste</th>
                       <th class="d-none">Motivo</th>                <!-- oculto -->
-                      <th>Productos</th>
+                      <th class="d-none">Productos</th>
                       <th>Estado</th>
                       <th class="d-none">Autorizador</th>                  <!-- oculto -->
                       <th class="d-none">Fecha autorizacion</th>                  <!-- oculto -->
@@ -63,11 +64,13 @@
                         $claseFila = '';
 
                         if ($estado === 'aprobada') {
-                            $claseFila = 'table-success';
+                            $claseFila = 'table-primary';
                         } elseif ($estado === 'rechazada') {
                             $claseFila = 'table-danger';
                         }elseif ($estado === 'ejecutada') {
                             $claseFila = 'table-success';
+                        }elseif ($estado === 'pendiente' || $estado === 'confirmada') {
+                            $claseFila = 'table-warning';
                         }
                     @endphp
 
@@ -77,8 +80,9 @@
                         <td>{{ \Carbon\Carbon::parse($solicitud->fecha_solicitud)->format('Y-m-d') }}</td>
                         <td class="d-none">{{ $solicitud->usuario->name ?? 'N/D' }}</td>      <!-- oculto -->
                         <td>{{ $solicitud->bajaMercaderia?->almacen ?? 'No asignado' }}</td>
+                        <td>{{ $solicitud->bajaMercaderia?->tipo }}</td>
                         <td class="d-none">{{ $solicitud->glosa ?? 'Sin glosa' }}</td>      <!-- oculto -->
-                        <td>{{ $solicitud->bajaMercaderia?->detalle_productos ?? 'Sin detalle de productos' }}</td>
+                        <td class="d-none">{{ $solicitud->bajaMercaderia?->detalle_productos ?? 'Sin detalle de productos' }}</td>
                         <td>{{ ucfirst($estado) }}</td>
                         <td class="d-none">{{ $solicitud->autorizador->name ?? 'Sin autorizar' }}</td>      <!-- oculto -->
                         <td class="d-none">{{ $solicitud->fecha_autorizacion ?? 'N/D' }}</td>      <!-- oculto -->
@@ -89,30 +93,39 @@
                             <div class="d-flex flex-column flex-sm-row justify-content-center align-items-center">
                                 
                                 @if($solicitud->estado == 'pendiente')
-                                            @can('Baja_aprobar')
-                                            <!-- Aprobar con modal -->
-                                            <button class="btn btn-sm btn-success mb-2 mb-sm-0 me-sm-2 d-flex align-items-center justify-content-center"
-                                                    style="width: 36px; height: 36px;"
-                                                    data-bs-toggle="modal" data-bs-target="#observacionModal"
-                                                    title="Aprobar"
-                                                    onclick="setAccionAndSolicitudId('aprobar', {{ $solicitud->id }})">
-                                                <i class="fa fa-check"></i>
-                                            </button>
-                                            @endcan
-                                            @can('Baja_reprobar')
-                                            <!-- Rechazar con modal -->
-                                            <button class="btn btn-sm btn-danger mb-2 mb-sm-0 me-sm-2 d-flex align-items-center justify-content-center"
-                                                    style="width: 36px; height: 36px;"
-                                                    data-bs-toggle="modal" data-bs-target="#observacionModal"
-                                                    title="Rechazar"
-                                                    onclick="setAccionAndSolicitudId('rechazar', {{ $solicitud->id }})">
-                                                <i class="fa fa-times"></i>
-                                            </button>
-                                            @endcan
+                                  @can('Baja_confirmar')
+                                    <!-- Confirmar con modal -->                      
+                                    <button type="button" class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#modalConfirmar{{ $solicitud->id }}">
+                                          Confirmar
+                                      </button>
+                                  @endcan
+                                @endif
+
+                                @if($solicitud->estado == 'confirmada')
+                                  @can('Baja_aprobar')
+                                    <!-- Aprobar con modal -->
+                                    <button class="btn btn-sm btn-success mb-2 mb-sm-0 me-sm-2 d-flex align-items-center justify-content-center"
+                                            style="width: 36px; height: 36px;"
+                                            data-bs-toggle="modal" data-bs-target="#observacionModal"
+                                            title="Aprobar"
+                                            onclick="setAccionAndSolicitudId('aprobar', {{ $solicitud->id }})">
+                                        <i class="fa fa-check"></i>
+                                    </button>
+                                    
+                                    <!-- Rechazar con modal -->
+                                    <button class="btn btn-sm btn-danger mb-2 mb-sm-0 me-sm-2 d-flex align-items-center justify-content-center"
+                                            style="width: 36px; height: 36px;"
+                                            data-bs-toggle="modal" data-bs-target="#observacionModal"
+                                            title="Rechazar"
+                                            onclick="setAccionAndSolicitudId('rechazar', {{ $solicitud->id }})">
+                                        <i class="fa fa-times"></i>
+                                    </button>
+                                  @endcan
 
                                 @endif
+
                                 @can('Baja_ejecutar')
-                                @if ($solicitud->estado === 'aprobada' && !$solicitud->ejecucion)
+                                  @if ($solicitud->estado === 'aprobada' && !$solicitud->ejecucion)
                                       <button type="button" class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#modalEjecutar{{ $solicitud->id }}">
                                           Ejecutar
                                       </button>
@@ -157,61 +170,13 @@
         </div>
     </div>
 
-    <!-- Modal para ejecutar solicitud -->
-<div class="modal fade" id="modalEjecutar{{ $solicitud->id }}" tabindex="-1" aria-labelledby="modalLabel{{ $solicitud->id }}" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content">
-      <form action="{{ route('baja.ejecutar', $solicitud->id) }}" method="POST">
-        @csrf
-        @method('POST')
-        <div class="modal-header">
-          <h5 class="modal-title" id="modalLabel{{ $solicitud->id }}">Confirmar Ejecución</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-        </div>
-        <div class="modal-body">
-          <p>¿Está seguro de registrar esta acción?</p>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-          <button type="submit" class="btn btn-success">Ejecutar</button>
-        </div>
-      </form>
-    </div>
-  </div>
-</div>
+      @include('GestionSolicitudes.baja.modal_ejecutar', ['solicitud' => $solicitud])
+      @include('GestionSolicitudes.baja.modal_confirmar', ['solicitud' => $solicitud])                   
     @endforeach
  
     @include('GestionSolicitudes.baja.create')
 
-<!-- Modal para Agregar Observación -->
-<div class="modal fade" id="observacionModal" tabindex="-1" aria-labelledby="observacionModalLabel" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="observacionModalLabel">Agregar Observación</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        <form id="formObservacion" action="{{ route('baja.aprobar_o_rechazar') }}" method="POST">
-          @csrf
-          <!-- Campo oculto para la solicitud_id -->
-          <input type="hidden" name="solicitud_id" id="solicitud_id" value="">
-          <input type="hidden" name="accion" id="accion" value="">
-
-          <div class="mb-3">
-            <label for="observacion" class="form-label">Observación</label>
-            <textarea name="observacion" class="form-control" rows="3"></textarea>
-          </div>
-
-          <div class="d-flex justify-content-end">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-            <button type="submit" class="btn btn-primary ms-2">Aceptar</button>
-          </div>
-        </form>
-      </div>
-    </div>
-  </div>
-</div>
+    @include('GestionSolicitudes.baja.modal_observacion')
 
 
 <script>
@@ -220,6 +185,22 @@
         document.getElementById('accion').value = accion;
         // Asigna la ID de la solicitud al campo oculto 'solicitud_id'
         document.getElementById('solicitud_id').value = solicitudId;
+        
+        const header = document.getElementById('observacionModalHeader');
+        const title = document.getElementById('observacionModalLabel');
+
+        // Limpiar clases anteriores
+        header.classList.remove('bg-primary', 'bg-danger', 'text-white');
+
+        if (accion === 'aprobar') {
+            header.classList.add('bg-primary', 'text-white');
+            title.textContent = 'Aprobar Solicitud';
+        } else if (accion === 'rechazar') {
+            header.classList.add('bg-danger', 'text-white');
+            title.textContent = 'Rechazar Solicitud';
+        } else {
+            title.textContent = 'Agregar Observación';
+        }
     }
 </script>
 

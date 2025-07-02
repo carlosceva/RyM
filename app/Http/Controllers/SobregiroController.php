@@ -196,39 +196,65 @@ class SobregiroController extends Controller
         return redirect()->route('Sobregiro.index')->with('success', 'La solicitud ha sido ' . $solicitud->estado . ' correctamente.');
     }
 
-    public function ejecutar(Request $request, $id, WhatsAppService $whatsapp)
+    public function confirmar($id, WhatsAppService $whatsapp, Request $request)
     {
-        $request->validate([
-            'cod_sobregiro' => 'nullable|string|max:255',
-        ]);
-
         $solicitud = Solicitud::findOrFail($id);
 
+        // Verificar si la solicitud ya está confirmada o no está pendiente
         if ($solicitud->estado !== 'aprobada') {
+            return back()->with('error', 'Solo las solicitudes aprobadas pueden ser confirmadas.');
+        }
+
+        // Registrar la confirmación
+        $solicitud->estado = 'confirmada';
+        $solicitud->sobregiro->id_confirmador = Auth::id();  // Guardar el ID del autorizador
+        $solicitud->sobregiro->fecha_confirmacion = now();   // Fecha de autorización
+        $solicitud->sobregiro->cod_sobregiro = $request->cod_sobregiro;
+        $solicitud->sobregiro->save();
+        
+        // Guardar la solicitud
+        $solicitud->save();
+
+        // Enviar notificación a los usuarios responsables (que tienen permiso "Baja_confirmar")
+        $usuariosResponsables = User::whereHas('roles.permissions', function ($query) {
+            $query->where('name', 'Sobregiro_ejecutar');  // Permiso para confirmar
+        })->get();
+
+        // Crear la lista de números de teléfono de los responsables
+        $phoneNumbers = $usuariosResponsables->map(function ($user) {
+            return [
+                'telefono' => '+591' . str_pad($user->telefono, 8, '0', STR_PAD_LEFT),
+                'api_key' => $user->key,
+            ];
+        });
+
+        $phoneNumbers = $phoneNumbers->toArray();
+
+        // Mensaje para los responsables
+        $mensaje = "📦 Una solicitud de *Sobregiro de Venta* ha sido *confirmada* y espera su ejecucion.\n" .
+                    "N° de solicitud: {$solicitud->id}\n" .
+                    "Código Sobregiro: {$request->cod_sobregiro}\n" .
+                    "Fecha de confirmacion: " . now()->format('d/m/Y H:i') . "\n" .
+                    "Confirmado por: " . auth()->user()->name . ".";
+
+        // Enviar mensaje a los responsables
+        if (!empty($phoneNumbers)) {
+            $whatsapp->sendWithAPIKey($phoneNumbers, $mensaje);
+        }
+
+        return back()->with('success', 'Solicitud confirmada exitosamente.');
+    }
+
+    public function ejecutar($id, WhatsAppService $whatsapp)
+    {
+        $solicitud = Solicitud::findOrFail($id);
+
+        if ($solicitud->estado !== 'confirmada') {
             return back()->with('error', 'Solo las solicitudes aprobadas pueden ser ejecutadas.');
         }
 
         if ($solicitud->ejecucion) {
             return back()->with('error', 'Esta solicitud ya fue ejecutada.');
-        }
-
-        // Guardar o actualizar código de sobregiro en la tabla solicitud_sobregiro (asumo que es otra tabla)
-        // Si tienes relación definida, por ejemplo:
-        $sobregiro = $solicitud->sobregiro; // relación hasOne o similar
-
-        if ($sobregiro) {
-            $sobregiro->cod_sobregiro = $request->cod_sobregiro;
-            $sobregiro->save();
-        } else {
-            // Si no existe y necesitas crearlo
-            // SolicitudSobregiro es el modelo para la tabla solicitud_sobregiro
-            Sobregiro::create([
-                'id_solicitud' => $solicitud->id,
-                'cod_sobregiro' => $request->cod_sobregiro,
-                'cliente' => $solicitud->cliente,  // ajusta si es necesario
-                'importe' => $solicitud->importe,  // ajusta si es necesario
-                'estado' => $solicitud->estado,
-            ]);
         }
 
         // Registrar ejecución
@@ -250,7 +276,6 @@ class SobregiroController extends Controller
 
             $mensaje = "📦 Su solicitud de *Sobregiro de Venta* ha sido *ejecutada*.\n" .
                     "N° de solicitud: {$solicitud->id}\n" .
-                    "Código Sobregiro: {$request->cod_sobregiro}\n" .
                     "Fecha de ejecución: " . now()->format('d/m/Y H:i') . "\n" .
                     "Ejecutado por: " . auth()->user()->name . ".";
 

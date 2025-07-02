@@ -109,10 +109,11 @@ class BajaMercaderiaController extends Controller
                 'almacen' => $request->almacen, 
                 'detalle_productos' => $request->detalle_productos,
                 'motivo' => $request->motivo,
+                'tipo' => $request->tipo_ajuste,
             ]);
             
             $usuariosResponsables = User::whereHas('roles.permissions', function ($query) {
-                $query->where('name', 'Baja_aprobar');
+                $query->where('name', 'Baja_confirmar');
             })->get();
 
             $phoneNumbers = $usuariosResponsables->map(function ($user) {
@@ -124,7 +125,7 @@ class BajaMercaderiaController extends Controller
 
             $phoneNumbers = $phoneNumbers->toArray();
 
-            $message = "Se ha creado una nueva solicitud de *Baja de mercadería* y está esperando aprobación.\n" .
+            $message = "Se ha creado una nueva solicitud de *Ajuste de inventario* y está esperando confirmacion.\n" .
             "N° de solicitud: " . $solicitud->id . "\n" .
             "Fecha: " . $solicitud->fecha_solicitud->format('d/m/Y H:i') . "\n" .
             "Solicitado por: " . auth()->user()->name . ".";
@@ -133,15 +134,62 @@ class BajaMercaderiaController extends Controller
 
             DB::commit();
 
-            return redirect()->route('Baja.index')->with('success', 'Solicitud de Baja de Mercaderia creada.');
+            return redirect()->route('Baja.index')->with('success', 'Solicitud de Ajuste de inventario creada.');
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return redirect()->route('Muestra.index')->with('error', 'Hubo un problema al crear la solicitud de Muestra de Mercaderia: ' . $e->getMessage());
+            return redirect()->route('Muestra.index')->with('error', 'Hubo un problema al crear la solicitud de Ajuste de inventario: ' . $e->getMessage());
         }
     }
     
+    public function confirmar($id, WhatsAppService $whatsapp)
+    {
+        $solicitud = Solicitud::findOrFail($id);
 
+        // Verificar si la solicitud ya está confirmada o no está pendiente
+        if ($solicitud->estado !== 'pendiente') {
+            return back()->with('error', 'Solo las solicitudes pendientes pueden ser confirmadas.');
+        }
+
+        // Registrar la confirmación
+        $solicitud->estado = 'confirmada';
+        $solicitud->bajaMercaderia->id_autorizador = Auth::id();  // Guardar el ID del autorizador
+        $solicitud->bajaMercaderia->fecha_autorizacion = now();   // Fecha de autorización
+        $solicitud->bajaMercaderia->save();
+        
+        // Guardar la solicitud
+        $solicitud->save();
+
+        // Enviar notificación a los usuarios responsables (que tienen permiso "Baja_confirmar")
+        $usuariosResponsables = User::whereHas('roles.permissions', function ($query) {
+            $query->where('name', 'Baja_aprobar');  // Permiso para confirmar
+        })->get();
+
+        // Crear la lista de números de teléfono de los responsables
+        $phoneNumbers = $usuariosResponsables->map(function ($user) {
+            return [
+                'telefono' => '+591' . str_pad($user->telefono, 8, '0', STR_PAD_LEFT),
+                'api_key' => $user->key,
+            ];
+        });
+
+        $phoneNumbers = $phoneNumbers->toArray();
+
+        // Mensaje para los responsables
+        $message = "📦 Una solicitud de *Ajuste de Inventario* ha sido *confirmada* y está esperando su aprobacion.\n" .
+                "N° de solicitud: {$solicitud->id}\n" .
+                "Fecha de confirmación: " . now()->format('d/m/Y H:i') . "\n" .
+                "Confirmada por: " . auth()->user()->name . ".";
+
+        // Enviar mensaje a los responsables
+        if (!empty($phoneNumbers)) {
+            $whatsapp->sendWithAPIKey($phoneNumbers, $message);
+        }
+
+        return back()->with('success', 'Solicitud confirmada exitosamente.');
+    }
+
+    
     public function aprobar_o_rechazar(Request $request, WhatsAppService $whatsapp)
     {
         // Validamos la solicitud

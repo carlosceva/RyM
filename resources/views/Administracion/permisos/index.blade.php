@@ -41,8 +41,8 @@
             </thead>
             <tbody>
                 @php
-                    $solicitudes = ['Anulacion', 'Devolucion', 'Precio_especial', 'Sobregiro', 'Baja', 'Muestra', 'usuarios', 'roles','permisos'];
-                    $acciones = ['ver', 'crear', 'editar', 'borrar', 'aprobar', 'reprobar', 'ejecutar', 'entrega', 'pago'];
+                    $solicitudes = ['Anulacion', 'Devolucion', 'Precio_especial', 'Sobregiro', 'Baja', 'Muestra'];
+                    $acciones = ['ver', 'crear', 'borrar', 'aprobar', 'reprobar', 'ejecutar', 'entrega', 'pago'];
                 @endphp
 
                 @foreach ($roles as $role)
@@ -96,8 +96,11 @@
                         </td>
                         @can('roles_crear')
                             <td>
-                                <button class="btn btn-sm btn-warning" data-toggle="modal" data-target="#modalPermisos{{ $role->id }}">
+                                <button class="btn btn-sm mb-2 btn-warning" data-toggle="modal" data-target="#modalPermisos{{ $role->id }}">
                                     <i class="fa fa-key"></i> Asignar Permisos
+                                </button>
+                                <button class="btn btn-sm btn-secondary" data-toggle="modal" data-target="#modalOtrosPermisos{{ $role->id }}">
+                                    <i class="fa fa-key"></i> Otros Permisos
                                 </button>
                             </td>
                         @endcan
@@ -114,6 +117,7 @@
     <div class="modal-dialog modal-lg" role="document">
         <form method="POST" action="{{ route('permisos.guardar', $role->id) }}">
             @csrf
+            <input type="hidden" name="grupo" value="solicitudes">
             <div class="modal-content">
                 <div class="modal-header bg-dark text-white">
                     <h5 class="modal-title">Asignar Permisos a: {{ $role->name }}</h5>
@@ -162,5 +166,91 @@
         </form>
     </div>
 </div>
+
+<style>
+    .form-check-input:checked {
+        background-color: #28a745 !important; /* Verde */
+        border-color: #28a745 !important;
+    }
+
+    .form-check-input:focus {
+        box-shadow: none;
+    }
+
+    .permiso-box {
+        border: 1px solid #dee2e6;
+        padding: 0.75rem;
+        border-radius: 5px;
+        margin-bottom: 1rem;
+        transition: background-color 0.3s ease;
+    }
+
+    .permiso-box:hover {
+        background-color: #f8f9fa;
+    }
+
+    .scrollable-body {
+        max-height: 400px;
+        overflow-y: auto;
+    }
+</style>
+
+
+<!-- Otros permisos -->
+<div class="modal fade" id="modalOtrosPermisos{{ $role->id }}" tabindex="-1" role="dialog" aria-labelledby="modalOtrosPermisosLabel" aria-hidden="true">
+    <div class="modal-dialog modal-md" role="document">
+        <form method="POST" action="{{ route('permisos.guardar', $role->id) }}">
+            @csrf
+            <input type="hidden" name="grupo" value="otros">
+            <div class="modal-content">
+                <div class="modal-header bg-dark text-white">
+                    <h5 class="modal-title">Otros Permisos: {{ $role->name }}</h5>
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Cerrar">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body scrollable-body">
+                    @php
+                        $solicitudes = ['Anulacion', 'Devolucion', 'Precio_especial', 'Sobregiro', 'Baja', 'Muestra'];
+                        $acciones = ['ver', 'crear', 'editar', 'borrar', 'aprobar', 'reprobar', 'ejecutar', 'entrega', 'pago'];
+                        $excluir = collect($solicitudes)->flatMap(fn($s) => collect($acciones)->map(fn($a) => strtolower("{$s}_{$a}")));
+                        $otrosPermisos = $permissions->reject(fn ($permiso) => $excluir->contains(strtolower($permiso->name)));
+                        $agrupados = $otrosPermisos->groupBy(fn($p) => explode('_', $p->name)[0]);
+                    @endphp
+
+                    @if ($agrupados->isEmpty())
+                        <p class="text-center text-muted">No hay otros permisos disponibles.</p>
+                    @else
+                        @foreach ($agrupados as $modulo => $permisosModulo)
+                            <div class="permiso-box">
+                                <strong class="text-primary text-uppercase d-block mb-2">{{ ucfirst($modulo) }}</strong>
+                                <div class="row">
+                                    @foreach ($permisosModulo as $permiso)
+                                        <div class="col-6">
+                                            <div class="form-check">
+                                                <input type="checkbox" class="form-check-input"
+                                                       id="permiso_{{ $permiso->id }}"
+                                                       name="permisos[]" value="{{ $permiso->id }}"
+                                                       {{ $role->hasPermissionTo($permiso->name) ? 'checked' : '' }}>
+                                                <label class="form-check-label small" for="permiso_{{ $permiso->id }}">
+                                                    {{ ucwords(str_replace('_', ' ', Str::after($permiso->name, $modulo . '_'))) }}
+                                                </label>
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            </div>
+                        @endforeach
+                    @endif
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-success">Guardar Cambios</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
 @endforeach
 @endsection

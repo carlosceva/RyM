@@ -26,4 +26,11 @@ class Devolucion extends Model
     {
         return $this->belongsTo(Solicitud::class, 'id_solicitud');
     }
+
+    // Devolucion.php
+    public function almacen()
+    {
+        return $this->belongsTo(Almacen::class, 'almacen_id');
+    }
+
 }

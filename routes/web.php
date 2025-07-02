@@ -85,9 +85,11 @@ Route::middleware('auth')->group(function () {
     Route::get('/Baja/{id}/descargar/pdf', [BajaMercaderiaController::class, 'descargarPDF'])->name('baja.descargar.pdf');
     Route::get('/Baja/{id}/descargar/excel', [BajaMercaderiaController::class, 'descargarExcel'])->name('baja.descargar.excel');
     Route::post('/Baja/{id}/ejecutar', [BajaMercaderiaController::class, 'ejecutar'])->name('baja.ejecutar');
+    Route::post('/Baja/{id}/confirmar', [BajaMercaderiaController::class, 'confirmar'])->name('baja.confirmar');
 
     Route::resource('Sobregiro', SobregiroController::class)->middleware('can:Sobregiro_ver');
     Route::post('Sobregiro/aprobar_o_rechazar', [SobregiroController::class, 'aprobar_o_rechazar'])->name('sobregiro.aprobar_o_rechazar');
+    Route::post('/Sobregiro/{id}/confirmar', [SobregiroController::class, 'confirmar'])->name('sobregiro.confirmar');
     Route::post('/Sobregiro/{id}/ejecutar', [SobregiroController::class, 'ejecutar'])->name('sobregiro.ejecutar');
     Route::get('/Sobregiro/{id}/descargar/pdf', [SobregiroController::class, 'descargarPDF'])->name('sobregiro.descargar.pdf');
     Route::get('/Sobregiro/{id}/descargar/excel', [SobregiroController::class, 'descargarExcel'])->name('sobregiro.descargar.excel');
@@ -107,6 +109,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/Devolucion/{id}/descargar/excel', [DevolucionController::class, 'descargarExcel'])->name('devolucion.descargar.excel');
     Route::post('/Devolucion/{id}/verificar-Entrega', [DevolucionController::class, 'verificarEntrega'])->name('solicitud.devolucion.verificarEntrega');
     Route::post('/Devolucion/{id}/verificar-Entrega-Fisica', [DevolucionController::class, 'verificarEntregaFisica'])->name('solicitud.devolucion.verificarEntregaFisica');
+    Route::put('/Devolucion/{id}/almacen', [DevolucionController::class, 'actualizarAlmacen'])->name('devolucion.actualizar.almacen');
 
     Route::get('/permisos', [RolPermisoController::class, 'index'])->name('permisos.index')->middleware('can:permisos_ver');;
     Route::post('/permisos/guardar/{id}', [RolPermisoController::class, 'guardar'])->name('permisos.guardar');

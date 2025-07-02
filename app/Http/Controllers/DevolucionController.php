@@ -504,6 +504,19 @@ class DevolucionController extends Controller
         //
     }
 
+    public function actualizarAlmacen(Request $request, $id)
+    {
+        $request->validate([
+            'almacen_id' => 'required|exists:almacen,id',
+        ]);
+
+        $solicitud = Solicitud::findOrFail($id);
+        $solicitud->devolucion->almacen = $request->almacen_id;
+        $solicitud->devolucion->save();
+
+        return redirect()->back()->with('success', 'Almacén asignado correctamente.');
+    }
+
     /**
      * Remove the specified resource from storage.
      */

@@ -39,6 +39,7 @@
             <tr>
                 <th>ID</th>
                 <th>Nombre</th>
+                <th>Encargado</th>
                 <th>Acciones</th>
             </tr>
         </thead>
@@ -47,6 +48,7 @@
                 <tr>
                     <td>{{ $almacen->id }}</td>
                     <td>{{ $almacen->nombre }}</td>
+                    <td>{{ $almacen->encargado ? $almacen->encargado->name : 'Sin encargado' }}</td>
                     <td>
                         <!-- Botón Editar (modal) -->
                         <button class="btn btn-sm btn-warning" data-bs-toggle="modal" data-bs-target="#editarAlmacenModal{{ $almacen->id }}">Editar</button>
@@ -77,6 +79,19 @@
                 <div class="mb-3">
                     <label for="nombre{{ $almacen->id }}" class="form-label">Nombre</label>
                     <input type="text" name="nombre" id="nombre{{ $almacen->id }}" class="form-control" value="{{ $almacen->nombre }}" required>
+                </div>
+
+                <!-- Selector de Encargado -->
+                <div class="mb-3">
+                    <label for="id_encargado{{ $almacen->id }}" class="form-label">Encargado</label>
+                    <select name="id_encargado" id="id_encargado{{ $almacen->id }}" class="form-control">
+                        <option value="">Seleccionar encargado</option>
+                        @foreach($usuarios as $usuario)
+                            <option value="{{ $usuario->id }}" {{ $almacen->id_encargado == $usuario->id ? 'selected' : '' }}>
+                                {{ $usuario->name }}
+                            </option>
+                        @endforeach
+                    </select>
                 </div>
             </div>
             <div class="modal-footer">
@@ -126,6 +141,17 @@
                 <div class="mb-3">
                     <label for="nombreCrear" class="form-label">Nombre</label>
                     <input type="text" name="nombre" id="nombreCrear" class="form-control" required>
+                </div>
+
+                <!-- Selector de Encargado -->
+                <div class="mb-3">
+                    <label for="id_encargado" class="form-label">Encargado</label>
+                    <select name="id_encargado" id="id_encargado" class="form-control">
+                        <option value="">Seleccionar encargado</option>
+                        @foreach($usuarios as $usuario)
+                            <option value="{{ $usuario->id }}">{{ $usuario->name }}</option>
+                        @endforeach
+                    </select>
                 </div>
             </div>
             <div class="modal-footer">

@@ -47,6 +47,20 @@
                 </div>
             </div>
 
+            <!-- Tipo -->
+            <div class="row mb-2 align-items-center">
+                <label for="tipo_ajuste" class="col-md-2 col-form-label">Tipo de ajuste</label>
+                <div class="col-md-10">
+                    <select name="tipo_ajuste" id="tipo_ajuste" class="form-select" required>
+                        <option value="">-- Seleccione un tipo --</option>
+                        
+                            <option value="ingreso">Ingreso</option>
+                            <option value="egreso">Egreso</option>
+                        
+                    </select>
+                </div>
+            </div>
+
             <!-- Inputs para producto, cantidad y precio -->
             <div class="row g-2 mb-3">
                 <div class="col-md-4">
@@ -54,6 +68,9 @@
                 </div>
                 <div class="col-md-3">
                     <input type="number" id="cantidad" class="form-control" placeholder="Cantidad">
+                </div>
+                <div class="col-12 col-md-3">
+                    <input type="text" id="medida" class="form-control" placeholder="Ud. medida">
                 </div>
                 <div class="col-md-2">
                     <button type="button" class="btn btn-primary " onclick="agregarProducto()">Agregar</button>
@@ -67,6 +84,7 @@
                         <tr>
                             <th>Producto</th>
                             <th>Cantidad</th>
+                            <th>Ud. Medida</th>
                             <th>Acción</th>
                         </tr>
                     </thead>
@@ -100,6 +118,7 @@ let productos = [];
 function agregarProducto() {
     const producto = document.getElementById('producto').value.trim();
     const cantidad = parseInt(document.getElementById('cantidad').value.trim());
+    const medida = document.getElementById('medida').value.trim();
 
     if (!producto || isNaN(cantidad)) {
         alert("Por favor complete todos los campos correctamente.");
@@ -113,8 +132,9 @@ function agregarProducto() {
 
     // Redondear a 2 decimales para uniformidad
     productos.push({ 
-        producto, 
-        cantidad, 
+        producto,
+        cantidad,
+        medida,  
     });
 
     actualizarTabla();
@@ -134,18 +154,20 @@ function actualizarTabla() {
         const fila = `<tr>
             <td>${item.producto}</td>
             <td>${item.cantidad}</td>
+            <td>${item.medida}</td>
             <td><button type="button" class="btn btn-danger btn-sm" onclick="eliminarProducto(${index})">Eliminar</button></td>
         </tr>`;
         tbody.innerHTML += fila;
     });
 
-    const detalleCadena = productos.map(p => `${p.producto}-${p.cantidad}`).join(",");
+    const detalleCadena = productos.map(p => `${p.producto}-${p.cantidad}-${p.medida}`).join(",");
     document.getElementById('detalle_productos').value = detalleCadena;
 }
 
 function limpiarInputs() {
     document.getElementById('producto').value = '';
     document.getElementById('cantidad').value = '';
+    document.getElementById('medida').value = '';
 }
 
 function validarProductos() {

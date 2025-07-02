@@ -83,7 +83,19 @@
                         <td>{{ \Carbon\Carbon::parse($solicitud->fecha_solicitud)->format('Y-m-d') }}</td>
                         <td class="d-none">{{ $solicitud->usuario->name ?? 'N/D' }}</td>      <!-- oculto -->
                         <td>{{ $solicitud->devolucion->nota_venta ?? 'N/D' }}</td>
-                        <td>{{ $solicitud->devolucion->almacen ?? 'N/D' }}</td>
+                        <td>
+                            @if (empty($solicitud->devolucion->almacen) || $solicitud->devolucion->almacen == 'No definido')
+                                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalAlmacen{{ $solicitud->id }}">
+                                    Asignar
+                                </button>
+                            @else
+                                @if(is_numeric($solicitud->devolucion->almacen)) 
+                                    {{ \App\Models\Almacen::find($solicitud->devolucion->almacen)->nombre ?? 'No definido' }}
+                                @else
+                                    {{ $solicitud->devolucion->almacen ?? 'No definido' }}
+                                @endif
+                            @endif
+                        </td>
                         <td>{{ $solicitud->devolucion->motivo ?? 'N/D' }}</td>
                         <td class="d-none">{{ $solicitud->glosa ?? 'Sin glosa' }}</td>      <!-- oculto -->
                         <td class="d-none">
@@ -420,6 +432,38 @@
                     </div>
                 </form>
             </div>
+        </div>
+    </div>
+
+    <!-- Modal ALmacen -->
+    <div class="modal fade" id="modalAlmacen{{ $solicitud->id }}" tabindex="-1" aria-labelledby="modalAlmacenLabel{{ $solicitud->id }}" aria-hidden="true">
+        <div class="modal-dialog">
+            <form method="POST" action="{{ route('devolucion.actualizar.almacen', $solicitud->id) }}" class="modal-content">
+                @csrf
+                @method('PUT')
+
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalAlmacenLabel{{ $solicitud->id }}">Asignar Almacén</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="almacen_id" class="form-label">Seleccione un almacén</label>
+                        <select name="almacen_id" class="form-select" required>
+                            <option value="">-- Seleccionar --</option>
+                            @foreach($almacenes as $almacen)
+                                <option value="{{ $almacen->id }}">{{ $almacen->nombre }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-success">Guardar</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                </div>
+            </form>
         </div>
     </div>
 

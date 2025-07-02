@@ -114,12 +114,19 @@
                                             </button>
                                             @endcan
                                 @endif
+                                @can('Sobregiro_confirmar')
+                                    @if ($solicitud->estado === 'aprobada' && !$solicitud->ejecucion)
+                                      <button type="button" class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#modalConfirmar{{ $solicitud->id }}">
+                                          Confirmar
+                                      </button>
+                                    @endif
+                                @endcan
                                 @can('Sobregiro_ejecutar')
-                                @if ($solicitud->estado === 'aprobada' && !$solicitud->ejecucion)
+                                    @if ($solicitud->estado === 'confirmada' && !$solicitud->ejecucion)
                                       <button type="button" class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#modalEjecutar{{ $solicitud->id }}">
                                           Ejecutar
                                       </button>
-                                  @endif
+                                    @endif
                                 @endcan
                                 &nbsp;
 
@@ -161,95 +168,12 @@
         </div>
     </div>
 
-    <!-- Modal para ejecutar solicitud -->
-    <div class="modal fade" id="modalEjecutar{{ $solicitud->id }}" tabindex="-1" aria-labelledby="modalLabel{{ $solicitud->id }}" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-            <form action="{{ route('sobregiro.ejecutar', $solicitud->id) }}" method="POST">
-                @csrf
-                @method('POST')
-                <div class="modal-header">
-                <h5 class="modal-title" id="modalLabel{{ $solicitud->id }}">Confirmar Ejecución</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-                </div>
-                <div class="modal-body">
-                <p>¿Está seguro de registrar esta acción?</p>
-
-                <div class="mb-3">
-                    <label for="cod_sobregiro_{{ $solicitud->id }}" class="form-label">Código de Sobregiro</label>
-                    <input type="text" class="form-control" id="cod_sobregiro_{{ $solicitud->id }}" name="cod_sobregiro" 
-                        value="{{ old('cod_sobregiro', $solicitud->cod_sobregiro ?? '') }}" required>
-                </div>
-
-                </div>
-                <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <button type="submit" class="btn btn-success">Ejecutar</button>
-                </div>
-            </form>
-            </div>
-        </div>
-    </div>
+    @include('GestionSolicitudes.sobregiro.modal_ejecutar', ['solicitud' => $solicitud])
+    @include('GestionSolicitudes.sobregiro.modal_confirmar', ['solicitud' => $solicitud])
 
     @endforeach
  
-    <!-- Vista para crear solicitud -->
-<div class="modal fade" id="modalNuevaSolicitud" tabindex="-1" aria-labelledby="modalCrearSolicitudLabel" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="modalCrearSolicitudLabel">Crear Solicitud de Sobregiro de venta</h5>
-        <button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        <form action="{{ route('Sobregiro.store') }}" method="POST" onsubmit="this.querySelector('button[type=submit]').disabled = true;">
-          @csrf
-            <!-- Tipo de Solicitud -->
-            <input type="hidden" name="tipo" value="Sobregiro de Venta">
-
-            <!-- Usuario que solicita (Oculto porque es el usuario autenticado) -->
-            <input type="hidden" name="id_usuario" value="{{ auth()->id() }}">
-
-            <!-- Fecha de solicitud (Generada automáticamente) -->
-            <div class="mb-3">
-                <label for="fecha_solicitud" class="form-label">Fecha de Solicitud</label>
-                <input type="text" class="form-control" id="fecha_solicitud" value="{{ now()->format('Y-m-d H:i:s') }}" disabled>
-            </div>
-
-            <!-- Estado (Se define automáticamente como pendiente) -->
-            <input type="hidden" name="estado" value="pendiente">
-
-            <!-- Cliente -->
-            <div class="mb-3">
-                <label for="cliente" class="form-label">Cliente</label>
-                <input type="text" class="form-control" id="cliente" name="cliente">
-            </div>
-
-            <!-- importe -->
-            <div class="mb-3">
-                <label for="importe" class="form-label">Importe</label>
-                <input type="text" class="form-control" id="importe" name="importe">
-                
-                @error('importe')
-                    <div class="text-danger mt-2">{{ $message }}</div>
-                @enderror
-            </div>
-
-            <!-- Glosa (Descripción o motivo de la solicitud) -->
-            <div class="mb-3">
-                <label for="glosa" class="form-label">Glosa</label>
-                <textarea class="form-control" id="glosa" name="glosa" rows="3"></textarea>
-            </div>
-
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
-                <button type="submit" class="btn btn-primary">Crear Solicitud</button>
-            </div>
-        </form>
-      </div>
-    </div>
-  </div>
-</div>
+@include('GestionSolicitudes.sobregiro.create')
 
 <!-- Modal para Agregar Observación -->
 <div class="modal fade" id="observacionModal" tabindex="-1" aria-labelledby="observacionModalLabel" aria-hidden="true">
