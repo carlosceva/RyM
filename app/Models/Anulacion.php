@@ -12,7 +12,7 @@ class Anulacion extends Model
     protected $table = 'solicitud_anulacion';
 
     protected $fillable = [
-        'id_solicitud', 'nota_venta', 'motivo', 'estado', 'tiene_pago', 'obs_pago', 'tiene_entrega', 'entrega_fisica'
+        'id_solicitud', 'nota_venta', 'motivo', 'estado', 'tiene_pago', 'obs_pago', 'tiene_entrega', 'entrega_fisica', 'id_almacen'
     ];
 
     protected $casts = [
@@ -26,4 +26,20 @@ class Anulacion extends Model
     {
         return $this->belongsTo(Solicitud::class, 'id_solicitud');
     }
+
+    public function almacen()
+    {
+        return $this->belongsTo(Almacen::class, 'id_almacen');
+    }
+
+    public function encargado()
+    {
+        return $this->almacen?->encargado;
+    }
+
+    public function esEncargado(User $usuario)
+    {
+        return $this->encargado && $this->encargado->id === $usuario->id;
+    }
+
 }

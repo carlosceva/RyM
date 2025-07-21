@@ -25,14 +25,12 @@ class BackupController extends Controller
             $puerto = $db['port'] ?? 5432;
             $base = $db['database'];
 
-            // Asegúrate de tener correctamente seteado el path de pg_dump
             $pgDumpPath = '"C:\\Program Files\\PostgreSQL\\16\\bin\\pg_dump.exe"';
 
             $fecha = now()->format('Y_m_d_H_i_s');
             $nombreArchivo = "backup_{$fecha}.sql";
             $rutaBackup = storage_path("app/backups/{$nombreArchivo}");
 
-            // Creamos la carpeta si no existe
             if (!file_exists(storage_path('app/backups'))) {
                 mkdir(storage_path('app/backups'), 0777, true);
             }
@@ -47,7 +45,9 @@ class BackupController extends Controller
                 throw new \Exception("pg_dump falló. Output: " . implode("\n", $output));
             }
 
-            return back()->with('success', 'Respaldo generado correctamente.');
+            // ✅ Forzar descarga del archivo al usuario
+            return response()->download($rutaBackup)->deleteFileAfterSend();
+
         } catch (\Exception $e) {
             \Log::error('Error al generar respaldo: ' . $e->getMessage());
             return back()->with('error', 'Error al generar respaldo.');

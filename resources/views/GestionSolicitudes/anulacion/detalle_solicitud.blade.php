@@ -43,6 +43,12 @@
                 </div>
 
                 <div class="col-12 col-md-6 mt-3 mt-md-0">
+                    <p class="mb-2"><strong>Almacen: </strong>{{ $solicitud->anulacion->almacen->nombre ?? 'N/A' }}</p>
+                </div>
+            </div>
+
+            <div class="row  p-2 ">
+                <div class="col-12 col-md-6 ">
                     <p class="mb-2"><strong>Motivo: </strong>{{ $solicitud->anulacion->motivo }}</p>
                 </div>
             </div>

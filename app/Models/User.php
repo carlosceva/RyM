@@ -61,4 +61,14 @@ class User extends Authenticatable
         $this->attributes['codigo'] = strtolower($value);
     }
 
+    public function almacenesEncargados()
+    {
+        return $this->hasMany(\App\Models\Almacen::class, 'id_encargado');
+    }
+
+    public function esEncargadoDeAlmacen(): bool
+    {
+        return $this->almacenesEncargados()->exists();
+    }
+
 }

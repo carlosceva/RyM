@@ -30,6 +30,19 @@
                     <input type="text" class="form-control" id="nota_venta" name="nota_venta">
                 </div>
 
+                <!-- Almacén -->
+                <div class="row mb-2 align-items-center">
+                    <label for="id_almacen" class="col-md-3 col-form-label">Almacén</label>
+                    <div class="col-md-9">
+                        <select name="id_almacen" id="id_almacen" class="form-select" required>
+                            <option value="">-- Seleccione un almacén --</option>
+                            @foreach($almacenes as $almacen)
+                                <option value="{{ $almacen->id }}">{{ $almacen->nombre }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+
                 <!-- Motivo -->
                 <div class="mb-3">
                     <label for="motivo" class="form-label">Motivo</label>

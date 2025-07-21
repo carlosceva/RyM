@@ -11,7 +11,9 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\DB;
 use App\Models\Devolucion;
 use App\Models\User;
+use App\Models\Almacen;
 use App\Services\WhatsAppService;
+use App\Services\NotificadorSolicitudService;
 
 class AnulacionController extends Controller
 {
@@ -21,8 +23,38 @@ class AnulacionController extends Controller
     public function index()
     {
         $user = Auth::user();
+        $almacenes = Almacen::where('estado', 'a')->get();
 
-        if ($user->hasRole('Administrador') || $user->can('Anulacion_aprobar') || $user->can('Anulacion_reprobar') || $user->can('Anulacion_pago') || $user->can('Anulacion_entrega')) {
+        if ($user->hasRole('Supra Administrador')) {
+            $solicitudes = Solicitud::whereHas('anulacion')
+                ->with(['usuario', 'anulacion'])
+                ->orderBy('fecha_solicitud', 'desc')
+                ->get();
+
+        } elseif ($user->can('Anulacion_entrega') && $user->esEncargadoDeAlmacen()) {
+            // ✅ Almacenero encargado: solo solicitudes de su(s) almacén(es)
+            $idsAlmacenes = $user->almacenesEncargados->pluck('id')->toArray();
+
+            $solicitudes = Solicitud::where('estado', '!=', 'inactivo')
+                ->whereHas('anulacion', function ($query) use ($idsAlmacenes) {
+                    $query->where('estado', '!=', 'inactivo')
+                        ->whereIn('id_almacen', $idsAlmacenes);
+                })
+                ->with(['usuario', 'anulacion' => function ($query) use ($idsAlmacenes) {
+                    $query->where('estado', '!=', 'inactivo')
+                        ->whereIn('id_almacen', $idsAlmacenes);
+                }])
+                ->orderBy('fecha_solicitud', 'desc')
+                ->get();
+
+        } elseif (
+            $user->hasRole('Administrador') ||
+            $user->can('Anulacion_aprobar') ||
+            $user->can('Anulacion_reprobar') ||
+            $user->can('Anulacion_pago') ||
+            // ✅ Permitimos Anulacion_entrega si no es un almacenero sin almacén
+            ($user->can('Anulacion_entrega') && !$user->esEncargadoDeAlmacen())
+        ) {
             $solicitudes = Solicitud::where('estado', '!=', 'inactivo')
                 ->whereHas('anulacion', function ($query) {
                     $query->where('estado', '!=', 'inactivo');
@@ -31,8 +63,10 @@ class AnulacionController extends Controller
                     $query->where('estado', '!=', 'inactivo');
                 }])
                 ->orderBy('fecha_solicitud', 'desc')
-                ->get();        
+                ->get();
+
         } else {
+            // Usuario común: solo sus solicitudes activas
             $solicitudes = Solicitud::where('estado', '!=', 'inactivo')
                 ->where('id_usuario', $user->id)
                 ->whereHas('anulacion', function ($query) {
@@ -42,10 +76,10 @@ class AnulacionController extends Controller
                     $query->where('estado', '!=', 'inactivo');
                 }])
                 ->orderBy('fecha_solicitud', 'asc')
-                ->get();        
+                ->get();
         }
 
-        return view('GestionSolicitudes.anulacion.index', compact('solicitudes'));
+        return view('GestionSolicitudes.anulacion.index', compact('solicitudes', 'almacenes'));
     }
 
     /**
@@ -59,7 +93,7 @@ class AnulacionController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request, WhatsAppService $whatsapp)
+    public function store(Request $request, NotificadorSolicitudService $notificador)
     {
         $request->validate([
             'tipo' => 'required|string',
@@ -80,34 +114,17 @@ class AnulacionController extends Controller
                 'estado' => 'pendiente',
                 'glosa' => $request->glosa,
             ]);
-    
+            
             $anulacion = Anulacion::create([
                 'id_solicitud' => $solicitud->id,
                 'nota_venta' => $request->nota_venta,
                 'motivo' => $request->motivo,
                 'tiene_pago' => $request->tiene_pago,
                 'obs_pago' => $request->obs_pago,
+                'id_almacen' => $request->id_almacen,
             ]);
 
-            $usuariosResponsables = User::whereHas('roles.permissions', function ($query) {
-                $query->where('name', 'Anulacion_aprobar');
-            })->get();
-
-            $phoneNumbers = $usuariosResponsables->map(function ($user) {
-                return [
-                    'telefono' => '+591' . str_pad($user->telefono, 8, '0', STR_PAD_LEFT),
-                    'api_key' => $user->key, 
-                ];
-            });
-
-            $phoneNumbers = $phoneNumbers->toArray();
-
-            $message = "Se ha creado una nueva solicitud de *Anulacion de Venta* y está esperando aprobación.\n" .
-            "N° de solicitud: " . $solicitud->id . "\n" .
-            "Fecha: " . $solicitud->fecha_solicitud->format('d/m/Y H:i') . "\n" .
-            "Solicitado por: " . auth()->user()->name . ".";
-
-            $responses = $whatsapp->sendWithAPIKey($phoneNumbers, $message);
+            $notificador->notificar($solicitud, 'crear');
     
             DB::commit();
     
@@ -121,7 +138,7 @@ class AnulacionController extends Controller
         }
     }
 
-    public function aprobar_o_rechazar(Request $request, WhatsAppService $whatsapp)
+    public function aprobar_o_rechazar(Request $request, NotificadorSolicitudService $notificador)
     {
         // Validamos la solicitud
         $request->validate([
@@ -141,29 +158,7 @@ class AnulacionController extends Controller
         if ($request->accion === 'aprobar') {
             $solicitud->estado = 'aprobada';
 
-            $usuariosResponsables = User::whereHas('roles.permissions', function ($query) {
-                $query->where('name', 'Anulacion_entrega');
-            })
-            ->whereHas('roles.permissions', function ($query) {
-                $query->where('name', 'Anulacion_ejecutar');
-            })
-            ->get();
-
-            $phoneNumbers = $usuariosResponsables->map(function ($user) {
-                return [
-                    'telefono' => '+591' . str_pad($user->telefono, 8, '0', STR_PAD_LEFT),
-                    'api_key' => $user->key, 
-                ];
-            });
-
-            $phoneNumbers = $phoneNumbers->toArray();
-
-            $message = "Se ha aprobado una solicitud de *Anulacion de Venta* y está esperando su confirmacion.\n" .
-            "N° de solicitud: " . $solicitud->id . "\n" .
-            "Fecha de autorizacion: " . $solicitud->fecha_autorizacion->format('d/m/Y H:i') . "\n" .
-            "Autorizado por: " . $solicitud->autorizador->name . ".";
-
-            $responses = $whatsapp->sendWithAPIKey($phoneNumbers, $message);
+            $notificador->notificar($solicitud, 'aprobar');
 
         } elseif ($request->accion === 'rechazar') {
             $solicitud->estado = 'rechazada';
@@ -181,7 +176,7 @@ class AnulacionController extends Controller
         return redirect()->route('Anulacion.index')->with('success', 'La solicitud ha sido ' . $solicitud->estado . ' correctamente.');
     }
 
-    public function ejecutar($id, WhatsAppService $whatsapp)
+    public function ejecutar($id, NotificadorSolicitudService $notificador)
     {
         $solicitud = Solicitud::findOrFail($id);
     
@@ -221,18 +216,7 @@ class AnulacionController extends Controller
             $solicitud->estado = 'ejecutada';
             $solicitud->save();
 
-            // ✅ Notificar al solicitante
-            if ($usuarioSolicitante && $usuarioSolicitante->telefono && $usuarioSolicitante->key) {
-                $mensaje = "❌ Su solicitud de *anulación* ha sido *ejecutada*.\n" .
-                        "N° de solicitud: {$solicitud->id}\n" .
-                        "Fecha: " . now()->format('d/m/Y H:i') . "\n" .
-                        "Ejecutado por: " . auth()->user()->name . ".";
-
-                $whatsapp->sendWithAPIKey([[
-                    'telefono' => '+591' . str_pad($usuarioSolicitante->telefono, 8, '0', STR_PAD_LEFT),
-                    'api_key' => $usuarioSolicitante->key
-                ]], $mensaje);
-            }
+            $notificador->notificar($solicitud, 'ejecutar_anulacion');
     
             return back()->with('success', 'Solicitud de anulación ejecutada correctamente.');
         }
@@ -269,18 +253,8 @@ class AnulacionController extends Controller
             DB::commit();
 
             // ✅ Notificar al solicitante
-            if ($usuarioSolicitante && $usuarioSolicitante->telefono && $usuarioSolicitante->key) {
-                $mensaje = "🔄 Su solicitud fue convertida en una *devolución*.\n" .
-                        "N° de solicitud original: {$solicitud->id}\n" .
-                        "Nueva solicitud creada: {$nuevaSolicitud->id}\n" .
-                        "Fecha: " . now()->format('d/m/Y H:i') . "\n" .
-                        "Responsable: " . auth()->user()->name . ".";
-
-                $whatsapp->sendWithAPIKey([[
-                    'telefono' => '+591' . str_pad($usuarioSolicitante->telefono, 8, '0', STR_PAD_LEFT),
-                    'api_key' => $usuarioSolicitante->key
-                ]], $mensaje);
-            }
+            $notificador->notificar($solicitud, 'ejecutar_devolucion');
+            $notificador->notificar($solicitud, 'crear_devolucion');
     
             return redirect()->route('Devolucion.index')
                 ->with('success', 'La anulación fue convertida en una solicitud de devolución.');
@@ -290,7 +264,7 @@ class AnulacionController extends Controller
         }
     }   
 
-    public function verificarEntregaFisica(Request $request, $id, WhatsAppService $whatsapp)
+    public function verificarEntregaFisica(Request $request, $id, NotificadorSolicitudService $notificador)
     {
         $request->validate([
             'entrega' => 'required|boolean',
@@ -307,37 +281,14 @@ class AnulacionController extends Controller
 
         // ✅ Notificar solo si se seleccionó "NO tiene entrega"
         if (!$request->entrega) {
-            // Usuarios que tienen 'Anulacion_entrega' pero NO 'Anulacion_ejecutar'
-            $usuarios = User::whereHas('roles.permissions', function ($query) {
-                    $query->where('name', 'Anulacion_entrega');
-                })
-                ->whereHas('roles.permissions', function ($query) {
-                    $query->where('name', 'Anulacion_ejecutar');
-                })
-                ->get();
-
-            // Formatear números
-            $destinatarios = $usuarios->map(function ($user) {
-                return [
-                    'telefono' => '+591' . str_pad($user->telefono, 8, '0', STR_PAD_LEFT),
-                    'api_key' => $user->key,
-                ];
-            })->toArray();
-
-            // Mensaje a enviar
-            $message = "⚠️ Se marcó que *NO* hay entrega fisica en la solicitud de *Anulación*.\n" .
-                    "N° de solicitud: {$solicitud->id}\n" .
-                    "Fecha: " . now()->format('d/m/Y H:i') . "\n" .
-                    "Puede continuar con la ejecucion";
-
-            // Enviar vía WhatsApp
-            $whatsapp->sendWithAPIKey($destinatarios, $message);
+            
+            $notificador->notificar($solicitud, 'verificar_entrega_fisica');
         }
     
         return redirect()->back()->with('success', 'Verificación de Entrega registrada correctamente.');
     }
     
-    public function verificarEntrega(Request $request, $id, WhatsAppService $whatsapp)
+    public function verificarEntrega(Request $request, $id, NotificadorSolicitudService $notificador)
     {
         $request->validate([
             'entrega' => 'required|boolean',
@@ -354,31 +305,8 @@ class AnulacionController extends Controller
 
         // ✅ Notificar solo si se seleccionó "NO tiene entrega"
         if (!$request->entrega) {
-            // Usuarios que tienen 'Anulacion_entrega' pero NO 'Anulacion_ejecutar'
-            $usuarios = User::whereHas('roles.permissions', function ($query) {
-                    $query->where('name', 'Anulacion_entrega');
-                })
-                ->whereDoesntHave('roles.permissions', function ($query) {
-                    $query->where('name', 'Anulacion_ejecutar');
-                })
-                ->get();
-
-            // Formatear números
-            $destinatarios = $usuarios->map(function ($user) {
-                return [
-                    'telefono' => '+591' . str_pad($user->telefono, 8, '0', STR_PAD_LEFT),
-                    'api_key' => $user->key,
-                ];
-            })->toArray();
-
-            // Mensaje a enviar
-            $message = "⚠️ Se marcó que *NO* hay despacho registrado en la solicitud de *Anulación*.\n" .
-                    "N° de solicitud: {$solicitud->id}\n" .
-                    "Fecha: " . now()->format('d/m/Y H:i') . "\n" .
-                    "Por favor, verifique la entrega";
-
-            // Enviar vía WhatsApp
-            $whatsapp->sendWithAPIKey($destinatarios, $message);
+            
+            $notificador->notificar($solicitud, 'verificar_entrega');
         }
     
         return redirect()->back()->with('success', 'Verificación de entrega registrada correctamente.');

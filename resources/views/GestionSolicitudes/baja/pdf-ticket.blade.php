@@ -56,7 +56,7 @@
         <!-- Cuerpo -->
         <div class="card-body mt-2">
             <p class="mb-1"><strong>Solicitante:</strong> {{ $solicitud->usuario->name ?? 'N/D' }}</p>
-            <p class="mb-1"><strong>Almacén:</strong> {{ $solicitud->bajaMercaderia->almacen ?? 'N/A' }}</p>
+            <p class="mb-1"><strong>Almacén:</strong> {{ $solicitud->bajaMercaderia->almacen_nombre?->nombre ?? 'N/A' }}</p>
             <p class="mb-1"><strong>Tipo de ajuste:</strong> {{ $solicitud->bajaMercaderia->tipo ?? 'N/A' }}</p>
 
             <p class="mb-1"><strong>Motivo:</strong></p>

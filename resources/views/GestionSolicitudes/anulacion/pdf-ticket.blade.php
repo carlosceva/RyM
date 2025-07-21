@@ -75,6 +75,14 @@
                 </div>
             </div>
 
+            <!-- Almacen -->
+            <div class="d-flex align-center mb-2">
+                <strong class="me-2">Almacen:</strong>
+                <div class="border p-2 rounded bg-light small flex-grow">
+                    {{ $solicitud->anulacion->almacen->nombre ?? 'N/A' }}
+                </div>
+            </div>
+
             <!-- Motivo -->
             <div class="d-flex align-center mb-2">
                 <strong class="me-2">Motivo:</strong>
@@ -84,7 +92,7 @@
             </div>
 
 
-            <!-- Motivo -->
+            <!-- Glosa -->
             <div class="d-flex align-center mb-2">
                 <strong class="me-2">Glosa:</strong>
                 <div class="border p-2 rounded bg-light small flex-grow">

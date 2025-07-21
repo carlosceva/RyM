@@ -66,7 +66,13 @@
                                 <tbody>
                                     @foreach ($solicitudes as $solicitud)
                                     <tr>
-                                        <td>{{ ucwords(str_replace('_', ' ', $solicitud)) }}</td>
+                                        <td>
+                                            @php
+                                                // Mapeo condicional: si la solicitud es 'Baja', la reemplazamos por 'Ajuste de Inv.'
+                                                $nombreSolicitud = ($solicitud === 'Baja') ? 'Ajuste de Inv.' : ucwords(str_replace('_', ' ', $solicitud));
+                                            @endphp
+                                            {{ $nombreSolicitud }}
+                                        </td>
                                         @foreach ($acciones as $accion)
                                             @php
                                                 $permisoName = "{$solicitud}_{$accion}";
@@ -90,7 +96,7 @@
                                             </td>
                                         @endforeach
                                     </tr>
-                                    @endforeach
+                                @endforeach
                                 </tbody>
                             </table>
                         </td>
@@ -137,23 +143,27 @@
                         </thead>
                         <tbody>
                             @foreach ($solicitudes as $solicitud)
-                            <tr>
-                                <td>{{ ucwords(str_replace('_', ' ', $solicitud)) }}</td>
-                                @foreach ($acciones as $accion)
-                                    @php
-                                        $permisoName = "{$solicitud}_{$accion}";
-                                        $permiso = $permissions->firstWhere('name', $permisoName);
-                                    @endphp
-                                    <td>
-                                        @if ($permiso)
-                                            <input type="checkbox" name="permisos[]" value="{{ $permiso->id }}"
-                                            {{ $role->hasPermissionTo($permiso->name) ? 'checked' : '' }}>
-                                        @else
-                                            <span>-</span>
-                                        @endif
-                                    </td>
-                                @endforeach
-                            </tr>
+                                @php
+                                    // Mapeo condicional: Si la solicitud es 'Baja', reemplazamos por 'Ajuste de Inv.'
+                                    $nombreSolicitud = ($solicitud === 'Baja') ? 'Ajuste de Inv.' : ucwords(str_replace('_', ' ', $solicitud));
+                                @endphp
+                                <tr>
+                                    <td>{{ $nombreSolicitud }}</td>
+                                    @foreach ($acciones as $accion)
+                                        @php
+                                            $permisoName = "{$solicitud}_{$accion}";
+                                            $permiso = $permissions->firstWhere('name', $permisoName);
+                                        @endphp
+                                        <td>
+                                            @if ($permiso)
+                                                <input type="checkbox" name="permisos[]" value="{{ $permiso->id }}"
+                                                {{ $role->hasPermissionTo($permiso->name) ? 'checked' : '' }}>
+                                            @else
+                                                <span>-</span>
+                                            @endif
+                                        </td>
+                                    @endforeach
+                                </tr>
                             @endforeach
                         </tbody>
                     </table>
@@ -166,6 +176,7 @@
         </form>
     </div>
 </div>
+
 
 <style>
     .form-check-input:checked {

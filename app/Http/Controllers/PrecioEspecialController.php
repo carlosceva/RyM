@@ -10,7 +10,10 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use App\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf;
-use App\Services\WhatsAppService;
+use App\Services\TwilioWhatsAppService;
+use App\Services\Contracts\WhatsAppServiceInterface;
+use App\Services\NotificadorSolicitudService;
+use App\Notifications\SolicitudAprobada;
 
 class PrecioEspecialController extends Controller
 {
@@ -32,16 +35,34 @@ class PrecioEspecialController extends Controller
                 ->orderBy('fecha_solicitud', 'desc')
                 ->get();        
         } else {
-            $solicitudes = Solicitud::where('estado', '!=', 'inactivo')
-                ->where('id_usuario', $user->id)
-                ->whereHas('precioEspecial', function ($query) {
-                    $query->where('estado', '!=', 'inactivo');
-                })
-                ->with(['usuario', 'precioEspecial' => function ($query) {
-                    $query->where('estado', '!=', 'inactivo');
-                }])
-                ->orderBy('fecha_solicitud', 'asc')
-                ->get();        
+
+            if ($user->hasRole('Auxiliar de Venta')) {
+                // Obtener IDs de los vendedores comerciales
+                $vendedoresComercialesIds = \App\Models\User::role('Vendedor Comercial')->pluck('id');
+
+                // Mostrar solicitudes que fueron creadas por esos vendedores comerciales
+                $solicitudes = Solicitud::where('estado', '!=', 'inactivo')
+                    ->whereIn('id_usuario', $vendedoresComercialesIds)
+                    ->whereHas('precioEspecial', function ($query) {
+                        $query->where('estado', '!=', 'inactivo');
+                    })
+                    ->with(['usuario', 'precioEspecial' => function ($query) {
+                        $query->where('estado', '!=', 'inactivo');
+                    }])
+                    ->orderBy('fecha_solicitud', 'asc')
+                    ->get();
+            } else {
+                $solicitudes = Solicitud::where('estado', '!=', 'inactivo')
+                    ->where('id_usuario', $user->id)
+                    ->whereHas('precioEspecial', function ($query) {
+                        $query->where('estado', '!=', 'inactivo');
+                    })
+                    ->with(['usuario', 'precioEspecial' => function ($query) {
+                        $query->where('estado', '!=', 'inactivo');
+                    }])
+                    ->orderBy('fecha_solicitud', 'asc')
+                    ->get();        
+            }
         }
     
         return view('GestionSolicitudes.precio.index', compact('solicitudes'));
@@ -60,7 +81,7 @@ class PrecioEspecialController extends Controller
      * Store a newly created resource in storage.
      */
 
-    public function store(Request $request, WhatsAppService $whatsapp)
+    public function store(Request $request, NotificadorSolicitudService $notificador)
     {
         
         $request->validate([
@@ -85,25 +106,7 @@ class PrecioEspecialController extends Controller
                 'detalle_productos' => $request->detalle_productos,
             ]);
             
-            $usuariosResponsables = User::whereHas('roles.permissions', function ($query) {
-                $query->where('name', 'Precio_especial_aprobar');
-            })->get();
-
-            $phoneNumbers = $usuariosResponsables->map(function ($user) {
-                return [
-                    'telefono' => '+591' . str_pad($user->telefono, 8, '0', STR_PAD_LEFT),
-                    'api_key' => $user->key, 
-                ];
-            });
-
-            $phoneNumbers = $phoneNumbers->toArray();
-            
-            $message = "Se ha creado una nueva solicitud de *Precio especial* y está esperando aprobación.\n" .
-            "N° de solicitud: " . $solicitud->id . "\n" .
-            "Fecha: " . $solicitud->fecha_solicitud->format('d/m/Y H:i') . "\n" .
-            "Solicitado por: " . auth()->user()->name . ".";
-
-            $responses = $whatsapp->sendWithAPIKey($phoneNumbers, $message);
+            $notificador->notificar($solicitud, 'crear');
 
             DB::commit();
 
@@ -171,7 +174,7 @@ class PrecioEspecialController extends Controller
     //     return redirect()->route('PrecioEspecial.index')->with('success', 'La solicitud ha sido ' . $solicitud->estado . ' correctamente.');
     // }
 
-    public function aprobar_o_rechazar(Request $request, WhatsAppService $whatsapp)
+    public function aprobar_o_rechazar(Request $request, WhatsAppServiceInterface $whatsapp, NotificadorSolicitudService $notificador)
     {
         $request->validate([
             'solicitud_id' => 'required|exists:solicitudes,id',
@@ -194,23 +197,10 @@ class PrecioEspecialController extends Controller
             if ($request->accion === 'aprobar') {
                 $solicitud->estado = 'aprobada';
 
-                $usuariosResponsables = User::whereHas('roles.permissions', function ($query) {
-                    $query->where('name', 'Precio_especial_ejecutar');
-                })->get();
-
-                $phoneNumbers = $usuariosResponsables->map(function ($user) {
-                    return [
-                        'telefono' => '+591' . str_pad($user->telefono, 8, '0', STR_PAD_LEFT),
-                        'api_key' => $user->key,
-                    ];
-                })->toArray();
-
-                $message = "Se ha aprobado una solicitud de *Precio especial de venta* y está esperando su ejecución.\n" .
-                    "N° de solicitud: " . $solicitud->id . "\n" .
-                    "Fecha de autorización: " . $solicitud->fecha_autorizacion->format('d/m/Y H:i') . "\n" .
-                    "Autorizado por: " . $solicitud->autorizador->name . ".";
-
-                $responses = $whatsapp->sendWithAPIKey($phoneNumbers, $message);
+                $notificador->notificar(
+                    solicitud: $solicitud,
+                    etapa: 'aprobar'
+                );
             } elseif ($request->accion === 'rechazar') {
                 $solicitud->estado = 'rechazada';
             }
@@ -228,6 +218,12 @@ class PrecioEspecialController extends Controller
 
             $solicitud->save();
 
+            $usuariosEjecutores = User::permission('Precio_especial_ejecutar')->get();
+
+            foreach ($usuariosEjecutores as $user) {
+                $user->notify(new SolicitudAprobada($solicitud));
+            }
+
             DB::commit();
 
             return redirect()->route('PrecioEspecial.index')
@@ -238,7 +234,7 @@ class PrecioEspecialController extends Controller
         }
     }
 
-    public function ejecutar($id, WhatsAppService $whatsapp)
+    public function ejecutar($id, NotificadorSolicitudService $notificador)
     {
         $solicitud = Solicitud::findOrFail($id);
     
@@ -262,24 +258,7 @@ class PrecioEspecialController extends Controller
         $solicitud->estado = 'ejecutada';
         $solicitud->save();
 
-        $usuarioSolicitante = $solicitud->usuario;
-
-        if ($usuarioSolicitante && $usuarioSolicitante->telefono && $usuarioSolicitante->key) {
-            $numero = '+591' . str_pad($usuarioSolicitante->telefono, 8, '0', STR_PAD_LEFT);
-            $apiKey = $usuarioSolicitante->key;
-    
-            $mensaje = "📦 Su solicitud de *Precio especial de venta* ha sido *ejecutada*.\n" .
-                       "N° de solicitud: {$solicitud->id}\n" .
-                       "Fecha de ejecución: " . now()->format('d/m/Y H:i') . "\n" .
-                       "Ejecutado por: " . auth()->user()->name . ".";
-    
-            $destinatario = [[
-                'telefono' => $numero,
-                'api_key' => $apiKey
-            ]];
-    
-            $whatsapp->sendWithAPIKey($destinatario, $mensaje);
-        }
+        $notificador->notificar($solicitud, 'ejecutar');
     
         return back()->with('success', 'Solicitud ejecutada exitosamente.');
     }

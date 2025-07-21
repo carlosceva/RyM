@@ -160,7 +160,7 @@
                                         @can('Devolucion_entrega')
                                             @can('Devolucion_ejecutar')
                                                 <button type="button" class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#modalEntrega{{ $solicitud->id }}">
-                                                    Confirmar Entrega
+                                                    Confirmar Despacho
                                                 </button>
                                                 &nbsp;
                                             @endcan
@@ -270,7 +270,7 @@
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow-sm">
             <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title" id="modalLabel{{ $solicitud->id }}">Verificar Entrega</h5>
+                <h5 class="modal-title" id="modalLabel{{ $solicitud->id }}">Verificar Despacho</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
             </div>
 

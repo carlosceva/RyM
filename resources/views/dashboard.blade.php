@@ -146,7 +146,7 @@
             <ul class="nav nav-treeview">
               @can('usuarios_ver')
               <li class="nav-item">
-                <a href="{{route('usuario.index')}}" class="nav-link">
+                <a href="{{route('usuario.index')}}" class="nav-link {{ request()->routeIs('usuario.index') ? 'active' : '' }}">
                   <i class="fa fa-users nav-icon"></i>
                   <p>Usuarios</p>
                 </a>
@@ -154,7 +154,7 @@
               @endcan
               @can('roles_ver')
               <li class="nav-item">
-                <a href="{{route('roles.index')}}" class="nav-link">
+                <a href="{{route('roles.index')}}" class="nav-link {{ request()->routeIs('roles.index') ? 'active' : '' }}">
                   <i class="fa fa-book nav-icon"></i>
                   <p>Roles</p>
                 </a>
@@ -162,7 +162,7 @@
               @endcan
               @can('permisos_ver')
               <li class="nav-item">
-                <a href="{{ route('permisos.index') }}" class="nav-link">
+                <a href="{{ route('permisos.index') }}" class="nav-link {{ request()->routeIs('permisos.index') ? 'active' : '' }}">
                   <i class="fa fa-key nav-icon"></i>
                   <p>Permisos</p>
                 </a>
@@ -170,7 +170,7 @@
               @endcan
               @can('sistema_ver')
               <li class="nav-item">
-                <a href="{{ route('backup.index') }}" class="nav-link">
+                <a href="{{ route('backup.index') }}" class="nav-link {{ request()->routeIs('backup.index') ? 'active' : '' }}">
                   <i class="fa fa-hdd nav-icon"></i>
                   <p>Backup y Restore</p>
                 </a>
@@ -178,7 +178,7 @@
               @endcan
               @can('usuarios_ver')
               <li class="nav-item">
-                <a href="{{ route('almacen.index') }}" class="nav-link">
+                <a href="{{ route('almacen.index') }}" class="nav-link {{ request()->routeIs('almacen.index') ? 'active' : '' }}">
                   <i class="fas fa-file nav-icon"></i>
                   <p>Almacenes</p>
                 </a>
@@ -209,7 +209,7 @@
               @endrole
               @can('Devolucion_ver')
               <li class="nav-item">
-                <a href="{{route('Devolucion.index')}}" class="nav-link">
+                <a href="{{route('Devolucion.index')}}" class="nav-link {{ request()->routeIs('Devolucion.index') ? 'active' : '' }}">
                   <i class="nav-icon fas fa-undo"></i>
                   <p>Devolucion de venta</p>
                 </a>
@@ -217,7 +217,7 @@
               @endcan
               @can('Anulacion_ver')
               <li class="nav-item">
-                <a href="{{route('Anulacion.index')}}" class="nav-link">
+                <a href="{{route('Anulacion.index')}}" class="nav-link {{ request()->routeIs('Anulacion.index') ? 'active' : '' }}">
                   <i class="nav-icon far fa-times-circle"></i>
                   <p>Anulacion de venta</p>
                 </a>
@@ -225,7 +225,7 @@
               @endcan
               @can('Sobregiro_ver')
               <li class="nav-item">
-                <a href="{{route('Sobregiro.index')}}" class="nav-link">
+                <a href="{{route('Sobregiro.index')}}" class="nav-link {{ request()->routeIs('Sobregiro.index') ? 'active' : '' }}">
                   <i class="nav-icon far fa-arrow-alt-circle-up"></i>
                   <p>Sobregiro en ventas</p>
                 </a>
@@ -233,7 +233,7 @@
               @endcan
               @can('Precio_especial_ver')
               <li class="nav-item">
-                <a href="{{route('PrecioEspecial.index')}}" class="nav-link">
+                <a href="{{route('PrecioEspecial.index')}}" class="nav-link {{ request()->routeIs('PrecioEspecial.index') ? 'active' : '' }}">
                   <i class="nav-icon far fa-file-alt"></i>
                   <p>Precio especial</p>
                 </a>
@@ -241,7 +241,7 @@
               @endcan
               @can('Muestra_ver')
               <li class="nav-item">
-                <a href="{{route('Muestra.index')}}" class="nav-link">
+                <a href="{{route('Muestra.index')}}" class="nav-link {{ request()->routeIs('Muestra.index') ? 'active' : '' }}">
                   <i class="nav-icon far fa-file-alt"></i>
                   <p>Muestra de mercadería</p>
                 </a>
@@ -249,7 +249,7 @@
               @endcan
               @can('Baja_ver')
               <li class="nav-item">
-                <a href="{{route('Baja.index')}}" class="nav-link">
+                <a href="{{route('Baja.index')}}" class="nav-link {{ request()->routeIs('Baja.index') ? 'active' : '' }}">
                   <i class="nav-icon far fa-trash-alt"></i>
                   <p>Ajuste de inventario</p>
                 </a>

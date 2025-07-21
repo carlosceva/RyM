@@ -3,7 +3,7 @@
   <div class="modal-dialog modal-lg">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title" id="modalCrearSolicitudLabel">Crear Solicitud de Baja de Mercaderia</h5>
+        <h5 class="modal-title" id="modalCrearSolicitudLabel">Crear Solicitud de Ajuste de Mercaderia</h5>
         <button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
@@ -41,7 +41,7 @@
                     <select name="almacen" id="almacen" class="form-select" required>
                         <option value="">-- Seleccione un almacén --</option>
                         @foreach($almacenes as $almacen)
-                            <option value="{{ $almacen->nombre }}">{{ $almacen->nombre }}</option>
+                            <option value="{{ $almacen->id }}">{{ $almacen->nombre }}</option>
                         @endforeach
                     </select>
                 </div>
@@ -70,7 +70,7 @@
                     <input type="number" id="cantidad" class="form-control" placeholder="Cantidad">
                 </div>
                 <div class="col-12 col-md-3">
-                    <input type="text" id="medida" class="form-control" placeholder="Ud. medida">
+                    <input type="text" id="medida" class="form-control" placeholder="U/M">
                 </div>
                 <div class="col-md-2">
                     <button type="button" class="btn btn-primary " onclick="agregarProducto()">Agregar</button>
@@ -84,7 +84,7 @@
                         <tr>
                             <th>Producto</th>
                             <th>Cantidad</th>
-                            <th>Ud. Medida</th>
+                            <th>U/M</th>
                             <th>Acción</th>
                         </tr>
                     </thead>

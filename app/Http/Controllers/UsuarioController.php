@@ -62,7 +62,6 @@ class UsuarioController extends Controller
                 'codigo' => $request->input('codigo'),
                 'name' => $request->input('name'),
                 'telefono' => $request->input('telefono'),
-                'key' => $request->input('key'),
             ]);
 
             // Asignar rol
@@ -105,6 +104,7 @@ class UsuarioController extends Controller
             'estado' => 'required|string|in:a,i',
             // Validación para la contraseña (opcional)
             'password' => 'nullable|string|min:6|confirmed', // La contraseña es opcional, pero si se proporciona, debe tener confirmación
+            'rol' => 'nullable|exists:roles,name',
         ]);
     
         // Encontrar al usuario
@@ -116,13 +116,19 @@ class UsuarioController extends Controller
         $usuario->telefono = $request->telefono;
         $usuario->email = $request->email;
         $usuario->estado = $request->estado;
-        $usuario->key = $request->key;
     
         // Si la contraseña es proporcionada, la actualizamos
         if ($request->has('password') && !empty($request->password)) {
             $usuario->password = Hash::make($request->password);
         }
-    
+
+        // Actualizar el rol si fue seleccionado
+        if ($request->filled('rol')) {
+            $usuario->syncRoles([$request->rol]); // Se asigna el rol seleccionado
+        } else {
+            $usuario->syncRoles([]); // Se elimina cualquier rol asignado (usuario sin rol)
+        }
+
         // Guardar los cambios en la base de datos
         $usuario->save();
     

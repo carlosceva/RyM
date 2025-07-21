@@ -65,7 +65,7 @@
                             <input type="number" id="cantidad" class="form-control" placeholder="Cantidad">
                         </div>
                         <div class="col-12 col-md-3">
-                            <input type="text" id="medida" class="form-control" placeholder="Ud. medida">
+                            <input type="text" id="medida" class="form-control" placeholder="U/M">
                         </div>
                         
                     </div>
@@ -85,7 +85,7 @@
                             <th>Cod-SAI</th>
                             <th>Producto</th>
                             <th>Cantidad</th>
-                            <th>Ud. Medida</th>
+                            <th>U/M</th>
                             <th>Acción</th>
                         </tr>
                     </thead>

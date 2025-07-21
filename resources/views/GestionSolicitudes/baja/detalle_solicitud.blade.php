@@ -96,7 +96,7 @@
                 
                     <p class="mb-2"><strong>Solicitante:</strong> {{ $solicitud->usuario->name ?? 'N/D' }}</p>
 
-                    <p class="mb-2"><strong>Almacen:</strong> {{ $solicitud->bajaMercaderia->almacen ?? 'N/A' }}</p>
+                    <p class="mb-2"><strong>Almacen:</strong> {{ $solicitud->bajaMercaderia->almacen_nombre?->nombre ?? 'N/A' }}</p>
 
                     <p class="mb-2"><strong>Tipo de ajuste:</strong> {{ $solicitud->bajaMercaderia->tipo ?? 'N/A' }}</p>
 
@@ -117,7 +117,7 @@
                                     <th scope="col">#</th>
                                     <th scope="col">Producto</th>
                                     <th scope="col">Cantidad</th>
-                                    <th scope="col">Medida</th>
+                                    <th scope="col">U/M</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -244,7 +244,7 @@
                     <!-- Enlace para descargar los archivos adjuntos -->
                     @if($solicitud->adjuntos->count() > 0)
                         @foreach ($solicitud->adjuntos as $adjunto)
-                        <a href="{{ asset('storage/' . $adjunto->archivo) }}" class="btn btn-sm btn-primary" target="_blank">
+                        <a href="{{ route('descargar.adjunto', $adjunto->id) }}" class="btn btn-sm btn-primary">
                             <i class="fa fa-download"></i> Descargar archivo adjunto
                         </a>
                         @endforeach

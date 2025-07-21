@@ -9,6 +9,10 @@ use Illuminate\Support\Facades\View;
 use App\Observers\SolicitudObserver;
 use App\Notifications\SolicitudCreada;
 use App\Models\User;
+use App\Services\Contracts\WhatsAppServiceInterface;
+use App\Services\TwilioWhatsAppService;
+use App\Services\FakeWhatsAppService;
+use App\Services\GupshupWhatsAppService;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -21,7 +25,12 @@ class AppServiceProvider extends ServiceProvider
     
     public function register(): void
     {
-        //
+        $this->app->bind(WhatsAppServiceInterface::class, function () {
+            if (app()->environment('production')) {
+                return new TwilioWhatsAppService();
+            }
+            return new TwilioWhatsAppService();
+        });
     }
 
     /**

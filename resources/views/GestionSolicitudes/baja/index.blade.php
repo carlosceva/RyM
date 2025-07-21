@@ -79,7 +79,7 @@
                         <td class="d-none">{{ ucfirst($solicitud->tipo) }}</td>      <!-- oculto -->
                         <td>{{ \Carbon\Carbon::parse($solicitud->fecha_solicitud)->format('Y-m-d') }}</td>
                         <td class="d-none">{{ $solicitud->usuario->name ?? 'N/D' }}</td>      <!-- oculto -->
-                        <td>{{ $solicitud->bajaMercaderia?->almacen ?? 'No asignado' }}</td>
+                        <td>{{ $solicitud->bajaMercaderia?->almacen_nombre?->nombre ?? 'N/A' }} </td>
                         <td>{{ $solicitud->bajaMercaderia?->tipo }}</td>
                         <td class="d-none">{{ $solicitud->glosa ?? 'Sin glosa' }}</td>      <!-- oculto -->
                         <td class="d-none">{{ $solicitud->bajaMercaderia?->detalle_productos ?? 'Sin detalle de productos' }}</td>

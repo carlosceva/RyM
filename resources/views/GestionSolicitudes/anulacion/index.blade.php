@@ -136,7 +136,7 @@
                                             @can('Anulacion_entrega')
                                                 @can('Anulacion_ejecutar')
                                                     <button class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#modalEntrega{{ $solicitud->id }}">
-                                                        Confirmar Entrega
+                                                        Confirmar Despacho
                                                     </button>
                                                     &nbsp;
                                                 @endcan

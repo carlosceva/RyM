@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\DB;
 use App\Models\User;
 use App\Models\Almacen;
 use App\Services\WhatsAppService;
+use App\Services\NotificadorSolicitudService;
 
 class DevolucionController extends Controller
 {
@@ -22,23 +23,39 @@ class DevolucionController extends Controller
     public function index()
     {
         $user = Auth::user();
-
-        $almacenes = Almacen::where('estado','a')->get();
+        $almacenes = Almacen::where('estado', 'a')->get();
 
         if ($user->hasRole('Supra Administrador')) {
-            // Puede ver todas las solicitudes, incluso las inactivas
-            $solicitudes = Solicitud::whereHas('devolucion') // asegura que tenga devolución relacionada
-            ->with(['usuario', 'devolucion'])
-            ->orderBy('fecha_solicitud', 'desc')
-            ->get();
+            $solicitudes = Solicitud::whereHas('devolucion')
+                ->with(['usuario', 'devolucion'])
+                ->orderBy('fecha_solicitud', 'desc')
+                ->get();
+
+        } elseif ($user->can('Devolucion_entrega') && $user->esEncargadoDeAlmacen()) {
+            // ✅ Almacenero encargado: solo solicitudes de su(s) almacén(es)
+            $idsAlmacenes = $user->almacenesEncargados->pluck('id')->toArray();
+
+            $solicitudes = Solicitud::where('estado', '!=', 'inactivo')
+                ->whereHas('devolucion', function ($query) use ($idsAlmacenes) {
+                    $query->where('estado', '!=', 'inactivo')
+                        ->whereIn('almacen', $idsAlmacenes);
+                })
+                ->with(['usuario', 'devolucion' => function ($query) use ($idsAlmacenes) {
+                    $query->where('estado', '!=', 'inactivo')
+                        ->whereIn('almacen', $idsAlmacenes);
+                }])
+                ->orderBy('fecha_solicitud', 'desc')
+                ->get();
+
         } elseif (
             $user->hasRole('Administrador') ||
             $user->can('Devolucion_aprobar') ||
             $user->can('Devolucion_reprobar') ||
             $user->can('Devolucion_pago') ||
-            $user->can('Devolucion_entrega')
+            // ✅ Aquí permitimos Devolucion_entrega solo si **NO** es un almacenero sin almacén
+            ($user->can('Devolucion_entrega') && !$user->esEncargadoDeAlmacen())
         ) {
-            // Usuarios con ciertos permisos ven solo solicitudes activas
+            // Ej: auxiliares que tienen el permiso pero no son encargados
             $solicitudes = Solicitud::where('estado', '!=', 'inactivo')
                 ->whereHas('devolucion', function ($query) {
                     $query->where('estado', '!=', 'inactivo');
@@ -48,6 +65,7 @@ class DevolucionController extends Controller
                 }])
                 ->orderBy('fecha_solicitud', 'desc')
                 ->get();
+
         } else {
             // Usuario común solo ve sus propias solicitudes activas
             $solicitudes = Solicitud::where('estado', '!=', 'inactivo')
@@ -62,7 +80,7 @@ class DevolucionController extends Controller
                 ->get();
         }
 
-        return view('GestionSolicitudes.devolucion.index', compact('solicitudes','almacenes'));
+        return view('GestionSolicitudes.devolucion.index', compact('solicitudes', 'almacenes'));
     }
 
     /**
@@ -76,7 +94,7 @@ class DevolucionController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request, WhatsAppService $whatsapp)
+    public function store(Request $request, NotificadorSolicitudService $notificador)
     {
         $request->validate([
             'tipo' => 'required|string',
@@ -86,7 +104,7 @@ class DevolucionController extends Controller
             'tiene_pago' => 'required|boolean',
             'obs_pago' => 'nullable|string',
         ]);
-    
+        
         DB::beginTransaction();
     
         try {
@@ -109,29 +127,11 @@ class DevolucionController extends Controller
                 'tiene_pago' => $request->tiene_pago,
                 'obs_pago' => $request->obs_pago,
             ]);
+            
+            $notificador->notificar($solicitud, 'crear');
 
-            $usuariosResponsables = User::whereHas('roles.permissions', function ($query) {
-                $query->where('name', 'Devolucion_aprobar');
-            })->get();
-
-            $phoneNumbers = $usuariosResponsables->map(function ($user) {
-                return [
-                    'telefono' => '+591' . str_pad($user->telefono, 8, '0', STR_PAD_LEFT),
-                    'api_key' => $user->key, 
-                ];
-            });
-
-            $phoneNumbers = $phoneNumbers->toArray();
-
-            $message = "Se ha creado una nueva solicitud de *Devolucion de Venta* y está esperando aprobación.\n" .
-            "Número de solicitud: " . $solicitud->id . "\n" .
-            "Fecha de creación: " . $solicitud->fecha_solicitud->format('d/m/Y H:i') . "\n" .
-            "Solicitado por: " . auth()->user()->name . ".";
-
-            $responses = $whatsapp->sendWithAPIKey($phoneNumbers, $message);
-    
             DB::commit();
-    
+
             return redirect()->route('Devolucion.index')->with('success', 'Solicitud de Devolucion creada.');
     
         } catch (\Exception $e) {
@@ -141,7 +141,7 @@ class DevolucionController extends Controller
         }
     }    
 
-    public function aprobar_o_rechazar(Request $request, WhatsAppService $whatsapp)
+    public function aprobar_o_rechazar(Request $request, NotificadorSolicitudService $notificador)
     {
         // Validamos la solicitud
         $request->validate([
@@ -161,29 +161,7 @@ class DevolucionController extends Controller
         if ($request->accion === 'aprobar') {
             $solicitud->estado = 'aprobada';
 
-            $usuariosResponsables = User::whereHas('roles.permissions', function ($query) {
-                $query->where('name', 'Devolucion_entrega');
-            })
-            ->whereHas('roles.permissions', function ($query) {
-                $query->where('name', 'Devolucion_ejecutar');
-            })
-            ->get();
-
-            $phoneNumbers = $usuariosResponsables->map(function ($user) {
-                return [
-                    'telefono' => '+591' . str_pad($user->telefono, 8, '0', STR_PAD_LEFT),
-                    'api_key' => $user->key, 
-                ];
-            });
-
-            $phoneNumbers = $phoneNumbers->toArray();
-
-            $message = "Se ha aprobado una solicitud de *Devolucion de Venta* y está esperando su confirmacion.\n" .
-            "N° de solicitud: " . $solicitud->id . "\n" .
-            "Fecha de autorizacion: " . $solicitud->fecha_autorizacion->format('d/m/Y H:i') . "\n" .
-            "Autorizado por: " . $solicitud->autorizador->name . ".";
-
-            $responses = $whatsapp->sendWithAPIKey($phoneNumbers, $message);
+            $notificador->notificar($solicitud, 'aprobar');
 
         } elseif ($request->accion === 'rechazar') {
             $solicitud->estado = 'rechazada';
@@ -201,7 +179,7 @@ class DevolucionController extends Controller
         return redirect()->route('Devolucion.index')->with('success', 'La solicitud ha sido ' . $solicitud->estado . ' correctamente.');
     }
 
-    public function ejecutar($id, WhatsAppService $whatsapp)
+    public function ejecutar($id, NotificadorSolicitudService $notificador)
     {
         $solicitud = Solicitud::findOrFail($id);
     
@@ -262,19 +240,8 @@ class DevolucionController extends Controller
     
                 DB::commit();
 
-                // ✅ Notificar al solicitante
-                if ($usuarioSolicitante && $usuarioSolicitante->telefono && $usuarioSolicitante->key) {
-                    $mensaje = "🔄 Su solicitud de *Devolucion* fue convertida en una *Anulacion*.\n" .
-                            "N° de solicitud Devolucion: {$solicitud->id}\n" .
-                            "Nueva solicitud creada: {$nuevaSolicitud->id}\n" .
-                            "Fecha: " . now()->format('d/m/Y H:i') . "\n" .
-                            "Responsable: " . auth()->user()->name . ".";
-
-                    $whatsapp->sendWithAPIKey([[
-                        'telefono' => '+591' . str_pad($usuarioSolicitante->telefono, 8, '0', STR_PAD_LEFT),
-                        'api_key' => $usuarioSolicitante->key
-                    ]], $mensaje);
-                }
+                $notificador->notificar($solicitud, 'ejecutar_anulacion');
+                $notificador->notificar($solicitud, 'crear_anulacion');
     
                 return redirect()->route('Anulacion.index')
                     ->with('success', 'La devolución fue convertida en una solicitud de anulación.');
@@ -294,23 +261,12 @@ class DevolucionController extends Controller
         $solicitud->estado = 'ejecutada';
         $solicitud->save();
 
-        // ✅ Notificar al solicitante
-        if ($usuarioSolicitante && $usuarioSolicitante->telefono && $usuarioSolicitante->key) {
-            $mensaje = "❌ Su solicitud de *Devolucion* ha sido *ejecutada*.\n" .
-                    "N° de solicitud: {$solicitud->id}\n" .
-                    "Fecha: " . now()->format('d/m/Y H:i') . "\n" .
-                    "Ejecutado por: " . auth()->user()->name . ".";
-
-            $whatsapp->sendWithAPIKey([[
-                'telefono' => '+591' . str_pad($usuarioSolicitante->telefono, 8, '0', STR_PAD_LEFT),
-                'api_key' => $usuarioSolicitante->key
-            ]], $mensaje);
-        }
+        $notificador->notificar($solicitud, 'ejecutar_devolucion');
     
         return back()->with('success', 'Solicitud de devolución ejecutada correctamente.');
     }    
 
-    public function verificarEntregaFisica(Request $request, $id, WhatsAppService $whatsapp)
+    public function verificarEntregaFisica(Request $request, $id, NotificadorSolicitudService $notificador)
     {
         $request->validate([
             'entrega' => 'required|boolean',
@@ -327,37 +283,13 @@ class DevolucionController extends Controller
 
          // ✅ Notificar solo si se seleccionó "NO tiene entrega"
          if (!$request->entrega) {
-            // Usuarios que tienen 'Devolucion_entrega' pero NO 'Anulacion_ejecutar'
-            $usuarios = User::whereHas('roles.permissions', function ($query) {
-                    $query->where('name', 'Devolucion_entrega');
-                })
-                ->whereHas('roles.permissions', function ($query) {
-                    $query->where('name', 'Devolucion_ejecutar');
-                })
-                ->get();
-
-            // Formatear números
-            $destinatarios = $usuarios->map(function ($user) {
-                return [
-                    'telefono' => '+591' . str_pad($user->telefono, 8, '0', STR_PAD_LEFT),
-                    'api_key' => $user->key,
-                ];
-            })->toArray();
-
-            // Mensaje a enviar
-            $message = "⚠️ Se marcó que *NO* hay entrega fisica en la solicitud de *Devolucion*.\n" .
-                    "N° de solicitud: {$solicitud->id}\n" .
-                    "Fecha: " . now()->format('d/m/Y H:i') . "\n" .
-                    "Puede continuar con la ejecucion";
-
-            // Enviar vía WhatsApp
-            $whatsapp->sendWithAPIKey($destinatarios, $message);
+            $notificador->notificar($solicitud, 'verificar_entrega_fisica');
         }
     
         return redirect()->back()->with('success', 'Verificación de Entrega registrada correctamente.');
     }
     
-    public function verificarEntrega(Request $request, $id, WhatsAppService $whatsapp)
+    public function verificarEntrega(Request $request, $id, NotificadorSolicitudService $notificador)
     {
         $request->validate([
             'entrega' => 'required|boolean',
@@ -374,31 +306,8 @@ class DevolucionController extends Controller
 
         // ✅ Notificar solo si se seleccionó "NO tiene entrega"
         if (!$request->entrega) {
-            // Usuarios que tienen 'Anulacion_entrega' pero NO 'Anulacion_ejecutar'
-            $usuarios = User::whereHas('roles.permissions', function ($query) {
-                    $query->where('name', 'Devolucion_entrega');
-                })
-                ->whereDoesntHave('roles.permissions', function ($query) {
-                    $query->where('name', 'Devolucion_ejecutar');
-                })
-                ->get();
-
-            // Formatear números
-            $destinatarios = $usuarios->map(function ($user) {
-                return [
-                    'telefono' => '+591' . str_pad($user->telefono, 8, '0', STR_PAD_LEFT),
-                    'api_key' => $user->key,
-                ];
-            })->toArray();
-
-            // Mensaje a enviar
-            $message = "⚠️ Se marcó que *NO* hay despacho registrado en la solicitud de *Devolucion*.\n" .
-                    "N° de solicitud: {$solicitud->id}\n" .
-                    "Fecha: " . now()->format('d/m/Y H:i') . "\n" .
-                    "Por favor, verifique la entrega";
-
-            // Enviar vía WhatsApp
-            $whatsapp->sendWithAPIKey($destinatarios, $message);
+            
+            $notificador->notificar($solicitud, 'verificar_entrega');
         }
     
         return redirect()->back()->with('success', 'Verificación de entrega registrada correctamente.');

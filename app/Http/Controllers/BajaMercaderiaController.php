@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\DB;
 use App\Models\User;
 use App\Models\Almacen;
 use App\Services\WhatsAppService;
+use App\Services\NotificadorSolicitudService;
 
 class BajaMercaderiaController extends Controller
 {
@@ -22,10 +23,10 @@ class BajaMercaderiaController extends Controller
     public function index()
     {
         $user = Auth::user();
-
-        $almacenes = Almacen::where('estado','a')->get();
+        $almacenes = Almacen::where('estado', 'a')->get();
 
         if ($user->hasRole('Administrador') || $user->can('Baja_aprobar') || $user->can('Baja_reprobar') || $user->can('Baja_ejecutar')) {
+            // Administrador o usuarios con permisos especiales
             $solicitudes = Solicitud::where('estado', '!=', 'inactivo')
                 ->whereHas('bajaMercaderia', function ($query) {
                     $query->where('estado', '!=', 'inactivo');
@@ -34,8 +35,30 @@ class BajaMercaderiaController extends Controller
                     $query->where('estado', '!=', 'inactivo');
                 }])
                 ->orderBy('fecha_solicitud', 'desc')
-                ->get();        
+                ->get();
+        } elseif ($user->esEncargadoDeAlmacen()) {
+            // Si es encargado de almacén, solo mostrar las solicitudes relacionadas con sus almacenes
+            $solicitudes = Solicitud::where('estado', '!=', 'inactivo')
+                ->whereHas('bajaMercaderia', function ($query) use ($user) {
+                    // Filtrar por almacenes donde el usuario es encargado
+                    $query->whereHas('almacen_nombre', function ($query) use ($user) {
+                        $query->whereHas('encargado', function ($query) use ($user) {
+                            $query->where('id', $user->id);
+                        });
+                    });
+                })
+                ->with(['usuario', 'bajaMercaderia' => function ($query) use ($user) {
+                    // Filtrar también en la carga de la relación bajaMercaderia
+                    $query->whereHas('almacen_nombre', function ($query) use ($user) {
+                        $query->whereHas('encargado', function ($query) use ($user) {
+                            $query->where('id', $user->id);
+                        });
+                    });
+                }])
+                ->orderBy('fecha_solicitud', 'desc')
+                ->get();
         } else {
+            // Para otros usuarios, solo mostrar sus propias solicitudes
             $solicitudes = Solicitud::where('estado', '!=', 'inactivo')
                 ->where('id_usuario', $user->id)
                 ->whereHas('bajaMercaderia', function ($query) {
@@ -45,12 +68,11 @@ class BajaMercaderiaController extends Controller
                     $query->where('estado', '!=', 'inactivo');
                 }])
                 ->orderBy('fecha_solicitud', 'asc')
-                ->get();        
+                ->get();
         }
-    
-        return view('GestionSolicitudes.baja.index', compact('solicitudes','almacenes'));
+
+        return view('GestionSolicitudes.baja.index', compact('solicitudes', 'almacenes'));
     }
-    
 
     /**
      * Show the form for creating a new resource.
@@ -63,7 +85,7 @@ class BajaMercaderiaController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request, WhatsAppService $whatsapp)
+    public function store(Request $request, NotificadorSolicitudService $notificador)
     {
 
         // Validación de los campos
@@ -102,35 +124,18 @@ class BajaMercaderiaController extends Controller
                     'archivo' => $path,  // Guardar la ruta del archivo en la base de datos
                 ]);
             }
-        
+            //dd($request);
             // Crear la baja de mercadería
             $solicitudBajaMercaderia = BajaMercaderia::create([
                 'id_solicitud' => $solicitud->id,
-                'almacen' => $request->almacen, 
+                'id_almacen' => $request->almacen,
+                'almacen' =>  $request->almacen,
                 'detalle_productos' => $request->detalle_productos,
                 'motivo' => $request->motivo,
                 'tipo' => $request->tipo_ajuste,
             ]);
             
-            $usuariosResponsables = User::whereHas('roles.permissions', function ($query) {
-                $query->where('name', 'Baja_confirmar');
-            })->get();
-
-            $phoneNumbers = $usuariosResponsables->map(function ($user) {
-                return [
-                    'telefono' => '+591' . str_pad($user->telefono, 8, '0', STR_PAD_LEFT),
-                    'api_key' => $user->key, 
-                ];
-            });
-
-            $phoneNumbers = $phoneNumbers->toArray();
-
-            $message = "Se ha creado una nueva solicitud de *Ajuste de inventario* y está esperando confirmacion.\n" .
-            "N° de solicitud: " . $solicitud->id . "\n" .
-            "Fecha: " . $solicitud->fecha_solicitud->format('d/m/Y H:i') . "\n" .
-            "Solicitado por: " . auth()->user()->name . ".";
-
-            $responses = $whatsapp->sendWithAPIKey($phoneNumbers, $message);
+            $notificador->notificar($solicitud, 'crear');
 
             DB::commit();
 
@@ -138,11 +143,11 @@ class BajaMercaderiaController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return redirect()->route('Muestra.index')->with('error', 'Hubo un problema al crear la solicitud de Ajuste de inventario: ' . $e->getMessage());
+            return redirect()->route('Baja.index')->with('error', 'Hubo un problema al crear la solicitud de Ajuste de inventario: ' . $e->getMessage());
         }
     }
     
-    public function confirmar($id, WhatsAppService $whatsapp)
+    public function confirmar($id, NotificadorSolicitudService $notificador)
     {
         $solicitud = Solicitud::findOrFail($id);
 
@@ -160,37 +165,13 @@ class BajaMercaderiaController extends Controller
         // Guardar la solicitud
         $solicitud->save();
 
-        // Enviar notificación a los usuarios responsables (que tienen permiso "Baja_confirmar")
-        $usuariosResponsables = User::whereHas('roles.permissions', function ($query) {
-            $query->where('name', 'Baja_aprobar');  // Permiso para confirmar
-        })->get();
-
-        // Crear la lista de números de teléfono de los responsables
-        $phoneNumbers = $usuariosResponsables->map(function ($user) {
-            return [
-                'telefono' => '+591' . str_pad($user->telefono, 8, '0', STR_PAD_LEFT),
-                'api_key' => $user->key,
-            ];
-        });
-
-        $phoneNumbers = $phoneNumbers->toArray();
-
-        // Mensaje para los responsables
-        $message = "📦 Una solicitud de *Ajuste de Inventario* ha sido *confirmada* y está esperando su aprobacion.\n" .
-                "N° de solicitud: {$solicitud->id}\n" .
-                "Fecha de confirmación: " . now()->format('d/m/Y H:i') . "\n" .
-                "Confirmada por: " . auth()->user()->name . ".";
-
-        // Enviar mensaje a los responsables
-        if (!empty($phoneNumbers)) {
-            $whatsapp->sendWithAPIKey($phoneNumbers, $message);
-        }
+        $notificador->notificar($solicitud, 'confirmar');
 
         return back()->with('success', 'Solicitud confirmada exitosamente.');
     }
 
     
-    public function aprobar_o_rechazar(Request $request, WhatsAppService $whatsapp)
+    public function aprobar_o_rechazar(Request $request, NotificadorSolicitudService $notificador)
     {
         // Validamos la solicitud
         $request->validate([
@@ -210,25 +191,10 @@ class BajaMercaderiaController extends Controller
         if ($request->accion === 'aprobar') {
             $solicitud->estado = 'aprobada';
 
-            $usuariosResponsables = User::whereHas('roles.permissions', function ($query) {
-                $query->where('name', 'Baja_ejecutar');
-            })->get();
-
-            $phoneNumbers = $usuariosResponsables->map(function ($user) {
-                return [
-                    'telefono' => '+591' . str_pad($user->telefono, 8, '0', STR_PAD_LEFT),
-                    'api_key' => $user->key, 
-                ];
-            });
-
-            $phoneNumbers = $phoneNumbers->toArray();
-
-            $message = "Se ha aprobado una solicitud de *Baja de mercadería* y está esperando su ejecucion.\n" .
-            "N° de solicitud: " . $solicitud->id . "\n" .
-            "Fecha de autorizacion: " . $solicitud->fecha_autorizacion->format('d/m/Y H:i') . "\n" .
-            "Autorizado por: " . $solicitud->autorizador->name . ".";
-
-            $responses = $whatsapp->sendWithAPIKey($phoneNumbers, $message);
+            $notificador->notificar(
+                    solicitud: $solicitud,
+                    etapa: 'aprobar'
+                );
 
         } elseif ($request->accion === 'rechazar') {
             $solicitud->estado = 'rechazada';
@@ -246,7 +212,7 @@ class BajaMercaderiaController extends Controller
         return redirect()->route('Baja.index')->with('success', 'La solicitud ha sido ' . $solicitud->estado . ' correctamente.');
     }
 
-    public function ejecutar($id, WhatsAppService $whatsapp)
+    public function ejecutar($id, NotificadorSolicitudService $notificador)
     {
         $solicitud = Solicitud::findOrFail($id);
     
@@ -270,24 +236,7 @@ class BajaMercaderiaController extends Controller
         $solicitud->estado = 'ejecutada';
         $solicitud->save();
 
-        $usuarioSolicitante = $solicitud->usuario;
-
-        if ($usuarioSolicitante && $usuarioSolicitante->telefono && $usuarioSolicitante->key) {
-            $numero = '+591' . str_pad($usuarioSolicitante->telefono, 8, '0', STR_PAD_LEFT);
-            $apiKey = $usuarioSolicitante->key;
-    
-            $mensaje = "📦 Su solicitud de *Baja de Mercaderia* ha sido *ejecutada*.\n" .
-                       "N° de solicitud: {$solicitud->id}\n" .
-                       "Fecha de ejecución: " . now()->format('d/m/Y H:i') . "\n" .
-                       "Ejecutado por: " . auth()->user()->name . ".";
-    
-            $destinatario = [[
-                'telefono' => $numero,
-                'api_key' => $apiKey
-            ]];
-    
-            $whatsapp->sendWithAPIKey($destinatario, $mensaje);
-        }
+        $notificador->notificar($solicitud, 'ejecutar');
     
         return back()->with('success', 'Solicitud ejecutada exitosamente.');
     }
@@ -365,6 +314,18 @@ class BajaMercaderiaController extends Controller
         };
 
         return response()->stream($callback, 200, $headers);
+    }
+
+    public function descargar($id)
+    {
+        $adjunto = Adjuntos::findOrFail($id);
+        $ruta = storage_path('app/public/' . $adjunto->archivo);
+
+        if (!file_exists($ruta)) {
+            abort(404);
+        }
+
+        return response()->download($ruta);
     }
 
     /**

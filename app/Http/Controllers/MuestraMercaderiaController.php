@@ -11,6 +11,8 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\DB;
 use App\Models\User;
 use App\Services\WhatsAppService;
+use App\Services\NotificadorSolicitudService;
+use App\Services\Contracts\WhatsAppServiceInterface;
 
 class MuestraMercaderiaController extends Controller
 {
@@ -58,7 +60,7 @@ class MuestraMercaderiaController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request, WhatsAppService $whatsapp)
+    public function store(Request $request, NotificadorSolicitudService $notificador)
     {
         $request->validate([
             'tipo' => 'required|string',
@@ -83,25 +85,7 @@ class MuestraMercaderiaController extends Controller
                 'cod_sai' => $request->cod_sai,
             ]);
 
-            $usuariosResponsables = User::whereHas('roles.permissions', function ($query) {
-                $query->where('name', 'Muestra_aprobar');
-            })->get();
-
-            $phoneNumbers = $usuariosResponsables->map(function ($user) {
-                return [
-                    'telefono' => '+591' . str_pad($user->telefono, 8, '0', STR_PAD_LEFT),
-                    'api_key' => $user->key, 
-                ];
-            });
-
-            $phoneNumbers = $phoneNumbers->toArray();
-
-            $message = "Se ha creado una nueva solicitud de *Muestra de mercadería* y está esperando aprobación.\n" .
-            "N° de solicitud: " . $solicitud->id . "\n" .
-            "Fecha: " . $solicitud->fecha_solicitud->format('d/m/Y H:i') . "\n" .
-            "Solicitado por: " . auth()->user()->name . ".";
-
-            $responses = $whatsapp->sendWithAPIKey($phoneNumbers, $message);
+            $notificador->notificar($solicitud, 'crear');
 
             DB::commit();
 
@@ -116,7 +100,7 @@ class MuestraMercaderiaController extends Controller
         
     }
 
-    public function aprobar_o_rechazar(Request $request, WhatsAppService $whatsapp)
+    public function aprobar_o_rechazar(Request $request, WhatsAppServiceInterface $whatsapp, NotificadorSolicitudService $notificador)
     {
         // Validamos la solicitud
         $request->validate([
@@ -136,25 +120,10 @@ class MuestraMercaderiaController extends Controller
         if ($request->accion === 'aprobar') {
             $solicitud->estado = 'aprobada';
 
-            $usuariosResponsables = User::whereHas('roles.permissions', function ($query) {
-                $query->where('name', 'Muestra_ejecutar');
-            })->get();
-
-            $phoneNumbers = $usuariosResponsables->map(function ($user) {
-                return [
-                    'telefono' => '+591' . str_pad($user->telefono, 8, '0', STR_PAD_LEFT),
-                    'api_key' => $user->key, 
-                ];
-            });
-
-            $phoneNumbers = $phoneNumbers->toArray();
-
-            $message = "Se ha aprobado una solicitud de *Muestra de mercadería* y está esperando su ejecucion.\n" .
-            "N° de solicitud: " . $solicitud->id . "\n" .
-            "Fecha de autorizacion: " . $solicitud->fecha_autorizacion->format('d/m/Y H:i') . "\n" .
-            "Autorizado por: " . $solicitud->autorizador->name . ".";
-
-            $responses = $whatsapp->sendWithAPIKey($phoneNumbers, $message);
+            $notificador->notificar(
+                    solicitud: $solicitud,
+                    etapa: 'aprobar'
+                );
 
         } elseif ($request->accion === 'rechazar') {
             $solicitud->estado = 'rechazada';
@@ -172,7 +141,7 @@ class MuestraMercaderiaController extends Controller
         return redirect()->route('Muestra.index')->with('success', 'La solicitud ha sido ' . $solicitud->estado . ' correctamente.');
     }
 
-    public function ejecutar($id, WhatsAppService $whatsapp)
+    public function ejecutar($id, NotificadorSolicitudService $notificador)
     {
         $solicitud = Solicitud::findOrFail($id);
     
@@ -196,24 +165,7 @@ class MuestraMercaderiaController extends Controller
         $solicitud->estado = 'ejecutada';
         $solicitud->save();
 
-        $usuarioSolicitante = $solicitud->usuario;
-
-        if ($usuarioSolicitante && $usuarioSolicitante->telefono && $usuarioSolicitante->key) {
-            $numero = '+591' . str_pad($usuarioSolicitante->telefono, 8, '0', STR_PAD_LEFT);
-            $apiKey = $usuarioSolicitante->key;
-    
-            $mensaje = "📦 Su solicitud de *Muestra de mercaderia* ha sido *ejecutada*.\n" .
-                       "N° de solicitud: {$solicitud->id}\n" .
-                       "Fecha de ejecución: " . now()->format('d/m/Y H:i') . "\n" .
-                       "Ejecutado por: " . auth()->user()->name . ".";
-    
-            $destinatario = [[
-                'telefono' => $numero,
-                'api_key' => $apiKey
-            ]];
-    
-            $whatsapp->sendWithAPIKey($destinatario, $mensaje);
-        }
+        $notificador->notificar($solicitud, 'ejecutar');
     
         return back()->with('success', 'Solicitud ejecutada exitosamente.');
     }

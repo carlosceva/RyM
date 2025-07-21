@@ -37,7 +37,7 @@
                             <select name="almacen" id="almacen" class="form-select" required>
                                 <option value="">-- Seleccione un almacén --</option>
                                 @foreach($almacenes as $almacen)
-                                    <option value="{{ $almacen->nombre }}">{{ $almacen->nombre }}</option>
+                                    <option value="{{ $almacen->id }}">{{ $almacen->nombre }}</option>
                                 @endforeach
                             </select>
                         </div>

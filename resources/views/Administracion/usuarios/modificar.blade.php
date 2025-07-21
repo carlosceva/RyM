@@ -38,10 +38,18 @@
                     </div>
                 </div>
 
+                <!-- Campo de Rol -->
                 <div class="form-group row">
-                    <label for="key" class="col-md-3 col-form-label">Key</label>
+                    <label for="rol" class="col-md-3 col-form-label">Rol</label>
                     <div class="col-md-9">
-                        <input type="text" class="form-control" id="key" name="key" value="{{ $usuario->key }}" >
+                        <select class="form-control" id="rol" name="rol">
+                            <option value="">Seleccionar Rol</option>
+                            @foreach($roles as $rol)
+                                <option value="{{ $rol->name }}" {{ in_array($rol->name, $usuario->roles->pluck('name')->toArray()) ? 'selected' : '' }}>
+                                    {{ $rol->name }}
+                                </option>
+                            @endforeach
+                        </select>
                     </div>
                 </div>
                 

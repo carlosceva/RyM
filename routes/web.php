@@ -18,6 +18,11 @@ use App\Http\Controllers\BackupController;
 use App\Http\Controllers\AlmacenController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\NotificacionController;
+use App\Services\TwilioWhatsAppService;
+use App\Models\User;
+use App\Services\Contracts\WhatsAppServiceInterface;
+use App\Services\GupshupWhatsAppService;
+use GuzzleHttp\Client;
 
 Route::get('/', function () {
     return view('welcome');
@@ -125,9 +130,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/notificacion/ver/{id}', [NotificacionController::class, 'ver'])->name('notificacion.ver');
     Route::get('/notificaciones/leidas', [NotificacionController::class, 'obtenerNotificacionesLeidas']);
 
+    Route::get('/Baja/descargar-adjunto/{id}', [BajaMercaderiaController::class, 'descargar'])->name('descargar.adjunto');
 
 });
-
 
 Route::middleware(['role:Administrador'])->group(function () {
     Route::post('/solicitudes/{solicitud}/autorizar', [SolicitudController::class, 'autorizar'])->name('solicitudes.autorizar');
@@ -137,5 +142,21 @@ Route::get('/hoja-en-blanco', function () {
     return view('HojaEnBlanco');
 })->middleware(['auth', 'verified'])->name('HojaEnBlanco');
 
+// Route::get('/test-notificaciones', function () {
+//     $auxiliarId = 14; // Cambia por el ID real de tu usuario auxiliar
+//     $user = User::find($auxiliarId);
+//     dd($user->notifications()->count());
+// });
+
+// Route::get('/enviar-whatsapp', function (TwilioWhatsAppService $twilioService) {
+//     $to = '+59177813264';  // Número de destino
+//     $template = 'precio_especial_crear';  // Nombre de la plantilla de WhatsApp
+//     $params = ['10', '18-07-2025 11:15', 'Eduardo'];  // Parámetros de la plantilla
+
+//     // Llamar al servicio para enviar el mensaje
+//     $response = $twilioService->sendWhatsAppTemplateMessage($to, $template, $params);
+
+//     return response()->json($response);  // Retorna la respuesta de Twilio
+// });
 
 require __DIR__.'/auth.php';

@@ -54,7 +54,7 @@
                                     <th scope="col">Cod-SAI</th>
                                     <th scope="col">Producto</th>
                                     <th scope="col">Cantidad</th>
-                                    <th scope="col">Medida</th>
+                                    <th scope="col">U/M</th>
                                 </tr>
                             </thead>
                             <tbody>
