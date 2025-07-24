@@ -126,9 +126,8 @@ Route::middleware('auth')->group(function () {
 
     Route::resource('almacen', AlmacenController::class);
 
-    Route::post('/notificaciones/marcarleidas', [NotificacionController::class, 'marcarComoLeidas'])->name('notificaciones.leer');
-    Route::get('/notificacion/ver/{id}', [NotificacionController::class, 'ver'])->name('notificacion.ver');
-    Route::get('/notificaciones/leidas', [NotificacionController::class, 'obtenerNotificacionesLeidas']);
+    Route::get('notificaciones', [NotificacionController::class, 'index'])->name('notificaciones.index');
+    Route::get('notificaciones/ver/{id}', [NotificacionController::class, 'marcarLeidaYRedirigir'])->name('notificaciones.marcarLeidaYRedirigir');
 
     Route::get('/Baja/descargar-adjunto/{id}', [BajaMercaderiaController::class, 'descargar'])->name('descargar.adjunto');
 

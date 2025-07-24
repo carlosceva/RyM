@@ -23,7 +23,7 @@
                                 </div>
                                 <div>
                                     <h5 class="mb-0">{{ $card['total'] }} solicitudes</h5>
-                                    <h4 class="text-muted">{{ $card['titulo'] }}</h4>
+                                    <h4 class="text-muted">{{ $card['titulo'] === 'Baja de Mercaderia' ? 'Ajuste de Inventario' : $card['titulo'] }}</h4>
                                 </div>
                             </div>
 
@@ -31,7 +31,7 @@
                                 <a href="{{ route($card['ruta'], ['estado' => 'pendiente']) }}" class="btn btn-warning btn-sm d-block mb-2 text-left">
                                     Ver {{ $card['pendientes'] }} pendientes →
                                 </a>
-                                <a href="{{ route($card['ruta'], ['estado' => 'por_ejecutar']) }}" class="btn btn-success btn-sm d-block text-left">
+                                <a href="{{ route($card['ruta'], ['estado' => 'aprobada']) }}" class="btn btn-success btn-sm d-block text-left">
                                     Ver {{ $card['por_ejecutar'] }} por ejecutar →
                                 </a>
                             </div>

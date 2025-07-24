@@ -4,7 +4,9 @@ namespace App\Services;
 
 use App\Models\Solicitud;
 use App\Models\User;
+use App\Models\NotificacionLocal;
 use App\Services\Contracts\WhatsAppServiceInterface;
+use Illuminate\Support\Collection;
 
 class NotificadorSolicitudService
 {
@@ -44,13 +46,17 @@ class NotificadorSolicitudService
                         $mensaje['template'],
                         $mensaje['params']
                     );
+
                 } else {
                     $this->whatsapp->sendWhatsAppMessage($telefono, $mensaje);
                 }
             } else {
                 \Log::warning("Número inválido de WhatsApp para usuario {$user->name}: {$user->telefono}. Se omitió el envío.");
             }
+            
         }
+
+        $this->notificarLocalmente($solicitud, $usuarios, $etapa);
 
     }
 
@@ -153,28 +159,24 @@ class NotificadorSolicitudService
             $usuariosConPermisos = $query->get();
 
             foreach ($usuariosConPermisos as $usuario) {
-                if (
-                    $tiene->contains('Devolucion_entrega') &&
-                    $usuario->hasRole('Almacenero')
-                ) {
+                if ($tiene->contains('Devolucion_entrega') && $usuario->hasRole('Almacenero')){
                     $almacenId = null;
 
                     if ($solicitud->tipo === 'Devolucion de Venta') {
                         $almacenId = $solicitud->devolucion?->almacen;
                     }
 
-                    if ($solicitud->tipo === 'Baja de Mercaderia') {
-                        $almacenId = $solicitud->bajasMercaderia?->almacen;
-                    }
-
-                    if (
-                        $almacenId &&
-                        $usuario->almacenesEncargados->pluck('id')->contains($almacenId)
-                    ) {
+                    if ($almacenId && $usuario->almacenesEncargados->pluck('id')->contains($almacenId)) {
                         $usuarios->push($usuario);
                     }
 
-                } else {
+                } elseif ($tiene->contains('Baja_confirmar') && $usuario->hasRole('Almacenero')) {
+                    $almacenId = $solicitud->bajaMercaderia?->almacen_nombre?->id;
+
+                    if ($almacenId && $usuario->almacenesEncargados->pluck('id')->contains($almacenId)) {
+                        $usuarios->push($usuario);
+                    }
+                }else {
                     $usuarios->push($usuario);
                 }
             }
@@ -188,7 +190,7 @@ class NotificadorSolicitudService
                     }
 
                     if ($solicitud->tipo === 'Baja de Mercaderia') {
-                        $almacenId = $solicitud->bajasMercaderia?->almacen;
+                        $almacenId = $solicitud->bajaMercaderia?->almacen_nombre?->id;
                     }
 
                     if ($almacenId) {
@@ -260,6 +262,163 @@ class NotificadorSolicitudService
 
         // Fallback si no hay clase específica
         return "🔔 Notificación de solicitud N° {$solicitud->id} – etapa *$etapa*.";
+    }
+
+    private function notificarLocalmente(Solicitud $solicitud, Collection $usuarios, string $etapa)
+    {
+        \Log::info('Notificando localmente a usuarios', $usuarios->pluck('id', 'name')->toArray());
+
+        foreach ($usuarios as $usuario) {
+            try {
+                $template = 'solicitud_plantilla'; // plantilla por defecto
+                $params = [];
+
+                switch ($etapa) {
+                    case 'aprobar':
+                        if ($solicitud->tipo === 'Sobregiro de Venta') {
+                            $template = 'solicitud_plantilla';
+                            $params =  [
+                                'aprobado',
+                                'Sobregiro de Venta',
+                                'confirmación',
+                                $solicitud->id,
+                                $solicitud->fecha_autorizacion->format('d/m/Y H:i'),
+                                'Autorizado',
+                                $solicitud->autorizador->name,
+                            ];
+                        }else if($solicitud->tipo === 'Devolucion de Venta'){
+                            $template = 'solicitud_plantilla';
+                            $params =  [
+                                'aprobado',
+                                'Devolución de Venta',
+                                'confirmación',
+                                $solicitud->id,
+                                $solicitud->fecha_autorizacion->format('d/m/Y H:i'),
+                                'Autorizado',
+                                $solicitud->autorizador->name,
+                            ];
+                        }else if($solicitud->tipo === 'Anulacion de Venta'){
+                            $template = 'solicitud_plantilla';
+                            $params =  [
+                                'aprobado',
+                                'Anulación de Venta',
+                                'confirmación',
+                                $solicitud->id,
+                                $solicitud->fecha_autorizacion->format('d/m/Y H:i'),
+                                'Autorizado',
+                                $solicitud->autorizador->name,
+                            ];
+                        }else{
+                            $template = 'solicitud_plantilla';
+                            $params =  [
+                                'aprobado',
+                                $solicitud->tipo,
+                                'ejecucion',
+                                $solicitud->id,
+                                $solicitud->fecha_autorizacion->format('d/m/Y H:i'),
+                                'Autorizado',
+                                $solicitud->autorizador->name,
+                            ];
+                        }
+                        break;
+
+                    case 'ejecutar':
+                        $template = 'solicitud_ejecutar';
+                        $params = [
+                            $solicitud->tipo,
+                            $solicitud->id,
+                            now()->format('d/m/Y H:i'),
+                            auth()->user()->name,
+                        ];
+                        break;
+
+                    case 'verificar_entrega':
+                        $template = 'verificar_entrega';
+                        $params = [
+                            $solicitud->tipo,
+                            $solicitud->id,
+                            now()->format('d/m/Y H:i'),
+                        ];
+                        break;
+
+                    case 'verificar_entrega_fisica':
+                        $template = 'verificar_entrega_fisica';
+                        $params = [
+                            $solicitud->tipo,
+                            $solicitud->id,
+                            now()->format('d/m/Y H:i'),
+                        ];
+                        break;
+
+                    case 'confirmar': // para sobregiro confirmado
+                        if ($solicitud->tipo === 'Sobregiro de Venta') {
+                            $template = 'sobregiro_confirmar';
+                            $params = [
+                                $solicitud->id,
+                                $solicitud->sobregiro->fecha_confirmacion->format('d/m/Y H:i'),
+                                $solicitud->sobregiro->confirmador->name,
+                                $solicitud->sobregiro->cod_sobregiro
+                            ];
+                            break;
+                        }else if($solicitud->tipo === 'Baja de Mercaderia'){
+                            $template = 'solicitud_plantilla';
+                            $params = [
+                            'confirmado',
+                            'Ajuste de Inventario',
+                            'aprobacion',
+                            $solicitud->id,
+                            $solicitud->bajaMercaderia->fecha_autorizacion->format('d/m/Y H:i'),
+                            'autorizado',
+                            $solicitud->bajaMercaderia->autorizador->name,
+                        ];
+                            break;
+                        }
+                        // si no es sobregiro, cae al default 'solicitud_plantilla'
+                    case 'ejecutar_anulacion':
+                        $template = 'solicitud_ejecutar';
+                        $params = [
+                            'anulacion',
+                            $solicitud->id,
+                            now()->format('d/m/Y H:i'),
+                            auth()->user()->name,
+                        ];
+                        break;
+
+                    case 'ejecutar_devolucion':
+                        $template = 'solicitud_ejecutar';
+                        $params = [
+                            'devolucion',
+                            $solicitud->id,
+                            now()->format('d/m/Y H:i'),
+                            auth()->user()->name,
+                        ];
+                        break;
+
+                    default:
+                        $template = 'solicitud_plantilla';
+                        $params = [
+                            'creado',
+                            $solicitud->tipo,
+                            'aprobacion',
+                            $solicitud->id,
+                            $solicitud->fecha_solicitud->format('d/m/Y H:i'),
+                            'Solicitado',
+                            $solicitud->usuario->name,
+                        ];
+                        break;
+                }
+
+                NotificacionLocal::create([
+                    'user_id' => $usuario->id,
+                    'solicitud_id' => $solicitud->id,
+                    'template' => $template,
+                    'params' => $params,
+                    'estado' => 'noread',
+                ]);
+            } catch (\Throwable $e) {
+                \Log::error('Error guardando notificación local: ' . $e->getMessage());
+            }
+        }
     }
 
 }

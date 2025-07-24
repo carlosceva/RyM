@@ -12,7 +12,7 @@ class BajaMercaderia extends Model
     protected $table = 'solicitud_bajas_mercaderia';
 
     protected $fillable = [
-        'id_solicitud', 'almacen', 'detalle_productos', 'estado', 'motivo', 'tipo', 'id_autorizador'. 'fecha_autorizacion', 'id_almacen'
+        'id_solicitud', 'detalle_productos', 'estado', 'motivo', 'tipo', 'id_autorizador'. 'fecha_autorizacion', 'id_almacen'
     ];
 
     // Relación con la solicitud

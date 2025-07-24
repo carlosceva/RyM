@@ -490,59 +490,6 @@ $(document).ready(function () {
 
 </script>
 
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-    const toggleBtn = document.getElementById('toggleNotificacionesLeidas');
-    const contenedorLeidas = document.getElementById('contenedorLeidas');
-
-    if (toggleBtn && contenedorLeidas) {
-        toggleBtn.addEventListener('click', function (e) {
-            e.preventDefault();
-            e.stopPropagation();  // Previene que el dropdown se cierre
-
-            const visible = contenedorLeidas.style.display === 'block';
-            contenedorLeidas.style.display = visible ? 'none' : 'block';
-            toggleBtn.textContent = visible ? 'Ver notificaciones leídas' : 'Ocultar notificaciones leídas';
-
-            if (!visible) {
-                // Añadir un loader mientras se cargan las notificaciones
-                contenedorLeidas.innerHTML = '<div class="text-center"><i class="fa fa-spinner fa-spin"></i> Cargando...</div>';
-
-                // Realizamos la petición AJAX para obtener las notificaciones leídas
-                fetch('/notificaciones/leidas')  // La URL que definimos en la ruta
-                    .then(response => response.json())
-                    .then(data => {
-                        // Limpiamos el contenedor y agregamos las notificaciones leídas
-                        contenedorLeidas.innerHTML = ''; // Limpiar el loader
-
-                        if (data.notifications.length === 0) {
-                            contenedorLeidas.innerHTML = '<div class="text-center">No hay notificaciones leídas.</div>';
-                        } else {
-                            data.notifications.forEach(noti => {
-                                const notificationItem = document.createElement('a');
-                                notificationItem.classList.add('dropdown-item', 'text-wrap', 'text-muted');
-                                notificationItem.href = noti.link;  // O la URL que necesites
-                                notificationItem.innerHTML = `<i class="fas fa-file mr-2"></i> ${noti.mensaje}`;
-
-                                const divider = document.createElement('div');
-                                divider.classList.add('dropdown-divider');
-                                
-                                contenedorLeidas.appendChild(notificationItem);
-                                contenedorLeidas.appendChild(divider);
-                            });
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error al cargar las notificaciones leídas:', error);
-                        contenedorLeidas.innerHTML = '<div class="text-center text-danger">Error al cargar las notificaciones.</div>';
-                    });
-            }
-        });
-    }
-});
-
-</script>
-
 @livewireScripts
 <!-- jQuery -->
 <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>

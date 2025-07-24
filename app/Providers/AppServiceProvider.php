@@ -13,6 +13,8 @@ use App\Services\Contracts\WhatsAppServiceInterface;
 use App\Services\TwilioWhatsAppService;
 use App\Services\FakeWhatsAppService;
 use App\Services\GupshupWhatsAppService;
+use App\Models\NotificacionLocal;
+use Illuminate\Support\Facades\Auth;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -45,10 +47,10 @@ class AppServiceProvider extends ServiceProvider
         View::composer('partials.navbar', function ($view) {
           
             $tipos = [
+                'precio_especial',
                 'Devolucion de Venta',
                 'Anulacion de Venta',
                 'Sobregiro de Venta',
-                'precio_especial',
                 'Muestra de Mercaderia',
                 'Baja de Mercaderia'
             ];
@@ -70,10 +72,29 @@ class AppServiceProvider extends ServiceProvider
                     ->where('estado', 'pendiente')
                     ->count();
 
-                $porEjecutar = Solicitud::where('tipo', $tipo)
-                    ->where('estado', 'aprobada')
-                    ->whereDoesntHave('ejecucion')
-                    ->count();
+                // Contar las solicitudes por ejecutar
+                if ($tipo == 'Sobregiro de Venta') {
+                    // Sobregiro de Venta tiene estado 'confirmada' y no debe estar ejecutada
+                    $porEjecutar = Solicitud::where('tipo', $tipo)
+                        ->where('estado', 'confirmada')
+                        ->whereDoesntHave('ejecucion')
+                        ->count();
+                } elseif ($tipo == 'Devolucion de Venta' || $tipo == 'Anulacion de Venta') {
+                    // Devolución y Anulación deben tener 'tiene_pago' no nulo y no estar ejecutadas
+                    $porEjecutar = Solicitud::where('tipo', $tipo)
+                        ->where('estado', 'aprobada') // Usamos 'pendiente' ya que es el estado inicial
+                        ->whereHas($tipo == 'Devolucion de Venta' ? 'devolucion' : 'anulacion', function($query) {
+                            $query->whereNotNull('tiene_pago'); // Aseguramos que 'tiene_pago' no sea null
+                        })
+                        ->whereDoesntHave('ejecucion')
+                        ->count();
+                } else {
+                    // Para los demás tipos, por ejecutar se considera 'aprobada' y no ejecutada
+                    $porEjecutar = Solicitud::where('tipo', $tipo)
+                        ->where('estado', 'aprobada')
+                        ->whereDoesntHave('ejecucion')
+                        ->count();
+                }
 
                 $solicitudesPendientes[$tipo] = $pendientes;
                 $solicitudesPorEjecutar[$tipo] = $porEjecutar;
@@ -82,12 +103,24 @@ class AppServiceProvider extends ServiceProvider
             $totalPendientes = array_sum($solicitudesPendientes);
             $totalPorEjecutar = array_sum($solicitudesPorEjecutar);
 
+            $user = Auth::user();
+
+            $notificacionesLocales = collect();
+            if ($user) {
+                $notificacionesLocales = NotificacionLocal::where('user_id', $user->id)
+                    ->where('estado', 'noread')
+                    ->latest()
+                    ->take(5)
+                    ->get();
+            }
+
             $view->with(compact(
                 'solicitudesPendientes',
                 'solicitudesPorEjecutar',
                 'totalPendientes',
                 'totalPorEjecutar',
                 'tiposConRutas',
+                'notificacionesLocales',
             ));
         });
 

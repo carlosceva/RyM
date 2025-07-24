@@ -1,65 +1,69 @@
 <?php
 
 namespace App\Http\Controllers;
-use Illuminate\Support\Facades\View;
 
+use App\Models\NotificacionLocal;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 
 class NotificacionController extends Controller
 {
-    protected $tiposConRutas = [
-        'precio_especial' => 'PrecioEspecial.index',
-        'Devolucion de Venta' => 'Devolucion.index',
-        'Anulacion de Venta' => 'Anulacion.index',
-        'Sobregiro de Venta' => 'Sobregiro.index',
-        'Muestra de Mercaderia' => 'Muestra.index',
-        'Baja de Mercaderia' => 'Baja.index',
-    ];
+ public function index(Request $request)
+{
+    $usuario = auth()->user();
 
-    public function marcarComoLeidas()
+    // Total de notificaciones no leídas y leídas
+    $totalNoLeidas = $usuario->notificacionesLocalesNoLeidas()->count();
+    $totalLeidas = $usuario->notificacionesLocalesLeidas()->count();
+
+    // Configuración de la paginación
+    $perPage = 10; // Número de notificaciones por página
+    $page = $request->input('page', 1); // Página actual, por defecto es 1
+
+    // Calcular el offset
+    $offset = ($page - 1) * $perPage;
+
+    // Obtener las notificaciones con offset y limit
+    $noLeidas = $usuario->notificacionesLocalesNoLeidas()->skip($offset)->take($perPage)->get();
+    $leidas = $usuario->notificacionesLocalesLeidas()->skip($offset)->take($perPage)->get();
+
+    // Número total de páginas
+    $totalPagesNoLeidas = ceil($totalNoLeidas / $perPage);
+    $totalPagesLeidas = ceil($totalLeidas / $perPage);
+
+    return view('notificaciones.index', compact('noLeidas', 'leidas', 'totalPagesNoLeidas', 'totalPagesLeidas', 'page'));
+}
+
+
+    public function marcarLeidaYRedirigir($id)
     {
-        auth()->user()->unreadNotifications->markAsRead();
+        $notificacion = NotificacionLocal::findOrFail($id);
 
-        return response()->json(['status' => 'ok']);
-    }
-
-    public function ver($id)
-    {
-        $notificacion = auth()->user()->notifications()->findOrFail($id);
-        $notificacion->markAsRead();
-
-        $data = $notificacion->data;
-
-        $tipo = $data['tipo'] ?? null;
-        $solicitudId = $data['solicitud_id'] ?? null;
-
-        if ($tipo && $solicitudId && isset($this->tiposConRutas[$tipo])) {
-            $ruta = $this->tiposConRutas[$tipo];
-            return redirect()->route($ruta, ['filtro_id' => $solicitudId]);
+        if ($notificacion->user_id !== auth()->id()) {
+            abort(403);
         }
 
-        // Si algo falla, vuelve atrás
-        return redirect()->back()->with('error', 'No se pudo redirigir correctamente la notificación.');
-    }
+        $notificacion->update(['estado' => 'read']);
 
-    public function obtenerNotificacionesLeidas()
-    {
-        // Recuperamos las notificaciones leídas
-        $notificacionesLeidas = auth()->user()->readNotifications()
-            ->where('type', \App\Notifications\SolicitudCreada::class) // Puedes adaptar este filtro según el tipo de notificación
-            ->take(10) // Limita la cantidad de notificaciones
-            ->get();
+        $solicitud = $notificacion->solicitud;
 
-        // Formateamos las notificaciones para enviarlas en la respuesta JSON
-        $notificacionesLeidasData = $notificacionesLeidas->map(function($notificacion) {
-            return [
-                'mensaje' => $notificacion->data['mensaje'],
-                'link' => route('notificacion.ver', $notificacion->id),  // Enlace para ver la notificación
-            ];
-        });
+        // Mapeo tipo => nombre de ruta
+        $rutas = [
+            'precio_especial' => 'PrecioEspecial.index',
+            'Devolucion de Venta' => 'Devolucion.index',
+            'Anulacion de Venta' => 'Anulacion.index',
+            'Sobregiro de Venta' => 'Sobregiro.index',
+            'Muestra de Mercaderia' => 'Muestra.index',
+            'Baja de Mercaderia' => 'Baja.index',
+        ];
 
-        // Devolvemos las notificaciones leídas como JSON
-        return response()->json(['notifications' => $notificacionesLeidasData]);
+        $tipo = $solicitud->tipo;
+
+        if (!isset($rutas[$tipo])) {
+            return redirect()->route('notificaciones.index')->with('error', 'Tipo de solicitud no reconocido.');
+        }
+
+        return redirect()->route($rutas[$tipo]);
     }
 
 }

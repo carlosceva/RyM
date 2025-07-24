@@ -71,4 +71,19 @@ class User extends Authenticatable
         return $this->almacenesEncargados()->exists();
     }
 
+    public function notificacionesLocales()
+    {
+        return $this->hasMany(NotificacionLocal::class);
+    }
+
+    public function notificacionesLocalesNoLeidas()
+    {
+        return $this->notificacionesLocales()->noLeidas();
+    }
+
+    public function notificacionesLocalesLeidas()
+    {
+        return $this->notificacionesLocales()->leidas();
+    }
+
 }

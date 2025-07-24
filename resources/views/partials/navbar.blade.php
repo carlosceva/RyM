@@ -55,45 +55,44 @@
   }
 }
 
+@media (max-width: 768px) {
+    .dropdown-menu {
+        width: 100%;  /* Hacer el dropdown más ancho en pantallas pequeñas */
+    }
+    .dropdown-item {
+        min-width: 200px; /* Ancho mínimo más pequeño para pantallas pequeñas */
+        padding: 8px 12px; /* Ajustamos el padding */
+    }
+}
+
 </style>
 
-    <li class="nav-item dropdown">
-        <a class="nav-link" data-toggle="dropdown" href="#" id="notificacionesDropdown">
-            <i class="far fa-envelope"></i>
-            <span class="badge badge-danger navbar-badge">{{ $notificaciones->count() }}</span>
-        </a>
-        <div class="dropdown-menu dropdown-menu-lg dropdown-menu-right custom-dropdown">
-            <span class="dropdown-item dropdown-header">{{ ($notificaciones->count() == 0) ? 'No hay nuevas solicitudes' : $notificaciones->count().' nuevas solicitudes' }}</span>
-            <div class="dropdown-divider"></div>
+@php
+    $notificaciones = auth()->user()?->notificacionesLocalesNoLeidas()->get();
+@endphp
 
-            {{-- Notificaciones no leídas --}}
-            @foreach($notificaciones as $noti)
-                <a href="{{ route('notificacion.ver', $noti->id) }}"
-                   class="dropdown-item text-wrap bg-warning">
-                    <i class="fas fa-file mr-2"></i> {{ $noti->data['mensaje'] }}
-                </a>
-                <div class="dropdown-divider"></div>
-            @endforeach
-
-            {{-- Botón para ver notificaciones leídas --}}
-            <a href="#" class="dropdown-item dropdown-footer text-center" id="toggleNotificacionesLeidas">
-                Ver notificaciones leídas
+<li class="nav-item dropdown">
+    <a class="nav-link" data-toggle="dropdown" href="#">
+        <i class="fas fa-envelope"></i>
+        @if($notificaciones->count())
+            <span class="position-absolute top-0 start-50 translate-middle badge badge-danger" style="font-size: 0.6rem; ">
+                {{ $notificaciones->count() }}
+            </span>
+        @endif
+    </a>
+    <div class="dropdown-menu dropdown-menu-lg dropdown-menu-right" style="max-height: 300px; overflow-y: auto; width: 300px; padding: 0 10px;">
+        @forelse ($notificaciones as $n)
+            <a href="{{ route('notificaciones.marcarLeidaYRedirigir', $n->id) }}" class="dropdown-item" style="white-space: normal; word-wrap: break-word; padding: 10px 15px; min-width: 250px;">
+                <i class="fas fa-envelope mr-2"></i> {!! nl2br(e($n->mensaje)) !!}
+                <span class="float-right text-muted text-sm">{{ $n->created_at->diffForHumans() }}</span>
             </a>
-
-            {{-- Contenedor oculto de notificaciones leídas --}}
-            <div id="contenedorLeidas" style="display: none;">
-                @foreach(auth()->user()->readNotifications()->where('type', \App\Notifications\SolicitudCreada::class)->take(10) as $leida)
-                    <div>
-                        <div class="dropdown-divider"></div>
-                        <a href="#" class="dropdown-item text-wrap text-muted">
-                            <i class="fas fa-file mr-2"></i> {{ $leida->data['mensaje'] }}
-                        </a>
-                    </div>
-                @endforeach
-            </div>
-        </div>
-    </li>
-
+        @empty
+            <span class="dropdown-item" style="padding: 10px 15px;">Sin notificaciones nuevas</span>
+        @endforelse
+        <div class="dropdown-divider"></div>
+        <a href="{{ route('notificaciones.index') }}" class="dropdown-item dropdown-footer" style="padding: 10px 15px;">Ver todas</a>
+    </div>
+</li>
 
 <li class="nav-item dropdown">
     <a class="nav-link position-relative" data-toggle="dropdown" href="#">
@@ -141,7 +140,9 @@
 
             @if($mostrar)
                 <div class="dropdown-item">
-                    <strong>{!! iconoPorTipo($tipo) !!} {{ ucfirst($tipo) }}</strong>
+                    <strong>{!! iconoPorTipo($tipo) !!} 
+                        {{ ucfirst($tipo) === 'Baja de Mercaderia' ? 'Ajuste de inventario' : ucfirst($tipo) }}
+                    </strong>
                     <div class="text-right">
                         @if($puedeAprobar)
                             <a href="{{ route($tiposConRutas[$tipo], ['estado' => 'pendiente']) }}"

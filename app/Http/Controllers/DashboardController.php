@@ -33,14 +33,64 @@ class DashboardController extends Controller
         $tarjetas = [];
 
         foreach ($tiposConRutas as $tipo => $ruta) {
-            $pendientes = Solicitud::where('tipo', $tipo)
-                ->where('estado', 'pendiente')
-                ->count();
+            $pendientes = 0;
+            $porEjecutar = 0;
 
-            $porEjecutar = Solicitud::where('tipo', $tipo)
-                ->where('estado', 'aprobada')
-                ->whereDoesntHave('ejecucion')
-                ->count();
+            switch ($tipo) {
+                case 'precio_especial':
+                case 'Muestra de Mercaderia':
+                case 'Baja de Mercaderia':
+                    $pendientes = Solicitud::where('tipo', $tipo)
+                        ->where('estado', 'pendiente')
+                        ->count();
+
+                    $porEjecutar = Solicitud::where('tipo', $tipo)
+                        ->where('estado', 'aprobada')
+                        ->whereDoesntHave('ejecucion') 
+                        ->count();
+                    break;
+                
+                case 'Sobregiro de Venta':
+                    $pendientes = Solicitud::where('tipo', $tipo)
+                        ->where('estado', 'pendiente')
+                        ->count();
+
+                    $porEjecutar = Solicitud::where('tipo', $tipo)
+                        ->where('estado', 'confirmada')
+                        ->whereDoesntHave('ejecucion')
+                        ->count();
+                    break;
+
+                case 'Devolucion de Venta':
+                    $pendientes = Solicitud::where('tipo', $tipo)
+                        ->where('estado', 'pendiente')
+                        ->count();
+
+                    $porEjecutar = Solicitud::where('tipo', $tipo)
+                        ->where('estado', 'aprobada')
+                        ->whereHas('devolucion', function ($query) {
+                            $query->whereNotNull('tiene_pago');
+                        })
+                        ->whereDoesntHave('ejecucion') 
+                        ->count();
+                    break;
+                case 'Anulacion de Venta':
+                     $pendientes = Solicitud::where('tipo', $tipo)
+                        ->where('estado', 'pendiente')
+                        ->count();
+
+                    $porEjecutar = Solicitud::where('tipo', $tipo)
+                        ->where('estado', 'aprobada')
+                        ->whereHas('anulacion', function ($query) {
+                            $query->whereNotNull('tiene_pago');
+                        })
+                        ->whereDoesntHave('ejecucion') 
+                        ->count();
+                    break;
+
+                default:
+                    break;
+            }
 
             $tarjetas[] = [
                 'tipo' => $tipo,
@@ -55,4 +105,5 @@ class DashboardController extends Controller
 
         return view('HojaEnBlanco', compact('tarjetas'));
     }
+
 }
