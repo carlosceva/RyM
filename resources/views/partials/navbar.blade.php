@@ -68,7 +68,7 @@
 </style>
 
 @php
-    $notificaciones = auth()->user()?->notificacionesLocalesNoLeidas()->get();
+    $notificaciones = auth()->user()?->notificacionesLocalesNoLeidas()->latest()->get();
 @endphp
 
 <li class="nav-item dropdown">

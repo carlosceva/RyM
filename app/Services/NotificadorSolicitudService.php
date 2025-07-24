@@ -6,7 +6,9 @@ use App\Models\Solicitud;
 use App\Models\User;
 use App\Models\NotificacionLocal;
 use App\Services\Contracts\WhatsAppServiceInterface;
+use App\Models\Configuracion;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Log;
 
 class NotificadorSolicitudService
 {
@@ -27,37 +29,37 @@ class NotificadorSolicitudService
 
         $usuarios = $this->resolverDestinatarios($config, $solicitud);
         
-        \Log::info('Usuarios destinatarios:', $usuarios->pluck('id', 'name')->toArray());
+        Log::info('👥 Usuarios destinatarios:', $usuarios->pluck('id', 'name')->toArray());
 
         $mensaje = $this->generarMensaje($solicitud, $etapa, $tipo);
 
         foreach ($usuarios as $user) {
             $numero = trim($user->telefono);
 
-            // Validar que tenga exactamente 8 dígitos numéricos
             if (preg_match('/^\d{8}$/', $numero)) {
                 $telefono = '+591' . $numero;
 
-                \Log::info("Enviando mensaje a: {$user->name} – $telefono");
+                if (Configuracion::getValor('notificaciones_twilio') === '1') {
+                    Log::info("📲 Enviando mensaje a: {$user->name} – $telefono");
 
-                if (is_array($mensaje) && isset($mensaje['template'], $mensaje['params'])) {
-                    $this->whatsapp->sendWhatsAppTemplateMessage(
-                        $telefono,
-                        $mensaje['template'],
-                        $mensaje['params']
-                    );
+                    if (is_array($mensaje) && isset($mensaje['template'], $mensaje['params'])) {
+                        $this->whatsapp->sendWhatsAppTemplateMessage(
+                            $telefono,
+                            $mensaje['template'],
+                            $mensaje['params']
+                        );
 
+                    } else {
+                        $this->whatsapp->sendWhatsAppMessage($telefono, $mensaje);
+                    }
                 } else {
-                    $this->whatsapp->sendWhatsAppMessage($telefono, $mensaje);
+                    Log::info("🔕 WhatsApp desactivado. No se envió mensaje a {$user->name} – $telefono");
                 }
             } else {
-                \Log::warning("Número inválido de WhatsApp para usuario {$user->name}: {$user->telefono}. Se omitió el envío.");
+                Log::warning("Número inválido de WhatsApp para usuario {$user->name}: {$user->telefono}. Se omitió el envío.");
             }
-            
         }
-
         $this->notificarLocalmente($solicitud, $usuarios, $etapa);
-
     }
 
     protected function resolverDestinatarios(array $config, Solicitud $solicitud)

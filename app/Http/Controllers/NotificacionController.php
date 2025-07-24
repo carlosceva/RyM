@@ -8,31 +8,31 @@ use Illuminate\Http\Request;
 
 class NotificacionController extends Controller
 {
- public function index(Request $request)
-{
-    $usuario = auth()->user();
+    public function index(Request $request)
+    {
+        $usuario = auth()->user();
 
-    // Total de notificaciones no leídas y leídas
-    $totalNoLeidas = $usuario->notificacionesLocalesNoLeidas()->count();
-    $totalLeidas = $usuario->notificacionesLocalesLeidas()->count();
+        // Total de notificaciones no leídas y leídas
+        $totalNoLeidas = $usuario->notificacionesLocalesNoLeidas()->count();
+        $totalLeidas = $usuario->notificacionesLocalesLeidas()->count();
 
-    // Configuración de la paginación
-    $perPage = 10; // Número de notificaciones por página
-    $page = $request->input('page', 1); // Página actual, por defecto es 1
+        // Configuración de la paginación
+        $perPage = 10; // Número de notificaciones por página
+        $page = $request->input('page', 1); // Página actual, por defecto es 1
 
-    // Calcular el offset
-    $offset = ($page - 1) * $perPage;
+        // Calcular el offset
+        $offset = ($page - 1) * $perPage;
 
-    // Obtener las notificaciones con offset y limit
-    $noLeidas = $usuario->notificacionesLocalesNoLeidas()->skip($offset)->take($perPage)->get();
-    $leidas = $usuario->notificacionesLocalesLeidas()->skip($offset)->take($perPage)->get();
+        // Obtener las notificaciones con offset y limit
+        $noLeidas = $usuario->notificacionesLocalesNoLeidas()->skip($offset)->take($perPage)->get();
+        $leidas = $usuario->notificacionesLocalesLeidas()->skip($offset)->take($perPage)->get();
 
-    // Número total de páginas
-    $totalPagesNoLeidas = ceil($totalNoLeidas / $perPage);
-    $totalPagesLeidas = ceil($totalLeidas / $perPage);
+        // Número total de páginas
+        $totalPagesNoLeidas = ceil($totalNoLeidas / $perPage);
+        $totalPagesLeidas = ceil($totalLeidas / $perPage);
 
-    return view('notificaciones.index', compact('noLeidas', 'leidas', 'totalPagesNoLeidas', 'totalPagesLeidas', 'page'));
-}
+        return view('notificaciones.index', compact('noLeidas', 'leidas', 'totalPagesNoLeidas', 'totalPagesLeidas', 'page'));
+    }
 
 
     public function marcarLeidaYRedirigir($id)

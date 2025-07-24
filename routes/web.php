@@ -23,6 +23,7 @@ use App\Models\User;
 use App\Services\Contracts\WhatsAppServiceInterface;
 use App\Services\GupshupWhatsAppService;
 use GuzzleHttp\Client;
+use App\Http\Controllers\ConfiguracionController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -130,6 +131,9 @@ Route::middleware('auth')->group(function () {
     Route::get('notificaciones/ver/{id}', [NotificacionController::class, 'marcarLeidaYRedirigir'])->name('notificaciones.marcarLeidaYRedirigir');
 
     Route::get('/Baja/descargar-adjunto/{id}', [BajaMercaderiaController::class, 'descargar'])->name('descargar.adjunto');
+
+    Route::get('/configuracion', [ConfiguracionController::class, 'index'])->name('configuracion.index');
+    Route::post('/configuracion/twilio', [ConfiguracionController::class, 'actualizarTwilio'])->name('configuracion.twilio');
 
 });
 

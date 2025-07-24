@@ -168,19 +168,25 @@
                 </a>
               </li>
               @endcan
-              @can('sistema_ver')
-              <li class="nav-item">
-                <a href="{{ route('backup.index') }}" class="nav-link {{ request()->routeIs('backup.index') ? 'active' : '' }}">
-                  <i class="fa fa-hdd nav-icon"></i>
-                  <p>Backup y Restore</p>
-                </a>
-              </li>
-              @endcan
               @can('usuarios_ver')
               <li class="nav-item">
                 <a href="{{ route('almacen.index') }}" class="nav-link {{ request()->routeIs('almacen.index') ? 'active' : '' }}">
                   <i class="fas fa-file nav-icon"></i>
                   <p>Almacenes</p>
+                </a>
+              </li>
+              @endcan
+              @can('sistema_ver')
+              <!-- <li class="nav-item">
+                <a href="{{ route('backup.index') }}" class="nav-link {{ request()->routeIs('backup.index') ? 'active' : '' }}">
+                  <i class="fa fa-hdd nav-icon"></i>
+                  <p>Backup y Restore</p>
+                </a>
+              </li> -->
+              <li class="nav-item">
+                <a href="{{ route('configuracion.index') }}" class="nav-link {{ request()->routeIs('configuracion.index') ? 'active' : '' }}">
+                  <i class="fa fa-cog nav-icon"></i>
+                  <p>Configuraciones</p>
                 </a>
               </li>
               @endcan
@@ -355,7 +361,7 @@
 
 <script src="{{asset('dist/js/pages/dashboard.js')}}"></script>
 <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
-    <script src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap5.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap5.min.js"></script>
     
 <script>
   $('#usuario').DataTable();
