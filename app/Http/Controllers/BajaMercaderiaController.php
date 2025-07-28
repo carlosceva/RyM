@@ -129,6 +129,7 @@ class BajaMercaderiaController extends Controller
             $solicitudBajaMercaderia = BajaMercaderia::create([
                 'id_solicitud' => $solicitud->id,
                 'id_almacen' => $request->almacen,
+                'almacen' =>  $request->almacen,
                 'detalle_productos' => $request->detalle_productos,
                 'motivo' => $request->motivo,
                 'tipo' => $request->tipo_ajuste,
