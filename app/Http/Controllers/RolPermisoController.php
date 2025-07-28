@@ -12,7 +12,7 @@ class RolPermisoController extends Controller
     // Mostrar todos los roles con sus permisos
     public function index()
     {
-        $roles = Role::with('permissions')->get();
+        $roles = Role::with('permissions')->where('estado','a')->get();
         $permissions = Permission::all();
         return view('Administracion.permisos.index', compact('roles', 'permissions'));
     }
