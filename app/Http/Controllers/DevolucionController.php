@@ -223,7 +223,9 @@ class DevolucionController extends Controller
                     'id_usuario' => $solicitud->id_usuario,
                     'tipo' => 'Anulacion de Venta',
                     'fecha_solicitud' => now(),
-                    'estado' => 'pendiente',
+                    'estado' => 'aprobada',
+                    'id_autorizador' => $solicitud->id_autorizador,
+                    'fecha_autorizacion' => $solicitud->fecha_autorizacion,
                     'observacion' => 'Generada automáticamente desde solicitud de devolución #' . $solicitud->id,
                 ]);
     
@@ -236,6 +238,7 @@ class DevolucionController extends Controller
                     'tiene_entrega' => $devolucion->tiene_entrega,
                     'entrega_fisica' => $devolucion->entrega_fisica,
                     'obs_pago' => $devolucion->obs_pago,
+                    'id_almacen' => $devolucion->almacen,
                 ]);
     
                 DB::commit();

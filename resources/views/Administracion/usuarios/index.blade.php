@@ -61,7 +61,7 @@
 
                     <tr class="{{ $claseFila }}">
                         <td>{{ $usuario->id }}</td>
-                        <td>{{ $usuario->codigo }}</td>
+                        <td>{{ strtoupper($usuario->codigo) }}</td>
                         <td>{{ $usuario->name }}</td>
                         <td>{{ $usuario->telefono }}</td>
                         <td>

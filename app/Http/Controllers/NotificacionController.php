@@ -24,8 +24,18 @@ class NotificacionController extends Controller
         $offset = ($page - 1) * $perPage;
 
         // Obtener las notificaciones con offset y limit
-        $noLeidas = $usuario->notificacionesLocalesNoLeidas()->skip($offset)->take($perPage)->get();
-        $leidas = $usuario->notificacionesLocalesLeidas()->skip($offset)->take($perPage)->get();
+        $noLeidas = $usuario->notificacionesLocalesNoLeidas()
+            ->orderBy('created_at', 'desc')
+            ->skip($offset)
+            ->take($perPage)
+            ->get();
+
+        $leidas = $usuario->notificacionesLocalesLeidas()
+            ->orderBy('created_at', 'desc')
+            ->skip($offset)
+            ->take($perPage)
+            ->get();
+
 
         // Número total de páginas
         $totalPagesNoLeidas = ceil($totalNoLeidas / $perPage);

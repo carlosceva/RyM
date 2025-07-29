@@ -9,6 +9,7 @@ use App\Services\Contracts\WhatsAppServiceInterface;
 use App\Models\Configuracion;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 class NotificadorSolicitudService
 {
@@ -314,7 +315,7 @@ class NotificadorSolicitudService
                             $template = 'solicitud_plantilla';
                             $params =  [
                                 'aprobado',
-                                $solicitud->tipo,
+                                Str::replace('Baja de Mercaderia', 'Ajuste de Inv.', $solicitud->tipo),
                                 'ejecucion',
                                 $solicitud->id,
                                 $solicitud->fecha_autorizacion->format('d/m/Y H:i'),
@@ -327,7 +328,7 @@ class NotificadorSolicitudService
                     case 'ejecutar':
                         $template = 'solicitud_ejecutar';
                         $params = [
-                            $solicitud->tipo,
+                            Str::replace('Baja de Mercaderia', 'Ajuste de Inv.', $solicitud->tipo),
                             $solicitud->id,
                             now()->format('d/m/Y H:i'),
                             auth()->user()->name,
@@ -366,7 +367,7 @@ class NotificadorSolicitudService
                             $template = 'solicitud_plantilla';
                             $params = [
                             'confirmado',
-                            'Ajuste de Inventario',
+                            'Ajuste de Inv.',
                             'aprobacion',
                             $solicitud->id,
                             $solicitud->bajaMercaderia->fecha_autorizacion->format('d/m/Y H:i'),
@@ -400,7 +401,7 @@ class NotificadorSolicitudService
                         $template = 'solicitud_plantilla';
                         $params = [
                             'creado',
-                            $solicitud->tipo,
+                            Str::replace('Baja de Mercaderia', 'Ajuste de Inv.', $solicitud->tipo),
                             'aprobacion',
                             $solicitud->id,
                             $solicitud->fecha_solicitud->format('d/m/Y H:i'),

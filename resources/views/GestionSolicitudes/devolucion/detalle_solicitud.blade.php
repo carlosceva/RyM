@@ -51,7 +51,11 @@
                 <div class="col-6 d-flex align-items-center">
                     <strong class="me-2 col-md-4">Almacen:</strong>
                     <div class="col-md-8 border p-2 rounded bg-light small flex-grow-1">
-                        {{ $solicitud->devolucion->almacen ?? 'N/D'}}
+                        @if(is_numeric($solicitud->devolucion->almacen)) 
+                            {{ \App\Models\Almacen::find($solicitud->devolucion->almacen)->nombre ?? 'No definido' }}
+                        @else
+                            {{ $solicitud->devolucion->almacen ?? 'No definido' }}
+                        @endif
                     </div>
                 </div>
             </div>

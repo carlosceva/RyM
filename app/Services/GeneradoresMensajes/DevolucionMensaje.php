@@ -28,7 +28,7 @@ class DevolucionMensaje
                     'Anulación',
                     'aprobación',
                     $solicitud->id,
-                    $solicitud->fecha_solicitud->format('d/m/Y H:i'),
+                    now()->format('d/m/Y H:i'),
                     'Solicitado',
                     $solicitud->usuario->name,
                 ],
