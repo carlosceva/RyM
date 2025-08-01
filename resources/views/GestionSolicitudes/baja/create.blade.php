@@ -17,8 +17,8 @@
 
              <!-- Fecha de solicitud -->
             <div class="mb-3 row">
-                <label for="fecha_solicitud" class="col-sm-2 col-form-label">Fecha actual: </label>
-                <div class="col-sm-10">
+                <label for="fecha_solicitud" class="col-3 col-sm-2 col-form-label">Fecha </label>
+                <div class="col-9 col-sm-10">
                     <input type="text" class="form-control" id="fecha_solicitud" value="{{ now()->format('Y-m-d H:i:s') }}" disabled>
                 </div>
             </div>
@@ -26,18 +26,10 @@
             <!-- Estado -->
             <input type="hidden" name="estado" value="pendiente">
 
-            <!-- Glosa -->
-            <div class="mb-3 row">
-                <label for="glosa" class="col-sm-2 col-form-label">Motivo: </label>
-                <div class="col-sm-10">
-                    <textarea class="form-control" id="glosa" name="glosa" rows="4" required></textarea>
-                </div>
-            </div>
-
             <!-- Almacén -->
             <div class="row mb-2 align-items-center">
-                <label for="almacen" class="col-md-2 col-form-label">Almacén</label>
-                <div class="col-md-10">
+                <label for="almacen" class="col-3 col-md-2 col-form-label">Almacén</label>
+                <div class="col-9 col-md-10">
                     <select name="almacen" id="almacen" class="form-select" required>
                         <option value="">-- Seleccione un almacén --</option>
                         @foreach($almacenes as $almacen)
@@ -49,8 +41,8 @@
 
             <!-- Tipo -->
             <div class="row mb-2 align-items-center">
-                <label for="tipo_ajuste" class="col-md-2 col-form-label">Tipo de ajuste</label>
-                <div class="col-md-10">
+                <label for="tipo_ajuste" class="col-3 col-md-2 col-form-label">Tipo</label>
+                <div class="col-9 col-md-10">
                     <select name="tipo_ajuste" id="tipo_ajuste" class="form-select" required>
                         <option value="">-- Seleccione un tipo --</option>
                         
@@ -61,19 +53,36 @@
                 </div>
             </div>
 
-            <!-- Inputs para producto, cantidad y precio -->
+            <!-- Glosa -->
+            <div class="mb-3 row">
+                <label for="glosa" class="col-sm-2 col-form-label">Motivo </label>
+                <div class="col-sm-10">
+                    <textarea class="form-control" id="glosa" name="glosa" rows="4" required></textarea>
+                </div>
+            </div>
+
+            <!-- Detalle Label -->
+            <div class="form-group row align-items-center mb-2">
+                <label for="detalles" class="col-4 col-form-label">Detalle</label>
+            </div>
+
+            <!-- Inputs dinámicos -->
             <div class="row g-2 mb-3">
-                <div class="col-md-4">
+                <div class="col-md-10">
+                <div class="row g-2">
+                    <div class="col-12 col-md-4">
                     <input type="text" id="producto" class="form-control" placeholder="Producto">
-                </div>
-                <div class="col-md-3">
+                    </div>
+                    <div class="col-12 col-md-4">
                     <input type="number" id="cantidad" class="form-control" placeholder="Cantidad">
-                </div>
-                <div class="col-12 col-md-3">
+                    </div>
+                    <div class="col-12 col-md-4">
                     <input type="text" id="medida" class="form-control" placeholder="U/M">
+                    </div>
+                </div>
                 </div>
                 <div class="col-md-2">
-                    <button type="button" class="btn btn-primary " onclick="agregarProducto()">Agregar</button>
+                <button type="button" class="btn btn-primary w-100" onclick="agregarProducto()">Agregar</button>
                 </div>
             </div>
 

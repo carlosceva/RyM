@@ -396,8 +396,8 @@ $(document).ready(function () {
     "<'row'<'col-sm-5'i><'col-sm-7'p>>";
 
   const filtrosFechas = `
-    <input type="date" id="fechaInicio" class="form-control form-control-sm mb-2 mb-md-0" placeholder="Desde" style="max-width: 160px;">
-    <input type="date" id="fechaFin" class="form-control form-control-sm" placeholder="Hasta" style="max-width: 160px;">
+    <input type="date" id="fechaInicio" class="form-control form-control-sm mb-2 mb-md-0 col-md-3 " placeholder="Desde" >
+    <input type="date" id="fechaFin" class="form-control form-control-sm col-md-3" placeholder="Hasta" >
   `;
 
   function initDataTable(tableId, exportPrefix, pdfTitle, exportCols) {

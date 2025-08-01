@@ -16,28 +16,33 @@
             <input type="hidden" name="id_usuario" value="{{ auth()->id() }}">
 
             <!-- Fecha de solicitud (Generada automáticamente) -->
-            <div class="mb-3">
-                <label for="fecha_solicitud" class="form-label">Fecha de Solicitud</label>
-                <input type="text" class="form-control" id="fecha_solicitud" value="{{ now()->format('Y-m-d H:i:s') }}" disabled>
+            <div class="form-group row align-items-center mb-3">
+                <label for="fecha_solicitud" class="col-3 col-form-label fw-bold">Fecha</label>
+                <div class="col-9">
+                    <input type="text" class="form-control" id="fecha_solicitud" value="{{ now()->format('Y-m-d H:i:s') }}" disabled>
+                </div>
             </div>
 
             <!-- Estado (Se define automáticamente como pendiente) -->
             <input type="hidden" name="estado" value="pendiente">
 
             <!-- Cliente -->
-            <div class="mb-3">
-                <label for="cliente" class="form-label">Cliente</label>
-                <input type="text" class="form-control" id="cliente" name="cliente">
+            <div class="form-group row align-items-center mb-3">
+                <label for="cliente" class="col-3 col-form-label fw-bold">Cliente</label>
+                <div class="col-9">
+                    <input type="text" class="form-control" id="cliente" name="cliente">
+                </div>
             </div>
 
-            <!-- importe -->
-            <div class="mb-3">
-                <label for="importe" class="form-label">Importe</label>
-                <input type="text" class="form-control" id="importe" name="importe">
-                
-                @error('importe')
-                    <div class="text-danger mt-2">{{ $message }}</div>
-                @enderror
+            <!-- Importe -->
+            <div class="form-group row align-items-center mb-3">
+                <label for="importe" class="col-3 col-form-label fw-bold">Importe</label>
+                <div class="col-9">
+                    <input type="text" class="form-control" id="importe" name="importe">
+                    @error('importe')
+                        <div class="text-danger mt-2">{{ $message }}</div>
+                    @enderror
+                </div>
             </div>
 
             <!-- Glosa (Descripción o motivo de la solicitud) -->

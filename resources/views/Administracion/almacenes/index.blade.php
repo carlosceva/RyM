@@ -49,14 +49,12 @@
                     <td>{{ $almacen->id }}</td>
                     <td>{{ $almacen->nombre }}</td>
                     <td>{{ $almacen->encargado ? $almacen->encargado->name : 'Sin encargado' }}</td>
-                    <td>
-                        <!-- Botón Editar (modal) -->
-                        <button class="btn btn-sm btn-warning" data-bs-toggle="modal" data-bs-target="#editarAlmacenModal{{ $almacen->id }}">Editar</button>
-
-                        <!-- Botón para abrir modal eliminar -->
-                        <button class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#eliminarAlmacenModal{{ $almacen->id }}">
-                            Desactivar
-                        </button>
+                    <td class="text-center">
+                        
+                        <a href="#" data-toggle="modal" data-target="#editarAlmacenModal{{ $almacen->id }}" title="Editar" ><i class="fa fa-edit" aria-hidden="true"></i></a>
+                                        &nbsp;
+                        <a href="#" data-toggle="modal" data-target="#eliminarAlmacenModal{{ $almacen->id }}" title="Eliminar" style="color:#dc3545"> <i class="fa fa-trash" aria-hidden="true"></i></a>
+                                        &nbsp;
                     </td>
                 </tr>
             @endforeach
@@ -73,34 +71,42 @@
             @method('PUT')
             <div class="modal-header">
                 <h5 class="modal-title" id="editarAlmacenLabel{{ $almacen->id }}">Editar Almacén</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                <button type="button" class="btn-close" data-dismiss="modal" aria-label="Cerrar"></button>
             </div>
             <div class="modal-body">
-                <div class="mb-3">
-                    <label for="nombre{{ $almacen->id }}" class="form-label">Nombre</label>
-                    <input type="text" name="nombre" id="nombre{{ $almacen->id }}" class="form-control" value="{{ $almacen->nombre }}" required>
+                <div class="form-row align-items-center mb-2">
+                    <div class="col-4">
+                        <label for="nombre{{ $almacen->id }}">Nombre</label>
+                    </div>
+                    <div class="col-8">
+                        <input type="text" name="nombre" id="nombre{{ $almacen->id }}" class="form-control" value="{{ $almacen->nombre }}" required>
+                    </div>
                 </div>
 
-                <!-- Selector de Encargado -->
-                <div class="mb-3">
-                    <label for="id_encargado{{ $almacen->id }}" class="form-label">Encargado</label>
-                    <select name="id_encargado" id="id_encargado{{ $almacen->id }}" class="form-control">
-                        <option value="">Seleccionar encargado</option>
-                        @foreach($usuarios as $usuario)
-                            <option value="{{ $usuario->id }}" {{ $almacen->id_encargado == $usuario->id ? 'selected' : '' }}>
-                                {{ $usuario->name }}
-                            </option>
-                        @endforeach
-                    </select>
+                <div class="form-row align-items-center mb-2">
+                    <div class="col-4">
+                        <label for="id_encargado{{ $almacen->id }}">Encargado</label>
+                    </div>
+                    <div class="col-8">
+                        <select name="id_encargado" id="id_encargado{{ $almacen->id }}" class="form-control">
+                            <option value="">Seleccionar encargado</option>
+                            @foreach($usuarios as $usuario)
+                                <option value="{{ $usuario->id }}" {{ $almacen->id_encargado == $usuario->id ? 'selected' : '' }}>
+                                    {{ $usuario->name }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
                 <button type="submit" class="btn btn-primary">Guardar cambios</button>
             </div>
         </form>
     </div>
 </div>
+
 
 <!-- Modal Eliminar -->
 <div class="modal fade" id="eliminarAlmacenModal{{ $almacen->id }}" tabindex="-1" aria-labelledby="eliminarAlmacenLabel{{ $almacen->id }}" aria-hidden="true">
@@ -111,7 +117,7 @@
 
             <div class="modal-header">
                 <h5 class="modal-title" id="eliminarAlmacenLabel{{ $almacen->id }}">Confirmar Desactivación</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                <button type="button" class="btn-close" data-dismiss="modal" aria-label="Cerrar"></button>
             </div>
 
             <div class="modal-body">
@@ -120,7 +126,7 @@
             </div>
 
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
                 <button type="submit" class="btn btn-danger">Desactivar</button>
             </div>
         </form>
@@ -138,21 +144,30 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
             </div>
             <div class="modal-body">
-                <div class="mb-3">
-                    <label for="nombreCrear" class="form-label">Nombre</label>
-                    <input type="text" name="nombre" id="nombreCrear" class="form-control" required>
+
+                <div class="form-row align-items-center mb-2">
+                    <div class="col-4">
+                        <label for="nombreCrear">Nombre</label>
+                    </div>
+                    <div class="col-8">
+                        <input type="text" name="nombre" id="nombreCrear" class="form-control" required>
+                    </div>
                 </div>
 
-                <!-- Selector de Encargado -->
-                <div class="mb-3">
-                    <label for="id_encargado" class="form-label">Encargado</label>
-                    <select name="id_encargado" id="id_encargado" class="form-control">
-                        <option value="">Seleccionar encargado</option>
-                        @foreach($usuarios as $usuario)
-                            <option value="{{ $usuario->id }}">{{ $usuario->name }}</option>
-                        @endforeach
-                    </select>
+                <div class="form-row align-items-center mb-2">
+                    <div class="col-4">
+                        <label for="id_encargado">Encargado</label>
+                    </div>
+                    <div class="col-8">
+                        <select name="id_encargado" id="id_encargado" class="form-control">
+                            <option value="">Seleccionar encargado</option>
+                            @foreach($usuarios as $usuario)
+                                <option value="{{ $usuario->id }}">{{ $usuario->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
                 </div>
+
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
@@ -161,6 +176,7 @@
         </form>
     </div>
 </div>
+
 
 <script>
     document.querySelector('#crearAlmacenModal form').addEventListener('submit', function(e) {

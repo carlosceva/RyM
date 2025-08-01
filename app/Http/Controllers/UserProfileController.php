@@ -54,10 +54,15 @@ class UserProfileController extends Controller
 
     public function changePassword(Request $request)
     {
-        // Validar las contraseñas
+        // Validar las contraseñas con mensajes personalizados
         $request->validate([
             'old_password' => 'required',
             'new_password' => 'required|min:6|confirmed',
+        ], [
+            'old_password.required'     => 'La contraseña actual es obligatoria.',
+            'new_password.required'     => 'La nueva contraseña es obligatoria.',
+            'new_password.min'          => 'La nueva contraseña debe tener al menos :min caracteres.',
+            'new_password.confirmed'    => 'La confirmación de la nueva contraseña no coincide.',
         ]);
 
         // Verificar que la contraseña actual sea correcta
@@ -72,5 +77,6 @@ class UserProfileController extends Controller
 
         return back()->with('success', 'Contraseña cambiada con éxito.');
     }
+
 }
 

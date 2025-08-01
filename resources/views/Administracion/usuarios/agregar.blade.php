@@ -1,4 +1,3 @@
-<!-- ... Código Agregad usuario ... -->
 <div class="modal fade" id="addUserModal" tabindex="-1" aria-labelledby="addUserModalLabel" aria-hidden="true">
   <div class="modal-dialog">
     <div class="modal-content">
@@ -9,43 +8,73 @@
       <div class="modal-body">
         <form action="{{ route('usuario.store') }}" method="POST">
           @csrf
-            <div class="mb-3">
-                <label for="codigo" class="form-label">Codigo</label>
-                <input type="text" class="form-control" id="codigo" name="codigo" required>
+
+          <div class="form-row align-items-center">
+            <div class="col-4">
+              <label for="codigo">Código</label>
             </div>
-            <div class="mb-3">
-                <label for="name" class="form-label">Nombre</label>
-                <input type="text" class="form-control" id="name" name="name" required>
+            <div class="col-8 mb-2">
+              <input type="text" class="form-control" id="codigo" name="codigo" required>
             </div>
-            <div class="mb-3">
-                <label for="telefono" class="form-label">Telefono</label>
-                <input type="number" class="form-control" id="telefono" name="telefono" required>
+          </div>
+
+          <div class="form-row align-items-center">
+            <div class="col-4">
+              <label for="name">Nombre</label>
             </div>
-            <div class="mb-3">
-                <label for="email" class="form-label">E-mail</label>
-                <input type="email" class="form-control" id="email" name="email">
+            <div class="col-8 mb-2">
+              <input type="text" class="form-control" id="name" name="name" required>
             </div>
-            <div class="mb-3">
-              <label for="rol" class="form-label">Seleccionar Rol</label>
+          </div>
+
+          <div class="form-row align-items-center">
+            <div class="col-4">
+              <label for="telefono">Teléfono</label>
+            </div>
+            <div class="col-8 mb-2">
+              <input type="number" class="form-control" id="telefono" name="telefono" required>
+            </div>
+          </div>
+
+          <div class="form-row align-items-center">
+            <div class="col-4">
+              <label for="email">E-mail</label>
+            </div>
+            <div class="col-8 mb-2">
+              <input type="email" class="form-control" id="email" name="email">
+            </div>
+          </div>
+
+          <div class="form-row align-items-center">
+            <div class="col-4">
+              <label for="rol">Rol</label>
+            </div>
+            <div class="col-8 mb-2">
               <select name="rol" id="rol" class="form-control" required>
-                  <option value="">Seleccionar Rol</option>
-                  @foreach($roles as $rol)
-                      <option value="{{ $rol->name }}">{{ $rol->name }}</option>
-                  @endforeach
+                <option value="">Seleccionar Rol</option>
+                @foreach($roles as $rol)
+                  <option value="{{ $rol->name }}">{{ $rol->name }}</option>
+                @endforeach
               </select>
             </div>
-            <div class="mb-3">
-                <label for="password" class="form-label">Contraseña</label>
-                <input type="password" class="form-control" id="password" name="password" required>
+          </div>
+
+          <div class="form-row align-items-center">
+            <div class="col-4">
+              <label for="password">Contraseña</label>
             </div>
-            
+            <div class="col-8 mb-3">
+              <input type="password" class="form-control" id="password" name="password" required>
+            </div>
+          </div>
+
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
             <button type="submit" class="btn btn-primary">Guardar</button>
           </div>
+
         </form>
       </div>
     </div>
   </div>
 </div>
-<!-- ... end agregar usuario ... -->

@@ -31,6 +31,7 @@
             <h5 class="mb-0">Gestión de Backups</h5>
         </div>
         <div class="card-body">
+
             @if(session('success'))
                 <div class="alert alert-success">{{ session('success') }}</div>
             @endif
@@ -39,18 +40,43 @@
                 <div class="alert alert-danger">{{ session('error') }}</div>
             @endif
 
-            <form action="{{ route('backup.realizar') }}" method="POST" style="display:inline-block">
-                @csrf
-                <button type="submit" class="btn btn-primary">Realizar Backup</button>
-            </form>
+            <div class="container">
+  <div class="row justify-content-center align-items-center">
 
-            <form action="{{ route('backup.restaurar') }}" method="POST" enctype="multipart/form-data" style="display:inline-block; margin-left:20px;">
-                @csrf
-                <input type="file" name="backup_file" accept=".sql,.txt" required>
-                <button type="submit" class="btn btn-warning">Restaurar Backup</button>
-            </form>
+    <!-- Realizar Backup -->
+    <div class="col-12 col-md-auto mb-2">
+      <form action="{{ route('backup.realizar') }}" method="POST">
+        @csrf
+        <button type="submit" class="btn btn-primary w-100">
+          <i class="fas fa-download"></i> Realizar Backup
+        </button>
+      </form>
+    </div>
+
+    <!-- Restaurar Backup -->
+    <div class="col-12 col-md-auto">
+      <form action="{{ route('backup.restaurar') }}" method="POST" enctype="multipart/form-data">
+        @csrf
+        <div class="form-row align-items-center">
+          <div class="col-12 col-sm-auto mb-2 mb-sm-0">
+            <input type="file" name="backup_file" accept=".sql,.txt" class="form-control-file" required>
+          </div>
+          <div class="col-12 col-sm-auto">
+            <button type="submit" class="btn btn-warning w-100">
+              <i class="fas fa-upload"></i> Restaurar Backup
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+
+  </div>
+</div>
+
+
         </div>
     </div>
+
 </div>
 
 <!-- FontAwesome para el ícono de WhatsApp -->

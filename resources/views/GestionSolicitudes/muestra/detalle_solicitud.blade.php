@@ -31,26 +31,37 @@
 
         <!-- Cuerpo -->
         <div class="card-body">
-            <div class="row">
-                <!-- Columna izquierda -->
-                <div class="col-12 col-md-6">
-                    <p class="mb-1"><strong>Solicitante:</strong> {{ $solicitud->usuario->name ?? 'N/D' }}</p>
-
-                    <p><strong>Motivo:</strong></p>
-                    <div class="border p-2 rounded bg-light small">
-                        {{ $solicitud->glosa ?? 'Sin glosa' }}
+           
+                <div class="row  p-2 ">
+                    <div class="col-12 col-md-6 ">
+                        <p class="mb-1"><strong>Solicitante:</strong> {{ $solicitud->usuario->name ?? 'N/D' }}</p>
+                    </div>
+                </div>
+                
+                <div class="row  p-2 ">
+                    <div class="col-12 col-md-6">
+                        <p class="mb-1"><strong>Cliente:</strong> {{ $solicitud->muestraMercaderia->cliente ?? 'Sin cliente' }}</p>
                     </div>
                 </div>
 
-                <!-- Columna derecha -->
-                <div class="col-12 col-md-6 mt-3 mt-md-0">
+                <div class="row p-2">
+                    <div class="col-12">
+                        <div class="d-flex align-items-center">
+                            <strong class="me-2">Motivo:</strong>
+                            <div class="border p-2 rounded bg-light small flex-grow-1">
+                                {{ $solicitud->glosa ?? 'Sin glosa' }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-12">
                     @if($solicitud->muestraMercaderia)
-                    <p class="mb-2"><strong>{{ $solicitud->muestraMercaderia->cliente ?? 'Sin cliente' }}</strong></p>
+                    <p class="mb-2"><strong>Detalle</strong></p>
                     <div class="border p-2 rounded bg-light small">
                         <table class="table table-borderless table-sm mb-0">
                             <thead>
                                 <tr>
-                                    <th scope="col">#</th>
                                     <th scope="col">Cod-SAI</th>
                                     <th scope="col">Producto</th>
                                     <th scope="col">Cantidad</th>
@@ -69,7 +80,6 @@
                                             $medida = trim($partes[3] ?? '');
                                         @endphp
                                         <tr>
-                                            <td>{{ $index + 1 }}</td>
                                             <td>{{ $codsai }}</td>
                                             <td>{{ $producto }}</td>
                                             <td>{{ $cantidad }}</td>
@@ -87,7 +97,7 @@
                     @endif
                 </div>
 
-            </div>
+            
 
             <!-- Autorización -->
             

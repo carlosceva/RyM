@@ -29,109 +29,106 @@
             </div>
         </div>
 
-        <!-- Cuerpo -->
-        <div class="card-body">
-            <div class="row  p-2 ">
-                <div class="col-12 col-md-6 ">
-                    <p class="mb-1"><strong>Solicitante:</strong> {{ $solicitud->usuario->name ?? 'N/D' }}</p>
-                </div>
+<!-- Cuerpo -->
+<div class="card-body">
+    <div class="row p-1">
+        <div class="col-12 col-md-6 d-flex">
+            <div class="fw-bold me-2">Solicitante:</div>
+            <div>{{ $solicitud->usuario->name ?? 'N/D' }}</div>
+        </div>
+    </div>
+
+    <div class="row p-1">
+        <div class="col-12 col-md-6 d-flex">
+            <div class="fw-bold me-2">Nota de venta:</div>
+            <div>{{ $solicitud->anulacion->nota_venta }}</div>
+        </div>
+        <div class="col-12 col-md-6 d-flex mt-3 mt-md-0">
+            <div class="fw-bold me-2">Almacen:</div>
+            <div>{{ $solicitud->anulacion->almacen->nombre ?? 'N/A' }}</div>
+        </div>
+    </div>
+
+    <div class="row p-1">
+        <div class="col-12 col-md-6 d-flex">
+            <div class="fw-bold me-2">Motivo:</div>
+            <div>{{ $solicitud->anulacion->motivo }}</div>
+        </div>
+    </div>
+
+    <div class="row p-1">
+        <div class="col-12 col-md-4 d-flex">
+            <div class="fw-bold me-2">Tiene Pago:</div>
+            <div>{{ is_null($solicitud->anulacion->tiene_pago) ? '---' : ($solicitud->anulacion->tiene_pago ? 'Sí' : 'No') }}</div>
+        </div>
+        <div class="col-12 col-md-4 d-flex">
+            <div class="fw-bold me-2">Tiene despacho:</div>
+            <div>{{ is_null($solicitud->anulacion->tiene_entrega) ? '---' : ($solicitud->anulacion->tiene_entrega ? 'Sí' : 'No') }}</div>
+        </div>
+        <div class="col-12 col-md-4 d-flex">
+            <div class="fw-bold me-2">Entrega física:</div>
+            <div>{{ is_null($solicitud->anulacion->entrega_fisica) ? '---' : ($solicitud->anulacion->entrega_fisica ? 'Sí' : 'No') }}</div>
+        </div>
+    </div>
+
+    @if (!empty($solicitud->anulacion->obs_pago))
+        <div class="row p-1">
+            <div class="col-12 d-flex">
+                <div class="fw-bold me-2">Observación del Pago:</div>
+                <div>{{ $solicitud->anulacion->obs_pago }}</div>
             </div>
+        </div>
+    @endif
 
-            <div class="row  p-2 ">
-                <div class="col-12 col-md-6">
-                    <p class="mb-1"><strong>Nota de venta:</strong> {{ $solicitud->anulacion->nota_venta }}</p>
-                </div>
-
-                <div class="col-12 col-md-6 mt-3 mt-md-0">
-                    <p class="mb-2"><strong>Almacen: </strong>{{ $solicitud->anulacion->almacen->nombre ?? 'N/A' }}</p>
-                </div>
-            </div>
-
-            <div class="row  p-2 ">
-                <div class="col-12 col-md-6 ">
-                    <p class="mb-2"><strong>Motivo: </strong>{{ $solicitud->anulacion->motivo }}</p>
-                </div>
-            </div>
-
-            <div class="row p-2">
-                <div class="col-12 col-md-4">
-                    <p class="mb-1">
-                        <strong>Tiene Pago:</strong>
-                        {{ is_null($solicitud->anulacion->tiene_pago) ? '---' : ($solicitud->anulacion->tiene_pago ? 'Sí' : 'No') }}
-                    </p>
-                </div>
-                <div class="col-12 col-md-4">
-                    <p class="mb-1">
-                        <strong>Tiene despacho:</strong>
-                        {{ is_null($solicitud->anulacion->tiene_entrega) ? '---' : ($solicitud->anulacion->tiene_entrega ? 'Sí' : 'No') }}
-                    </p>
-                </div>
-                <div class="col-12 col-md-4">
-                    <p class="mb-1">
-                        <strong>Entrega fisica:</strong>
-                        {{ is_null($solicitud->anulacion->entrega_fisica) ? '---' : ($solicitud->anulacion->entrega_fisica ? 'Sí' : 'No') }}
-                    </p>
-                </div>
-            </div>
-            <!-- Mostrar Observación de Pago solo si existe -->
-            @if (!empty($solicitud->anulacion->obs_pago))
-                <div class="col-12">
-                    <p class="mb-1">
-                        <strong>Observación del Pago:</strong>
-                        {{ $solicitud->anulacion->obs_pago }}
-                    </p>
-                </div>
-            @endif
-
-            <div class="row p-2">
-                <div class="col-12">
-                    <div class="d-flex align-items-center">
-                        <strong class="me-2">Glosa:</strong>
-                        <div class="border p-2 rounded bg-light small flex-grow-1">
-                            {{ $solicitud->glosa ?? 'Sin glosa' }}
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Autorización -->
-            <div class="row mt-3">
-                <div class="col-12 border-top pt-2">
-                    <div class="d-flex justify-content-between flex-wrap small">
-                        <span><strong>Autorizado por:</strong> {{ $solicitud->autorizador->name ?? 'Sin autorizar' }}</span>
-                        <span class="badge {{ $clase_color }}">
-                            {{ ucfirst($solicitud->estado) }}
-                        </span>
-                        <span>{{ $solicitud->fecha_autorizacion ?? 'N/D' }}</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Ejecución -->
-             @if($solicitud->estado !=='rechazada')
-            <div class="row mt-2">
-                <div class="col-12 border-top pt-2">
-                    <div class="d-flex justify-content-between flex-wrap small">
-                        <span><strong>Ejecutado por:</strong> {{ $solicitud->ejecucion->usuario->name ?? 'Sin ejecutar' }}</span>
-                        <span class="badge {{ $clase_color_ejecucion }}">
-                            {{ $solicitud->ejecucion ? 'Ejecutada' : 'Pendiente' }}
-                        </span>
-                        <span>{{ $solicitud->ejecucion->fecha_ejecucion ?? 'N/D' }}</span>
-                    </div>
-                </div>
-            </div>
-            @endif
-
-            <!-- Observación -->
-            <div class="row mt-2">
-                <div class="col-12">
-                    
-                    <div class="border p-2 rounded bg-light small">
-                        {{ $solicitud->observacion ?? 'Sin observación' }}
-                    </div>
+    <div class="row p-1">
+        <div class="col-12">
+            <div class="d-flex align-items-center">
+                <strong class="me-2">Glosa:</strong>
+                <div class="border p-2 rounded bg-light small flex-grow-1">
+                    {{ $solicitud->glosa ?? 'Sin glosa' }}
                 </div>
             </div>
         </div>
+    </div>
+
+    <!-- Autorización -->
+    <div class="row mt-3">
+        <div class="col-12 border-top pt-2">
+            <div class="d-flex justify-content-between flex-wrap small">
+                <span><strong>Autorizado por:</strong> {{ $solicitud->autorizador->name ?? 'Sin autorizar' }}</span>
+                <span class="badge {{ $clase_color }}">
+                    {{ ucfirst($solicitud->estado) }}
+                </span>
+                <span>{{ $solicitud->fecha_autorizacion ?? 'N/D' }}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ejecución -->
+    @if($solicitud->estado !== 'rechazada')
+    <div class="row mt-2">
+        <div class="col-12 border-top pt-2">
+            <div class="d-flex justify-content-between flex-wrap small">
+                <span><strong>Ejecutado por:</strong> {{ $solicitud->ejecucion->usuario->name ?? 'Sin ejecutar' }}</span>
+                <span class="badge {{ $clase_color_ejecucion }}">
+                    {{ $solicitud->ejecucion ? 'Ejecutada' : 'Pendiente' }}
+                </span>
+                <span>{{ $solicitud->ejecucion->fecha_ejecucion ?? 'N/D' }}</span>
+            </div>
+        </div>
+    </div>
+    @endif
+
+    <!-- Observación -->
+    <div class="row mt-2">
+        <div class="col-12">
+            <div class="border p-2 rounded bg-light small">
+                {{ $solicitud->observacion ?? 'Sin observación' }}
+            </div>
+        </div>
+    </div>
+</div>
+
             
         <style>
             /* Estilo para el botón Excel (estado normal) */

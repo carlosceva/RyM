@@ -1,110 +1,115 @@
-    <!-- Vista para crear solicitud -->
-    <div class="modal fade" id="modalNuevaSolicitud" tabindex="-1" aria-labelledby="modalCrearSolicitudLabel" aria-hidden="true">
+<!-- Vista para crear solicitud -->
+<div class="modal fade" id="modalNuevaSolicitud" tabindex="-1" aria-labelledby="modalCrearSolicitudLabel" aria-hidden="true">
   <div class="modal-dialog modal-lg">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title" id="modalCrearSolicitudLabel">Crear Solicitud de Muestra de Mercaderia</h5>
+        <h5 class="modal-title" id="modalCrearSolicitudLabel">Crear Solicitud de Muestra de Mercadería</h5>
         <button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
         <form action="{{ route('Muestra.store') }}" method="POST">
           @csrf
-            <!-- Tipo de Solicitud -->
-            <input type="hidden" name="tipo" value="Muestra de Mercaderia">
 
-            <!-- Usuario que solicita (Oculto porque es el usuario autenticado) -->
-            <input type="hidden" name="id_usuario" value="{{ auth()->id() }}">
+          <input type="hidden" name="tipo" value="Muestra de Mercaderia">
+          <input type="hidden" name="id_usuario" value="{{ auth()->id() }}">
+          <input type="hidden" name="estado" value="pendiente">
 
-             <!-- Fecha de solicitud -->
-            <div class="mb-3 row">
-                <label for="fecha_solicitud" class="col-sm-2 col-form-label">Fecha actual: </label>
-                <div class="col-sm-10">
+          <!-- Fecha -->
+          <div class="form-group row mb-3">
+            <div class="col-12 d-flex align-items-center">
+              <label for="fecha_solicitud" class="col-4 col-md-2 col-form-label">Fecha</label>
+              <div class="col-8 col-md-10">
                 <input type="text" class="form-control" id="fecha_solicitud" value="{{ now()->format('Y-m-d H:i:s') }}" disabled>
-                </div>
+              </div>
             </div>
+          </div>
 
-            <!-- Estado -->
-            <input type="hidden" name="estado" value="pendiente">
-
-            <!-- Glosa -->
-            <div class="mb-3 row">
-                <label for="glosa" class="col-sm-2 col-form-label">Motivo: </label>
-                <div class="col-sm-10">
-                <textarea class="form-control" id="glosa" name="glosa" rows="4" required></textarea>
-                </div>
-            </div>
-
+          <!-- Cliente y COD SAI -->
+          <div class="form-group row mb-3">
             <!-- Cliente -->
-            <div class="mb-3 row">
-                <label for="cliente" class="col-sm-2 col-form-label">Cliente: </label>
-                <div class="col-sm-4">
-                    <input type="text" class="form-control" id="cliente" name="cliente" required>
+            <div class="col-12 col-md-6 d-flex align-items-center mb-2 mb-md-0">
+              <label for="cliente" class="col-4 col-form-label">Cliente</label>
+              <div class="col-8">
+                <input type="text" class="form-control" id="cliente" name="cliente" required>
+              </div>
+            </div>
+
+            <!-- COD SAI -->
+            <div class="col-12 col-md-6 d-flex align-items-center">
+              <label for="cod_sai" class="col-4 col-form-label">COD SAI</label>
+              <div class="col-8">
+                <input type="text" class="form-control" id="cod_sai" name="cod_sai" required>
+              </div>
+            </div>
+          </div>
+
+          <!-- Glosa -->
+          <div class="form-group row mb-3">
+            <label for="glosa" class="col-12 col-md-2 col-form-label">Motivo</label>
+            <div class="col-12 col-md-10">
+              <textarea class="form-control" id="glosa" name="glosa" rows="4" required></textarea>
+            </div>
+          </div>
+
+          <!-- Detalle -->
+          <div class="form-group row mb-2">
+            <label class="col-12 col-form-label">Detalle</label>
+          </div>
+
+          <div class="form-group row align-items-end mb-3">
+            <!-- Inputs -->
+            <div class="col-12 col-md-10">
+              <div class="form-row">
+                <div class="col-12 col-md-3 mb-2 mb-md-0">
+                  <input type="text" id="codsai" class="form-control" placeholder="codsai">
                 </div>
-                <label for="cod_sai" class="col-sm-2 col-form-label">Codigo SAI: </label>
-                <div class="col-sm-4">
-                    <input type="text" class="form-control" id="cod_sai" name="cod_sai" required>
+                <div class="col-12 col-md-3 mb-2 mb-md-0">
+                  <input type="text" id="producto" class="form-control" placeholder="Producto">
                 </div>
-            </div>
-
-            <!-- cod sai Cliente -->
-            <div class="mb-3 row">
-                
-            </div>
-
-            <div class="row g-2 mb-3">
-                <!-- Columna 1: Inputs -->
-                <div class="col-12 col-md-10">
-                    <div class="row g-2">
-                        <div class="col-12 col-md-3">
-                            <input type="text" id="codsai" class="form-control" step="0.01" placeholder="codsai">
-                        </div>
-                        <div class="col-12 col-md-3">
-                            <input type="text" id="producto" class="form-control" placeholder="Producto">
-                        </div>
-                        <div class="col-12 col-md-3">
-                            <input type="number" id="cantidad" class="form-control" placeholder="Cantidad">
-                        </div>
-                        <div class="col-12 col-md-3">
-                            <input type="text" id="medida" class="form-control" placeholder="U/M">
-                        </div>
-                        
-                    </div>
+                <div class="col-12 col-md-3 mb-2 mb-md-0">
+                  <input type="number" id="cantidad" class="form-control" placeholder="Cantidad">
                 </div>
-
-                <!-- Columna 2: Botón -->
-                <div class="col-12 col-md-2">
-                    <button type="button" class="btn btn-primary w-100" onclick="agregarProducto()">Agregar</button>
+                <div class="col-12 col-md-3 mb-2 mb-md-0">
+                  <input type="text" id="medida" class="form-control" placeholder="U/M">
                 </div>
+              </div>
             </div>
 
-            <!-- Tabla dinámica -->
-            <div class="table-responsive mb-3">
-                <table class="table table-bordered table-striped" id="tablaProductos">
-                    <thead class="table-dark">
-                        <tr>
-                            <th>Cod-SAI</th>
-                            <th>Producto</th>
-                            <th>Cantidad</th>
-                            <th>U/M</th>
-                            <th>Acción</th>
-                        </tr>
-                    </thead>
-                    <tbody></tbody>
-                </table>
+            <!-- Botón -->
+            <div class="col-12 col-md-2 mt-3 mt-md-0">
+              <button type="button" class="btn btn-primary w-100" onclick="agregarProducto()">Agregar</button>
             </div>
+          </div>
 
-            <!-- Campo oculto para enviar los productos como cadena -->
-            <input type="hidden" name="detalle_productos" id="detalle_productos">
+          <!-- Tabla dinámica -->
+          <div class="table-responsive mb-3">
+            <table class="table table-bordered table-striped" id="tablaProductos">
+              <thead class="table-dark">
+                <tr>
+                  <th>Cod-SAI</th>
+                  <th>Producto</th>
+                  <th>Cantidad</th>
+                  <th>U/M</th>
+                  <th>Acción</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
 
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
-                <button type="submit" class="btn btn-primary">Crear Solicitud</button>
-            </div>
+          <input type="hidden" name="detalle_productos" id="detalle_productos">
+
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+            <button type="submit" class="btn btn-primary">Crear Solicitud</button>
+          </div>
         </form>
       </div>
     </div>
   </div>
 </div>
+
+
 
 <!-- JavaScript para tabla dinámica -->
 <script>

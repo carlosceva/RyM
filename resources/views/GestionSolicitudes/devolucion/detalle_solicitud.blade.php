@@ -32,25 +32,25 @@
         <!-- Cuerpo -->
         <div class="card-body">
             <div class="row p-2">
-                <div class="d-flex align-items-center">
-                    <strong class="me-2 col-md-2">Solicitante:</strong>
-                    <div class="col-md-10 border p-2 rounded bg-light small flex-grow-1">
+                <div class="d-flex align-items-center w-100">
+                    <strong class="me-2" style="min-width: 100px;">Solicitante:</strong>
+                    <div class="border p-2 rounded bg-light small flex-grow-1">
                         {{ $solicitud->usuario->name ?? 'N/D' }}
                     </div>
                 </div>
             </div>
 
-            <div class="row  p-2 ">
-                <div class="col-6 d-flex align-items-center">
-                    <strong class="me-2 col-md-4"># Nota:</strong>
-                    <div class="col-md-8 border p-2 rounded bg-light small flex-grow-1">
+            <div class="row p-2">
+                <div class="col-12 col-md-6 d-flex align-items-center mb-2 mb-md-0">
+                    <strong class="me-2" style="min-width: 100px;"># Nota:</strong>
+                    <div class="border p-2 rounded bg-light small flex-grow-1">
                         {{ $solicitud->devolucion->nota_venta ?? 'N/D'}}
                     </div>
                 </div>
 
-                <div class="col-6 d-flex align-items-center">
-                    <strong class="me-2 col-md-4">Almacen:</strong>
-                    <div class="col-md-8 border p-2 rounded bg-light small flex-grow-1">
+                <div class="col-12 col-md-6 d-flex align-items-center">
+                    <strong class="me-2" style="min-width: 100px;">Almacen:</strong>
+                    <div class="border p-2 rounded bg-light small flex-grow-1">
                         @if(is_numeric($solicitud->devolucion->almacen)) 
                             {{ \App\Models\Almacen::find($solicitud->devolucion->almacen)->nombre ?? 'No definido' }}
                         @else
@@ -61,54 +61,55 @@
             </div>
 
             <div class="row p-2">
-                <div class="col-12 col-md-4">
-                    <p class="mb-1">
-                        <strong>Tiene Pago:</strong>
+                <div class="col-12 col-md-4 mb-2 mb-md-0 d-flex align-items-center">
+                    <strong class="me-2" style="min-width: 100px;">Tiene Pago:</strong>
+                    <div>
                         @if($solicitud->devolucion)
                             {{ is_null($solicitud->devolucion->tiene_pago) ? '---' : ($solicitud->devolucion->tiene_pago ? 'Sí' : 'No') }}
                         @else
                             ---
                         @endif
-                    </p>
+                    </div>
                 </div>
 
-                <div class="col-12 col-md-4">
-                    <p class="mb-1">
-                        <strong>Tiene despacho:</strong>
+                <div class="col-12 col-md-4 mb-2 mb-md-0 d-flex align-items-center">
+                    <strong class="me-2" style="min-width: 100px;">Tiene despacho:</strong>
+                    <div>
                         @if($solicitud->devolucion)
                             {{ is_null($solicitud->devolucion->tiene_entrega) ? '---' : ($solicitud->devolucion->tiene_entrega ? 'Sí' : 'No') }}
                         @else
                             ---
                         @endif
-                    </p>
+                    </div>
                 </div>
 
-                <div class="col-12 col-md-4">
-                    <p class="mb-1">
-                        <strong>Entrega física:</strong>
+                <div class="col-12 col-md-4 d-flex align-items-center">
+                    <strong class="me-2" style="min-width: 100px;">Entrega física:</strong>
+                    <div>
                         @if($solicitud->devolucion)
                             {{ is_null($solicitud->devolucion->entrega_fisica) ? '---' : ($solicitud->devolucion->entrega_fisica ? 'Sí' : 'No') }}
                         @else
                             ---
                         @endif
-                    </p>
+                    </div>
                 </div>
-
             </div>
-            <!-- Mostrar Observación de Pago solo si existe -->
+
             @if (!empty($solicitud->devolucion->obs_pago))
-                <div class="col-12">
-                    <p class="mb-1">
-                        <strong>Observación del Pago:</strong>
-                        {{ $solicitud->devolucion->obs_pago }}
-                    </p>
+                <div class="row p-2">
+                    <div class="col-12 d-flex flex-column flex-md-row align-items-start align-items-md-center">
+                        <strong class="me-2" style="min-width: 150px;">Obs. del Pago:</strong>
+                        <div>
+                            {{ $solicitud->devolucion->obs_pago }}
+                        </div>
+                    </div>
                 </div>
             @endif
 
             <div class="row p-2">
-                <div class="d-flex align-items-center">
-                    <strong class="me-2 col-md-2">Motivo:</strong>
-                    <div class="col-md-10 border p-2 rounded bg-light small flex-grow-1">
+                <div class="d-flex align-items-center w-100">
+                    <strong class="me-2" style="min-width: 100px;">Motivo:</strong>
+                    <div class="border p-2 rounded bg-light small flex-grow-1">
                         {{ $solicitud->devolucion->motivo ?? 'N/D'}}
                     </div>
                 </div>
@@ -116,9 +117,9 @@
 
             <div class="row p-2">
                 <div class="col-12">
-                    <div class="d-flex align-items-center">
-                        <strong class="me-2 col-md-2">Glosa:</strong>
-                        <div class="col-md-10 border p-2 rounded bg-light small flex-grow-1">
+                    <div class="d-flex align-items-center w-100">
+                        <strong class="me-2" style="min-width: 100px;">Glosa:</strong>
+                        <div class="border p-2 rounded bg-light small flex-grow-1">
                             {{ $solicitud->glosa ?? 'Sin glosa' }}
                         </div>
                     </div>
@@ -128,42 +129,41 @@
             <!-- detalle productos -->
             <div class="col-12 mt-3 mt-md-0">
                 @if($solicitud->devolucion)
-                <strong>Detalle de productos:</strong>
-                <div class="border p-2 rounded bg-light small">
-                    <table class="table table-borderless table-sm mb-0">
-                        <thead>
-                            <tr>
-                                <th scope="col">#</th>
-                                <th scope="col">Producto</th>
-                                <th scope="col">Cantidad</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @if(!empty($solicitud->devolucion->detalle_productos))
-                                @php $productos = explode(',', $solicitud->devolucion->detalle_productos); @endphp
-                                @foreach($productos as $index => $item)
-                                    @php
-                                        $partes = explode('-', $item);
-                                        $producto = trim($partes[0] ?? '');
-                                        $cantidad = trim($partes[1] ?? '');
-                                    @endphp
-                                    <tr>
-                                        <td>{{ $index + 1 }}</td>
-                                        <td>{{ $producto }}</td>
-                                        <td>{{ $cantidad }}</td>
-                                    </tr>
-                                @endforeach
-                            @else
+                    <strong>Detalle de productos:</strong>
+                    <div class="table-responsive border p-2 rounded bg-light small">
+                        <table class="table table-borderless table-sm mb-0">
+                            <thead>
                                 <tr>
-                                    <td colspan="3">No hay productos registrados.</td>
+                                    <th scope="col">#</th>
+                                    <th scope="col">Producto</th>
+                                    <th scope="col">Cantidad</th>
                                 </tr>
-                            @endif
-                        </tbody>
-                    </table>
-                </div>
+                            </thead>
+                            <tbody>
+                                @if(!empty($solicitud->devolucion->detalle_productos))
+                                    @php $productos = explode(',', $solicitud->devolucion->detalle_productos); @endphp
+                                    @foreach($productos as $index => $item)
+                                        @php
+                                            $partes = explode('-', $item);
+                                            $producto = trim($partes[0] ?? '');
+                                            $cantidad = trim($partes[1] ?? '');
+                                        @endphp
+                                        <tr>
+                                            <td>{{ $index + 1 }}</td>
+                                            <td>{{ $producto }}</td>
+                                            <td>{{ $cantidad }}</td>
+                                        </tr>
+                                    @endforeach
+                                @else
+                                    <tr>
+                                        <td colspan="3">No hay productos registrados.</td>
+                                    </tr>
+                                @endif
+                            </tbody>
+                        </table>
+                    </div>
                 @endif
             </div>
-
 
             <!-- Autorización -->
             <div class="row mt-3">
@@ -196,7 +196,6 @@
             <!-- Observación -->
             <div class="row mt-2">
                 <div class="col-12">
-                    
                     <div class="border p-2 rounded bg-light small">
                         {{ $solicitud->observacion ?? 'Sin observación' }}
                     </div>

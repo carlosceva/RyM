@@ -175,57 +175,47 @@
                                             &nbsp;
                                         @endcan
 
-                                    {{-- Paso 3: No hubo entrega --}}
+                                    {{-- Paso 3: No hubo entrega (sin distinguir si tiene pago o no) --}}
                                     @else
-                                        @if ($tienePago)
+                                        @if (is_null($entregaFisica))
+                                            {{-- Esperando confirmación del almacén --}}
                                             @can('Devolucion_entrega')
-                                                @can('Devolucion_ejecutar')
-                                                    <div class="alert alert-warning p-2 mb-2 text-sm">
-                                                        ⚠️ Debe registrar la entrega en el sistema externo antes de continuar.
-                                                    </div>
-                                                @endcan
+                                                @cannot('Devolucion_ejecutar')
+                                                    <button class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#modalEntregaF{{ $solicitud->id }}">
+                                                        Registrar Entrega
+                                                    </button>
+                                                    &nbsp;
+                                                @endcannot
                                             @endcan
 
-                                        @elseif (!$tienePago)
-                                            @if (is_null($entregaFisica))
-                                                {{-- Esperando confirmación del almacén --}}
-                                                @can('Devolucion_entrega')
-                                                    @cannot('Devolucion_ejecutar')
-                                                        <button class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#modalEntregaF{{ $solicitud->id }}">
-                                                            Registrar Entrega
-                                                        </button>
-                                                        &nbsp;
-                                                    @endcannot
-                                                @endcan
+                                            @can('Devolucion_ejecutar')
+                                                <button class="btn btn-outline-secondary btn-sm" disabled>
+                                                    ⏳ Esperando confirmación
+                                                </button>
+                                                &nbsp;
+                                            @endcan
 
-                                                @can('Devolucion_ejecutar')
-                                                    <button class="btn btn-outline-secondary btn-sm" disabled>
-                                                        ⏳ Esperando confirmación
-                                                    </button>
-                                                    &nbsp;
-                                                @endcan
+                                        @elseif($entregaFisica === false)
+                                            {{-- No hubo entrega física → ejecutar como anulación --}}
+                                            @can('Devolucion_ejecutar')
+                                                <button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#modalEjecutar{{ $solicitud->id }}">
+                                                    Ejecutar
+                                                </button>
+                                                &nbsp;
+                                            @endcan
 
-                                            @elseif($entregaFisica === false)
-                                                {{-- No hubo entrega física → ejecutar como anulación --}}
-                                                @can('Devolucion_ejecutar')
-                                                    <button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#modalEjecutar{{ $solicitud->id }}">
-                                                        Ejecutar
-                                                    </button>
-                                                    &nbsp;
-                                                @endcan
-
-                                            @elseif($entregaFisica === true)
-                                                {{-- Sí hubo entrega física → ejecutar como devolución --}}
-                                                @can('Devolucion_ejecutar')
-                                                    <button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#modalEjecutar{{ $solicitud->id }}">
-                                                        Ejecutar
-                                                    </button>
-                                                    &nbsp;
-                                                @endcan
-                                            @endif
+                                        @elseif($entregaFisica === true)
+                                            {{-- Sí hubo entrega física → ejecutar como devolución --}}
+                                            @can('Devolucion_ejecutar')
+                                                <button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#modalEjecutar{{ $solicitud->id }}">
+                                                    Ejecutar
+                                                </button>
+                                                &nbsp;
+                                            @endcan
                                         @endif
                                     @endif
                                 @endif
+
 
                               <!-- Botón para ver detalles en formato ticket -->
                               <button class="btn btn-sm btn-primary d-flex align-items-center justify-content-center"
@@ -303,9 +293,9 @@
                     </div>
 
                     {{-- Mensaje de advertencia --}}
-                    <div id="resultado{{ $solicitud->id }}" class="alert alert-warning mt-3 d-none fw-bold text-center">
+                    <!-- <div id="resultado{{ $solicitud->id }}" class="alert alert-warning mt-3 d-none fw-bold text-center">
                         ⚠️ Debe registrar la entrega en el sistema externo antes de continuar.
-                    </div>
+                    </div> -->
 
                 </div>
 
@@ -575,28 +565,28 @@
     </script>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const radios = document.querySelectorAll('.entrega-verificacion-radio');
+    // document.addEventListener('DOMContentLoaded', function () {
+    //     const radios = document.querySelectorAll('.entrega-verificacion-radio');
 
-        radios.forEach(function (radio) {
-            radio.addEventListener('change', function () {
-                const solicitudId = this.dataset.solicitudId;
-                const tienePago = this.dataset.tienePago === '1';
-                const esNoEntrega = this.value === '0';
+    //     radios.forEach(function (radio) {
+    //         radio.addEventListener('change', function () {
+    //             const solicitudId = this.dataset.solicitudId;
+    //             const tienePago = this.dataset.tienePago === '1';
+    //             const esNoEntrega = this.value === '0';
 
-                const mensaje = document.getElementById('resultado' + solicitudId);
-                const btnConfirmar = document.querySelector('.btn-confirmar' + solicitudId);
+    //             const mensaje = document.getElementById('resultado' + solicitudId);
+    //             const btnConfirmar = document.querySelector('.btn-confirmar' + solicitudId);
 
-                if (tienePago && esNoEntrega) {
-                    mensaje?.classList.remove('d-none');
-                    btnConfirmar.disabled = true;
-                } else {
-                    mensaje?.classList.add('d-none');
-                    btnConfirmar.disabled = false;
-                }
-            });
-        });
-    });
+    //             if (tienePago && esNoEntrega) {
+    //                 mensaje?.classList.remove('d-none');
+    //                 btnConfirmar.disabled = true;
+    //             } else {
+    //                 mensaje?.classList.add('d-none');
+    //                 btnConfirmar.disabled = false;
+    //             }
+    //         });
+    //     });
+    // });
 </script>
 
 @endsection

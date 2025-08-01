@@ -1,6 +1,6 @@
 <!-- Vista para crear solicitud -->
 <div class="modal fade" id="modalNuevaSolicitud" tabindex="-1" aria-labelledby="modalCrearSolicitudLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg"> <!-- Aumenté tamaño del modal para mejor distribución -->
+    <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="modalCrearSolicitudLabel">Crear Solicitud de Devolución de Venta</h5>
@@ -9,32 +9,37 @@
             <div class="modal-body">
                 <form action="{{ route('Devolucion.store') }}" method="POST" onsubmit="this.querySelector('button[type=submit]').disabled = true;">
                     @csrf
-                    <!-- Campos ocultos -->
                     <input type="hidden" name="tipo" value="Devolucion de Venta">
                     <input type="hidden" name="id_usuario" value="{{ auth()->id() }}">
                     <input type="hidden" name="estado" value="pendiente">
 
-                    <!-- Fecha de solicitud (solo visual) -->
-                    <div class="row mb-2 align-items-center">
-                        <label for="fecha_solicitud" class="col-md-3 col-form-label">Fecha de Solicitud</label>
-                        <div class="col-md-9">
+                    <!-- Fecha de solicitud -->
+                    <div class="form-row align-items-center mb-2">
+                        <div class="col-4 col-md-3 col-lg-2">
+                            <label for="fecha_solicitud">Fecha</label>
+                        </div>
+                        <div class="col-8 col-md-9 col-lg-10">
                             <input type="text" class="form-control" id="fecha_solicitud" value="{{ now()->format('Y-m-d H:i:s') }}" disabled>
                         </div>
                     </div>
 
                     <!-- Nota de venta -->
-                    <div class="row mb-2 align-items-center">
-                        <label for="nota_venta" class="col-md-3 col-form-label">Nota de venta</label>
-                        <div class="col-md-9">
+                    <div class="form-row align-items-center mb-2">
+                        <div class="col-4 col-md-3 col-lg-2">
+                            <label for="nota_venta"># Nota</label>
+                        </div>
+                        <div class="col-8 col-md-9 col-lg-10">
                             <input type="text" class="form-control" id="nota_venta" name="nota_venta" required>
                         </div>
                     </div>
 
                     <!-- Almacén -->
-                    <div class="row mb-2 align-items-center">
-                        <label for="almacen" class="col-md-3 col-form-label">Almacén</label>
-                        <div class="col-md-9">
-                            <select name="almacen" id="almacen" class="form-select" required>
+                    <div class="form-row align-items-center mb-2">
+                        <div class="col-4 col-md-3 col-lg-2">
+                            <label for="almacen">Almacén</label>
+                        </div>
+                        <div class="col-8 col-md-9 col-lg-10">
+                            <select name="almacen" id="almacen" class="form-control" required>
                                 <option value="">-- Seleccione un almacén --</option>
                                 @foreach($almacenes as $almacen)
                                     <option value="{{ $almacen->id }}">{{ $almacen->nombre }}</option>
@@ -44,55 +49,59 @@
                     </div>
 
                     <!-- Motivo -->
-                    <div class="row mb-2 align-items-center">
-                        <label for="motivo" class="col-md-3 col-form-label">Motivo</label>
-                        <div class="col-md-9">
+                    <div class="form-row align-items-center mb-2">
+                        <div class="col-4 col-md-3 col-lg-2">
+                            <label for="motivo">Motivo</label>
+                        </div>
+                        <div class="col-8 col-md-9 col-lg-10">
                             <input type="text" class="form-control" id="motivo" name="motivo" required>
                         </div>
                     </div>
 
-                    <!-- Glosa -->
-                    <div class="row mb-2">
-                        <label for="glosa" class="col-md-3 col-form-label">Glosa</label>
-                        <div class="col-md-9">
+                    <!-- Glosa (ocupa fila completa) -->
+                    <div class="form-row mb-2">
+                        <div class="col-12">
+                            <label for="glosa">Glosa</label>
                             <textarea class="form-control" id="glosa" name="glosa" rows="2"></textarea>
                         </div>
                     </div>
 
                     <!-- Tiene pago registrado -->
-                    <div class="mb-3 d-flex align-items-center">
-                        <label class="form-label mb-0 me-3" style="white-space: nowrap;">¿Tiene pago registrado?</label>
-
-                        <div class="d-flex align-items-center">
-                            <div class="form-check form-check-inline d-flex align-items-center me-3">
-                                <input class="form-check-input me-1" type="radio" name="tiene_pago" id="tiene_pago_si" value="1" required>
+                    <div class="form-row align-items-center mb-2">
+                        <div class="col-4 col-md-5 col-lg-5">
+                            <label class="mb-0">¿Tiene pago registrado?</label>
+                        </div>
+                        <div class="col-8 col-md-7 col-lg-7 d-flex align-items-center">
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="tiene_pago" id="tiene_pago_si" value="1" required>
                                 <label class="form-check-label" for="tiene_pago_si">Sí</label>
                             </div>
-
-                            <div class="form-check form-check-inline d-flex align-items-center">
-                                <input class="form-check-input me-1" type="radio" name="tiene_pago" id="tiene_pago_no" value="0">
+                            <div class="form-check form-check-inline ml-3">
+                                <input class="form-check-input" type="radio" name="tiene_pago" id="tiene_pago_no" value="0">
                                 <label class="form-check-label" for="tiene_pago_no">No</label>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Observación de pago (solo si tiene pago) -->
-                    <div class="mb-3 d-none" id="obs_pago_group">
-                        <label for="obs_pago" class="form-label">Observación del Pago</label>
-                        <small class="text-muted d-block mb-1">Indicar si se abonará a otra nota o se devolverá en efectivo.</small>
-                        <input type="text" class="form-control" name="obs_pago" id="obs_pago">
+                    <!-- Observación de pago -->
+                    <div class="form-row d-none mb-3" id="obs_pago_group">
+                        <div class="col-12">
+                            <label for="obs_pago">Observación del Pago</label>
+                            <small class="text-muted d-block mb-1">Indicar si se abonará a otra nota o se devolverá en efectivo.</small>
+                            <input type="text" class="form-control" name="obs_pago" id="obs_pago">
+                        </div>
                     </div>
 
-                    <!-- Inputs para producto, cantidad y precio -->
-                    <div class="row g-2 mb-3">
-                        <div class="col-md-4">
+                    <!-- Inputs para productos -->
+                    <div class="form-row mb-3">
+                        <div class="col-6 col-md-4 mb-2 mb-md-0">
                             <input type="text" id="producto" class="form-control" placeholder="Producto">
                         </div>
-                        <div class="col-md-3">
+                        <div class="col-6 col-md-4 mb-2 mb-md-0">
                             <input type="number" id="cantidad" class="form-control" placeholder="Cantidad">
                         </div>
-                        <div class="col-md-2">
-                            <button type="button" class="btn btn-primary " onclick="agregarProducto()">Agregar</button>
+                        <div class="col-12 col-md-4">
+                            <button type="button" class="btn btn-primary w-100" onclick="agregarProducto()">Agregar</button>
                         </div>
                     </div>
 
@@ -110,7 +119,7 @@
                         </table>
                     </div>
 
-                    <!-- Campo oculto para enviar los productos como cadena -->
+                    <!-- Campo oculto para detalle -->
                     <input type="hidden" name="detalle_productos" id="detalle_productos">
 
                     <!-- Botones -->
@@ -123,6 +132,7 @@
         </div>
     </div>
 </div>
+
 
     <!-- JavaScript para tabla dinámica -->
 <script>
