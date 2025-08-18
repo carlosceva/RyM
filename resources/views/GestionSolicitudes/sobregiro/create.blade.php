@@ -36,7 +36,7 @@
 
             <!-- Importe -->
             <div class="form-group row align-items-center mb-3">
-                <label for="importe" class="col-3 col-form-label fw-bold">Importe</label>
+                <label for="importe" class="col-3 col-form-label fw-bold">Importe (Bs)</label>
                 <div class="col-9">
                     <input type="text" class="form-control" id="importe" name="importe">
                     @error('importe')

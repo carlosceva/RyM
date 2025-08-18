@@ -203,6 +203,11 @@ class PrecioEspecialController extends Controller
                 );
             } elseif ($request->accion === 'rechazar') {
                 $solicitud->estado = 'rechazada';
+
+                $notificador->notificar(
+                    solicitud: $solicitud,
+                    etapa: 'reprobar'
+                );
             }
 
             // Guardamos la observación si se proporcionó

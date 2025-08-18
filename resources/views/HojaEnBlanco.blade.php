@@ -3,43 +3,67 @@
 @section('title', 'Dashboard')
 
 @section('content')
-<div class="card">
+
+<div class="card mb-4">
     <div class="card-header">
-        <h1 class="card-title" style="font-size: 1.8rem;">
-            <i class="fas fa-image mr-1"></i>
-            <span>Dashboard</span>
-        </h1>
+        <h2 class="card-title">Mis Pedidos</h2>
     </div>
-
-    <div class="card-body">
-        <div class="row">
-            @foreach($tarjetas as $card)
-                <div class="col-md-4 mb-4">
-                    <div class="card shadow-sm">
-                        <div class="card-body">
-                            <div class="d-flex align-items-center mb-3">
-                                <div class="mr-3" style="font-size: 2rem;">
-                                    {!! $card['icono'] !!}
-                                </div>
-                                <div>
-                                    <h5 class="mb-0">{{ $card['total'] }} solicitudes</h5>
-                                    <h4 class="text-muted">{{ $card['titulo'] === 'Baja de Mercaderia' ? 'Ajuste de Inventario' : $card['titulo'] }}</h4>
-                                </div>
-                            </div>
-
-                            <div class="mt-3">
-                                <a href="{{ route($card['ruta'], ['estado' => 'pendiente']) }}" class="btn btn-warning btn-sm d-block mb-2 text-left">
-                                    Ver {{ $card['pendientes'] }} pendientes →
-                                </a>
-                                <a href="{{ route($card['ruta'], ['estado' => 'aprobada']) }}" class="btn btn-success btn-sm d-block text-left">
-                                    Ver {{ $card['por_ejecutar'] }} por ejecutar →
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            @endforeach
-        </div>
+    <div class="card-body" style="position: relative; height: 300px; max-width: 100%;">
+        <canvas id="graficoMisSolicitudes"></canvas>
     </div>
 </div>
+
+<!-- Aquí podrías agregar tarjetas o tabla resumen si lo deseas -->
+
 @endsection
+
+@push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    const ctx = document.getElementById('graficoMisSolicitudes').getContext('2d');
+
+    const data = {
+        labels: {!! json_encode($tiposSolicitud) !!},
+        datasets: [
+            {
+                label: 'Pendientes',
+                backgroundColor: '#fbc02d',
+                data: {!! json_encode($pendientesPorTipo) !!}
+            },
+            {
+                label: 'Aprobadas',
+                backgroundColor: '#1976d2',
+                data: {!! json_encode($aprobadasPorTipo) !!}
+            },
+            {
+                label: 'Rechazadas',
+                backgroundColor: '#d32f2f',
+                data: {!! json_encode($rechazadasPorTipo) !!}
+            },
+            {
+                label: 'Ejecutadas',
+                backgroundColor: '#388e3c',
+                data: {!! json_encode($ejecutadasPorTipo) !!}
+            }
+        ]
+    };
+
+    new Chart(ctx, {
+    type: 'bar',
+    data: data,
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,  // <--- muy importante para que use la altura del contenedor
+        plugins: {
+            legend: { position: 'top' },
+            title: { display: true, text: 'Estado de Mis Solicitudes por Tipo' }
+        },
+        scales: {
+            x: { beginAtZero: true },
+            y: { beginAtZero: true }
+        }
+    }
+});
+
+</script>
+@endpush

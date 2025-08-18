@@ -33,6 +33,13 @@ class PrecioEspecialMensaje
                     $solicitud->autorizador->name,
                 ],
             ],
+            'reprobar' => [
+                'template' => 'solicitud_reprobada',
+                'params' => [
+                    'Precio Especial',
+                    $solicitud->id,
+                ],
+            ],
             'ejecutar' => [
                 'template' => 'solicitud_ejecutar',
                 'params' => [

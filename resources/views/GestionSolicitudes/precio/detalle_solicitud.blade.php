@@ -57,8 +57,8 @@
                                     <th scope="col">#</th>
                                     <th scope="col">Producto</th>
                                     <th scope="col">Cantidad</th>
-
-                                    <th scope="col">Precio</th>
+                                    <th scope="col">U/M</th>
+                                    <th scope="col">Precio (Bs)</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -69,14 +69,14 @@
                                             $partes = explode('-', $item);
                                             $producto = trim($partes[0] ?? '');
                                             $cantidad = trim($partes[1] ?? '');
-
-                                            $precio = trim($partes[2] ?? '');
+                                            $medida = trim($partes[2] ?? '');
+                                            $precio = trim($partes[3] ?? '');
                                         @endphp
                                         <tr>
                                             <td>{{ $index + 1 }}</td>
                                             <td>{{ $producto }}</td>
                                             <td>{{ $cantidad }}</td>
-
+                                            <td>{{ $medida }}</td>
                                             <td>{{ $precio }}</td>
                                         </tr>
                                     @endforeach

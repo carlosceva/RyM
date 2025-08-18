@@ -76,4 +76,15 @@ class NotificacionController extends Controller
         return redirect()->route($rutas[$tipo]);
     }
 
+    public function marcarTodasComoLeidas()
+    {
+        $usuario = auth()->user();
+
+        if ($usuario) {
+            $usuario->notificacionesLocalesNoLeidas()->update(['estado' => 'read']);
+        }
+
+        return back()->with('success', 'Todas las notificaciones han sido marcadas como leídas.');
+    }
+
 }

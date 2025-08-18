@@ -17,7 +17,12 @@ return [
                 'rol:Vendedor Comercial' => ['creador'],
                 'default' => [], // Si fue un vendedor normal, no se notifica a nadie
             ]
-        ]
+        ],
+        'reprobar' => [
+            'condiciones' => [
+                'default' => ['creador'],
+            ]
+        ],
     ],
 
     'Anulacion de Venta' => [
@@ -29,6 +34,11 @@ return [
         ],
         'aprobar' => [
             'destinatarios' => ['permiso:Anulacion_entrega', 'encargado_almacen'],
+        ],
+        'reprobar' => [
+            'condiciones' => [
+                'default' => ['creador'],
+            ]
         ],
         'verificar_entrega' => [
             'condiciones' => [
@@ -61,6 +71,11 @@ return [
         'aprobar' => [
             'destinatarios' => ['permiso:Muestra_ejecutar'],
         ],
+        'reprobar' => [
+            'condiciones' => [
+                'default' => ['creador'],
+            ]
+        ],
         'ejecutar' => [
             'destinatarios' => ['creador'],
         ],
@@ -72,6 +87,11 @@ return [
         ],
         'aprobar' => [
             'destinatarios' => ['permiso:Sobregiro_confirmar'],
+        ],
+        'reprobar' => [
+            'condiciones' => [
+                'default' => ['creador'],
+            ]
         ],
         'confirmar' => [
             'destinatarios' => ['permiso:Sobregiro_ejecutar'],
@@ -90,6 +110,11 @@ return [
         ],
         'aprobar' => [
             'destinatarios' => ['permiso:Devolucion_entrega', 'encargado_almacen'],
+        ],
+        'reprobar' => [
+            'condiciones' => [
+                'default' => ['creador'],
+            ]
         ],
         'verificar_entrega' => [
             'condiciones' => [
@@ -124,6 +149,11 @@ return [
         ],
         'aprobar' => [
             'destinatarios' => ['permiso:Baja_ejecutar'],
+        ],
+        'reprobar' => [
+            'condiciones' => [
+                'default' => ['creador'],
+            ]
         ],
         'ejecutar' => [
             'destinatarios' => ['creador'],

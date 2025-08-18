@@ -107,7 +107,10 @@
                                                     style="width: 36px; height: 36px;"
                                                     data-bs-toggle="modal" data-bs-target="#observacionModal"
                                                     title="Rechazar"
-                                                    onclick="setAccionAndSolicitudId('rechazar', {{ $solicitud->id }})">
+                                                    data-detalle="{{ $solicitud->precioEspecial?->detalle_productos ?? 'Sin detalle de productos' }}"
+                                                    data-cliente="{{ $solicitud->precioEspecial?->cliente ?? 'No asignado' }}"
+                                                    data-glosa="{{ $solicitud->glosa ?? 'Sin glosa' }}"
+                                                    onclick="setAccionAndSolicitudId('rechazar', {{ $solicitud->id }}, this)">
                                                 <i class="fa fa-times"></i>
                                             </button>
                                             @endcan
@@ -226,6 +229,7 @@
                                     <tr>
                                         <th>Producto</th>
                                         <th>Cantidad</th>
+                                        <th>U/M</th>
                                         <th>Precio</th>
                                     </tr>
                                 </thead>
@@ -254,47 +258,47 @@
     </div>
 
 <script>
-function setAccionAndSolicitudId(accion, solicitudId, boton = null) {
-    document.getElementById('accion').value = accion;
-    document.getElementById('solicitud_id').value = solicitudId;
+    function setAccionAndSolicitudId(accion, solicitudId, boton = null) {
+        document.getElementById('accion').value = accion;
+        document.getElementById('solicitud_id').value = solicitudId;
 
-    const header = document.getElementById('observacionModalHeader');
-    const title = document.getElementById('observacionModalLabel');
+        const header = document.getElementById('observacionModalHeader');
+        const title = document.getElementById('observacionModalLabel');
 
-    // Limpiar clases anteriores
-    header.classList.remove('bg-primary', 'bg-danger', 'text-white');
+        // Limpiar clases anteriores
+        header.classList.remove('bg-primary', 'bg-danger', 'text-white');
 
-    if (accion === 'aprobar') {
-        header.classList.add('bg-primary', 'text-white');
-        title.textContent = 'Aprobar Solicitud';
-    } else if (accion === 'rechazar') {
-        header.classList.add('bg-danger', 'text-white');
-        title.textContent = 'Rechazar Solicitud';
-    } else {
-        title.textContent = 'Agregar Observación';
-    }
+        if (accion === 'aprobar') {
+            header.classList.add('bg-primary', 'text-white');
+            title.textContent = 'Aprobar Solicitud';
+        } else if (accion === 'rechazar') {
+            header.classList.add('bg-danger', 'text-white');
+            title.textContent = 'Rechazar Solicitud';
+        } else {
+            title.textContent = 'Agregar Observación';
+        }
 
-    if (boton) {
-        const detalle = boton.getAttribute('data-detalle');
-        const cliente = boton.getAttribute('data-cliente') || 'No asignado';
-        const glosa = boton.getAttribute('data-glosa') || 'Sin glosa';
+        if (boton) {
+            const detalle = boton.getAttribute('data-detalle');
+            const cliente = boton.getAttribute('data-cliente') || 'No asignado';
+            const glosa = boton.getAttribute('data-glosa') || 'Sin glosa';
 
-        // Mostrar cliente y glosa en el modal
-        document.getElementById('clienteModal').value = cliente;
-        document.getElementById('glosaModal').value = glosa;
+            // Mostrar cliente y glosa en el modal
+            document.getElementById('clienteModal').value = cliente;
+            document.getElementById('glosaModal').value = glosa;
 
-        if (detalle) {
-            cargarProductosParaEditar(detalle);
+            if (detalle) {
+                cargarProductosParaEditar(detalle);
+            }
         }
     }
-}
 </script>
 
 <script>
 function cargarProductosParaEditar(detalleString) {
     const productos = detalleString.split(',').map(item => {
-        const [producto, cantidad, precio] = item.split('-');
-        return { producto, cantidad, precio };
+        const [producto, cantidad, medida, precio] = item.split('-');
+        return { producto, cantidad, medida, precio };
     });
 
     const tbody = document.querySelector("#tablaProductosEditar tbody");
@@ -305,6 +309,7 @@ function cargarProductosParaEditar(detalleString) {
         <tr>
             <td>${item.producto}</td>
             <td>${item.cantidad}</td>
+            <td>${item.medida}</td>
             <td>
                 <input type="number" step="0.01" min="0" class="form-control precio-input" 
                        value="${item.precio}" data-index="${index}">
@@ -326,7 +331,7 @@ function actualizarDetalleProductosEditado() {
         productos[index].precio = parseFloat(input.value).toFixed(2);
     });
 
-    const detalleCadena = productos.map(p => `${p.producto}-${p.cantidad}-${p.precio}`).join(",");
+    const detalleCadena = productos.map(p => `${p.producto}-${p.cantidad}-${p.medida}-${p.precio}`).join(",");
     document.getElementById('detalle_productos_editado').value = detalleCadena;
 }
 

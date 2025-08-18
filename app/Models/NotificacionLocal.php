@@ -30,20 +30,29 @@ class NotificacionLocal extends Model
             case 'solicitud_plantilla':
                 return "Se ha {$this->params[0]} una solicitud de {$this->params[1]} y requiere {$this->params[2]}.\n" .
                        "Nro solicitud: {$this->params[3]} – Fecha: {$this->params[4]} – {$this->params[5]} Por: {$this->params[6]}";
+
             case 'solicitud_ejecutar':
                 return "Su solicitud de {$this->params[0]} ha sido ejecutada.\n" .
                        "Nro solicitud: {$this->params[1]} – Fecha: {$this->params[2]} – Por: {$this->params[3]}";
+
+            case 'solicitud_reprobar':
+                return "Su solicitud de tipo {$this->params[0]} ha sido rechazada.\n" .
+                       "Nro solicitud: {$this->params[1]}";
+
             case 'verificar_entrega':
                 return "Se marco que no hay despacho registrado en la solicitud de {$this->params[0]}.\n" .
                         "Nro solicitud: {$this->params[1]} – Fecha: {$this->params[2]} \n" .
                         "Por favor, verifique la entrega";
+
             case 'verificar_entrega_fisica':
                 return "Se marco que no hay entrega fisica en la solicitud de {$this->params[0]}.\n" .
                         "Nro solicitud: {$this->params[1]} – Fecha: {$this->params[2]} \n" .
                         "Puede continuar con la ejecucion";
+
             case 'sobregiro_confirmar':
                 return "Se ha confirmado una solicitud de Sobregiro de Venta y esta esperando su ejecucion. \n" .
                         "Nro solicitud: {$this->params[0]} – Fecha: {$this->params[1]} – Por: {$this->params[2]} - COD: {$this->params[3]}";
+
             default:
                 return "Nueva notificación";
         }

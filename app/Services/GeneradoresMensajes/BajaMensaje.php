@@ -45,6 +45,13 @@ class BajaMensaje
                     $solicitud->autorizador->name,
                 ],
             ],
+            'reprobar' => [
+                'template' => 'solicitud_reprobada',
+                'params' => [
+                    'Ajuste de Inventario',
+                    $solicitud->id,
+                ],
+            ],
             'ejecutar' => [
                 'template' => 'solicitud_ejecutar',
                 'params' => [

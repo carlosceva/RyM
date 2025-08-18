@@ -233,16 +233,19 @@
                         <p class="text-center text-muted">No hay otros permisos disponibles.</p>
                     @else
                         @foreach ($agrupados as $modulo => $permisosModulo)
+                            @php
+                                $nombreModulo = strtolower($modulo) === 'sistema' ? 'Configuraciones' : ucfirst($modulo);
+                            @endphp
                             <div class="permiso-box">
-                                <strong class="text-primary text-uppercase d-block mb-2">{{ ucfirst($modulo) }}</strong>
+                                <strong class="text-primary text-uppercase d-block mb-2">{{ $nombreModulo }}</strong>
                                 <div class="row">
                                     @foreach ($permisosModulo as $permiso)
                                         <div class="col-6">
                                             <div class="form-check">
                                                 <input type="checkbox" class="form-check-input"
-                                                       id="permiso_{{ $permiso->id }}"
-                                                       name="permisos[]" value="{{ $permiso->id }}"
-                                                       {{ $role->hasPermissionTo($permiso->name) ? 'checked' : '' }}>
+                                                    id="permiso_{{ $permiso->id }}"
+                                                    name="permisos[]" value="{{ $permiso->id }}"
+                                                    {{ $role->hasPermissionTo($permiso->name) ? 'checked' : '' }}>
                                                 <label class="form-check-label small" for="permiso_{{ $permiso->id }}">
                                                     {{ ucwords(str_replace('_', ' ', Str::after($permiso->name, $modulo . '_'))) }}
                                                 </label>
@@ -252,6 +255,7 @@
                                 </div>
                             </div>
                         @endforeach
+
                     @endif
                 </div>
                 <div class="modal-footer">

@@ -43,7 +43,7 @@
                 </div>
 
                 <div class="col-12 col-md-6 mt-3 mt-md-0">
-                    <p class="mb-2"><strong>Importe: </strong>{{ $solicitud->sobregiro?->importe ? number_format($solicitud->sobregiro->importe, 2, ',', '.') : '0,00' }}</p>
+                    <p class="mb-2"><strong>Importe: </strong>{{ $solicitud->sobregiro?->importe ? number_format($solicitud->sobregiro->importe, 2, ',', '.') . ' Bs' : '0,00 Bs' }}</p>
                 </div>
             </div>
 

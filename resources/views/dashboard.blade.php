@@ -376,9 +376,21 @@ $(document).ready(function () {
 
   // Filtro por fecha (columna 2 asumida como fecha)
   $.fn.dataTable.ext.search.push(function (settings, data, dataIndex) {
-    const min = $('#fechaInicio').val();
-    const max = $('#fechaFin').val();
-    const fecha = data[2];
+    let min = '';
+    let max = '';
+
+    // Verifica qué input de fecha está visible
+    if ($('#fechaInicio').is(':visible') && $('#fechaFin').is(':visible')) {
+      // PC
+      min = $('#fechaInicio').val();
+      max = $('#fechaFin').val();
+    } else if ($('#fechaInicioMobile').is(':visible') && $('#fechaFinMobile').is(':visible')) {
+      // Móvil
+      min = $('#fechaInicioMobile').val();
+      max = $('#fechaFinMobile').val();
+    }
+
+    const fecha = data[2]; // Suponiendo que la fecha está en la columna 2
 
     if (!fecha) return true;
 
@@ -396,8 +408,23 @@ $(document).ready(function () {
     "<'row'<'col-sm-5'i><'col-sm-7'p>>";
 
   const filtrosFechas = `
-    <input type="date" id="fechaInicio" class="form-control form-control-sm mb-2 mb-md-0 col-md-3 " placeholder="Desde" >
-    <input type="date" id="fechaFin" class="form-control form-control-sm col-md-3" placeholder="Hasta" >
+    <!-- Inputs de fecha solo visibles en móvil -->
+    <div class="d-flex d-md-none w-100 mb-2">
+      <div class="flex-fill me-2">
+        <label for="fechaInicioMobile" class="small mb-1">Fecha desde</label>
+        <input type="date" id="fechaInicioMobile" class="form-control form-control-sm">
+      </div>
+      <div class="flex-fill">
+        <label for="fechaFinMobile" class="small mb-1">Fecha hasta</label>
+        <input type="date" id="fechaFinMobile" class="form-control form-control-sm">
+      </div>
+    </div>
+
+    <!-- Inputs de fecha solo visibles en escritorio -->
+    <div class="d-none d-md-flex align-items-center gap-2 me-3">
+      <input type="date" id="fechaInicio" class="form-control form-control-sm me-2">
+      <input type="date" id="fechaFin" class="form-control form-control-sm">
+    </div>
   `;
 
   function initDataTable(tableId, exportPrefix, pdfTitle, exportCols) {
@@ -472,13 +499,12 @@ $(document).ready(function () {
         }
         const filtroId = urlParams.get('filtro_id');
         if (filtroId) {
-          // Busca solo en la columna del ID (columna 0)
           this.api().column(0).search(filtroId).draw();
         }
       }
     });
 
-    $('#fechaInicio, #fechaFin').on('change', function () {
+    $('#fechaInicio, #fechaFin, #fechaInicioMobile, #fechaFinMobile').on('change', function () {
       table.draw();
     });
 
@@ -493,8 +519,9 @@ $(document).ready(function () {
   initDataTable('#solicitud_anulacion', 'Anulacion', 'Solicitud de Anulacion de Venta', [0,1,2,3,4,5,6,7,8,9,10,11,12]);
   initDataTable('#solicitud_precio', 'Precio_Especial', 'Solicitud de Precio Especial de Venta', [0,1,2,3,4,5,6,7,8,9,10]);
 });
-
 </script>
+
+@stack('scripts')
 
 @livewireScripts
 <!-- jQuery -->

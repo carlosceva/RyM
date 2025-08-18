@@ -45,7 +45,7 @@
                       <th>Fecha</th>
                       <th class="d-none">Solicitante</th>                  <!-- oculto -->
                       <th>Cliente</th>
-                      <th>Importe</th>
+                      <th>Importe (Bs)</th>
                       <th class="d-none">Glosa</th>                  <!-- oculto -->
                       <th>Estado</th>
                       <th class="d-none">Autorizador</th>                  <!-- oculto -->

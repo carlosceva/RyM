@@ -33,6 +33,13 @@ class MuestraMensaje
                     $solicitud->autorizador->name,
                 ],
             ],
+            'reprobar' => [
+                'template' => 'solicitud_reprobada',
+                'params' => [
+                    'Muestra de Mercaderia',
+                    $solicitud->id,
+                ],
+            ],
             'ejecutar' => [
                 'template' => 'solicitud_ejecutar',
                 'params' => [

@@ -45,6 +45,13 @@ class AnulacionMensaje
                     $solicitud->autorizador->name,
                 ],
             ],
+            'reprobar' => [
+                'template' => 'solicitud_reprobada',
+                'params' => [
+                    'Anulacion de Venta',
+                    $solicitud->id,
+                ],
+            ],
             'ejecutar_anulacion' => [
                 'template' => 'solicitud_ejecutar',
                 'params' => [

@@ -38,6 +38,12 @@
         <form method="POST" action="{{ route('login') }}">
             @csrf
 
+            @if ($errors->has('login'))
+                <div class="text-sm text-red-600 mb-4">
+                    {{ $errors->first('login') }}
+                </div>
+            @endif
+
             <!-- Código -->
             <div class="mb-4">
                 <label for="codigo" class="block text-sm font-medium text-gray-700">Código</label>

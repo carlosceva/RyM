@@ -47,14 +47,17 @@
           <div class="row g-2 mb-3">
             <div class="col-md-10">
               <div class="row g-2">
-                <div class="col-12 col-md-4">
+                <div class="col-12 col-md-3">
                   <input type="text" id="producto" class="form-control" placeholder="Producto">
                 </div>
-                <div class="col-12 col-md-4">
+                <div class="col-12 col-md-3">
                   <input type="number" id="cantidad" class="form-control" placeholder="Cantidad">
                 </div>
-                <div class="col-12 col-md-4">
-                  <input type="number" id="precio" class="form-control" step="0.01" placeholder="Precio">
+                <div class="col-12 col-md-3 mb-2 mb-md-0">
+                  <input type="text" id="medida" class="form-control" placeholder="U/M">
+                </div>
+                <div class="col-12 col-md-3">
+                  <input type="number" id="precio" class="form-control" step="0.01" placeholder="Precio (Bs)">
                 </div>
               </div>
             </div>
@@ -70,7 +73,8 @@
                 <tr>
                   <th>Producto</th>
                   <th>Cantidad</th>
-                  <th>Precio</th>
+                  <th>U/M</th>
+                  <th>Precio (Bs)</th>
                   <th>Acción</th>
                 </tr>
               </thead>
@@ -99,12 +103,12 @@ let productos = [];
 function agregarProducto() {
     const producto = document.getElementById('producto').value.trim();
     const cantidad = parseInt(document.getElementById('cantidad').value.trim());
-
+    const medida = document.getElementById('medida').value.trim();
     let precioInput = document.getElementById('precio').value.trim();
     let precio = precioInput === "" ? 0 : parseFloat(precioInput);
 
 
-    if (!producto || isNaN(cantidad) ) {
+    if (!producto || isNaN(cantidad) || !medida) {
         alert("Por favor complete todos los campos correctamente.");
         return;
     }
@@ -123,7 +127,7 @@ function agregarProducto() {
     productos.push({ 
         producto, 
         cantidad,
-
+        medida, 
         precio: parseFloat(precio.toFixed(2)) 
     });
 
@@ -144,21 +148,21 @@ function actualizarTabla() {
         const fila = `<tr>
             <td>${item.producto}</td>
             <td>${item.cantidad}</td>
-
+            <td>${item.medida}</td>
             <td>${item.precio}</td>
             <td><button type="button" class="btn btn-danger btn-sm" onclick="eliminarProducto(${index})">Eliminar</button></td>
         </tr>`;
         tbody.innerHTML += fila;
     });
 
-    const detalleCadena = productos.map(p => `${p.producto}-${p.cantidad}-${p.precio}`).join(",");
+    const detalleCadena = productos.map(p => `${p.producto}-${p.cantidad}-${p.medida}-${p.precio}`).join(",");
     document.getElementById('detalle_productos').value = detalleCadena;
 }
 
 function limpiarInputs() {
     document.getElementById('producto').value = '';
     document.getElementById('cantidad').value = '';
-
+    document.getElementById('medida').value = '';
     document.getElementById('precio').value = '';
 }
 

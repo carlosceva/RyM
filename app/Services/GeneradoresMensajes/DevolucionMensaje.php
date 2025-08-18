@@ -45,6 +45,13 @@ class DevolucionMensaje
                     $solicitud->autorizador->name,
                 ],
             ],
+            'reprobar' => [
+                'template' => 'solicitud_reprobada',
+                'params' => [
+                    'Devolucion de Venta',
+                    $solicitud->id,
+                ],
+            ],
             'ejecutar_anulacion' => [
                 'template' => 'solicitud_ejecutar',
                 'params' => [

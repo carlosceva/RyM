@@ -165,6 +165,11 @@ class DevolucionController extends Controller
 
         } elseif ($request->accion === 'rechazar') {
             $solicitud->estado = 'rechazada';
+
+            $notificador->notificar(
+                    solicitud: $solicitud,
+                    etapa: 'reprobar'
+                );
         }
     
         // Si se proporciona una observación, la guardamos

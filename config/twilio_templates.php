@@ -15,4 +15,8 @@ return [
 
     // sobregiro_confirmar 4 variable
     'sobregiro_confirmar'         => 'HX49416032c50783dbe0b4a4d6bcf13c73',
+
+    'solicitud_reprobar' => 'HX5cf1c0798d51dcdb238221417e2616fd',
+
+    'solicitud_reprobada'=> 'HX21d3c9be1fda618aeb673500148f0b01',
 ];

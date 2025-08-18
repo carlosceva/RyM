@@ -64,7 +64,7 @@
             <div class="d-flex justify-between w-100 mb-2">
                 <p class="mb-1"><strong>Solicitante:</strong> {{ $solicitud->usuario->name ?? 'N/D' }}</p>
                 @if($solicitud->sobregiro)
-                    <p class="mb-1"><strong>Importe:</strong> {{ $solicitud->sobregiro?->importe ? number_format($solicitud->sobregiro->importe, 2, ',', '.') : '0,00' }}</p>
+                    <p class="mb-1"><strong>Importe:</strong> {{ $solicitud->sobregiro?->importe ? number_format($solicitud->sobregiro->importe, 2, ',', '.') . ' Bs' : '0,00 Bs' }}</p>
                 @endif
             </div>
 

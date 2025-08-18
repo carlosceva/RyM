@@ -369,7 +369,7 @@
 
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-success">Ejecutar</button>
+                    <button type="submit" class="btn btn-success">{{ $esAnulacion ? 'Ejecutar' : 'Convertir' }}</button>
                 </div>
             </form>
         </div>

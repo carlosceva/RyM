@@ -39,7 +39,6 @@
                     <tr>
                         <th>ID</th>
                         <th>NOMBRE</th>
-                        <th>ESTADO</th>
                         @if (auth()->user()->can('roles_editar') || auth()->user()->can('roles_borrar'))
                             <th>Acciones</th>
                         @endif
@@ -59,9 +58,6 @@
                     <tr class="{{ $claseFila }}">
                         <td>{{ $rol->id }}</td>
                         <td>{{ $rol->name }}</td>
-                        <td>
-                            <?= $rol->estado === 'a' ? 'Activo' : ($rol->estado === 'i' ? 'Inactivo' : '') ?>
-                        </td>
                         @if (auth()->user()->can('roles_editar') || auth()->user()->can('roles_borrar'))
                             <td>    
                                 @can('roles_editar')

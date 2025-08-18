@@ -325,6 +325,14 @@ class NotificadorSolicitudService
                         }
                         break;
 
+                    case 'reprobar':
+                        $template = 'solicitud_reprobar';
+                        $params = [
+                            Str::replace('Baja de Mercaderia', 'Ajuste de Inv.', $solicitud->tipo),
+                            $solicitud->id,
+                        ];
+                        break;
+
                     case 'ejecutar':
                         $template = 'solicitud_ejecutar';
                         $params = [

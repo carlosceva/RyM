@@ -128,6 +128,11 @@ class SobregiroController extends Controller
 
         } elseif ($request->accion === 'rechazar') {
             $solicitud->estado = 'rechazada';
+
+            $notificador->notificar(
+                    solicitud: $solicitud,
+                    etapa: 'reprobar'
+                );
         }
 
         // Guardar observación si existe

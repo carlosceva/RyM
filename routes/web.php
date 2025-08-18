@@ -129,6 +129,7 @@ Route::middleware('auth')->group(function () {
 
     Route::get('notificaciones', [NotificacionController::class, 'index'])->name('notificaciones.index');
     Route::get('notificaciones/ver/{id}', [NotificacionController::class, 'marcarLeidaYRedirigir'])->name('notificaciones.marcarLeidaYRedirigir');
+    Route::post('/notificaciones/marcar-todas-como-leidas', [NotificacionController::class, 'marcarTodasComoLeidas'])->name('notificaciones.marcarTodasComoLeidas');
 
     Route::get('/Baja/descargar-adjunto/{id}', [BajaMercaderiaController::class, 'descargar'])->name('descargar.adjunto');
 

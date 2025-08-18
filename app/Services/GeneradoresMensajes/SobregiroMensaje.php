@@ -33,6 +33,13 @@ class SobregiroMensaje
                     $solicitud->autorizador->name,
                 ],
             ],
+            'reprobar' => [
+                'template' => 'solicitud_reprobada',
+                'params' => [
+                    'Sobregiro de Venta',
+                    $solicitud->id,
+                ],
+            ],
             'confirmar' => [
                 'template' => 'sobregiro_confirmar',
                 'params' => [

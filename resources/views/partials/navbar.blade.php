@@ -81,6 +81,15 @@
         @endif
     </a>
     <div class="dropdown-menu dropdown-menu-lg dropdown-menu-right" style="max-height: 300px; overflow-y: auto; width: 300px; padding: 0 10px;">
+        @if($notificaciones->count())
+            <form method="POST" action="{{ route('notificaciones.marcarTodasComoLeidas') }}">
+                @csrf
+                <button type="submit" class="dropdown-item text-center text-primary" style="padding: 10px 15px; background: none; border: none; width: 100%;">
+                    Marcar todas como leídas
+                </button>
+            </form>
+        @endif
+
         @forelse ($notificaciones as $n)
             <a href="{{ route('notificaciones.marcarLeidaYRedirigir', $n->id) }}" class="dropdown-item" style="white-space: normal; word-wrap: break-word; padding: 10px 15px; min-width: 250px;">
                 <i class="fas fa-envelope mr-2"></i> {!! nl2br(e($n->mensaje)) !!}
@@ -94,7 +103,7 @@
     </div>
 </li>
 
-<li class="nav-item dropdown">
+<!-- <li class="nav-item dropdown">
     <a class="nav-link position-relative" data-toggle="dropdown" href="#">
         <i class="far fa-bell"></i>
 
@@ -164,5 +173,5 @@
             @endif
         @endforeach
     </div>
-</li>
+</li> -->
 @endauth
