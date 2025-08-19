@@ -115,13 +115,25 @@
                                             </button>
                                             @endcan
                                 @endif
-                                @can('Precio_especial_ejecutar')
+                                
                                 @if ($solicitud->estado === 'aprobada' && !$solicitud->ejecucion)
-                                      <button type="button" class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#modalEjecutar{{ $solicitud->id }}">
-                                          Ejecutar
-                                      </button>
-                                  @endif
+                                    <!-- Mostrar "Confirmar Venta" solo si "venta_realizada" es nulo -->
+                                    @if (is_null($solicitud->precioEspecial->venta_realizada))
+                                        <button type="button" class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#modalConfirmar{{ $solicitud->id }}">
+                                            Confirmar Venta
+                                        </button>
+                                    @endif
+                                @endif
+
+                                @can('Precio_especial_ejecutar')
+                                    <!-- Mostrar "Ejecutar" solo si "venta_realizada" es 's' -->
+                                    @if ($solicitud->precioEspecial->venta_realizada === 's' && !$solicitud->ejecucion)
+                                        <button type="button" class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#modalEjecutar{{ $solicitud->id }}">
+                                            Ejecutar
+                                        </button>
+                                    @endif
                                 @endcan
+
                                 &nbsp;
 
                               <!-- Botón para ver detalles en formato ticket -->
@@ -184,6 +196,38 @@
             </div>
         </div>
     </div>
+
+    <!-- Modal para confirmar venta -->
+    <div class="modal fade" id="modalConfirmar{{ $solicitud->id }}" tabindex="-1" aria-labelledby="modalLabelConfirmar{{ $solicitud->id }}" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <form action="{{ route('venta.confirmar', $solicitud->id) }}" method="POST">
+                    @csrf
+                    @method('POST')
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="modalLabelConfirmar{{ $solicitud->id }}">Confirmar Venta para Solicitud #{{ $solicitud->id }}</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>¿Se realizó la venta?</p>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="venta_realizada" value="s" id="venta_si_{{ $solicitud->id }}" required>
+                            <label class="form-check-label" for="venta_si_{{ $solicitud->id }}">Sí</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="venta_realizada" value="n" id="venta_no_{{ $solicitud->id }}" required>
+                            <label class="form-check-label" for="venta_no_{{ $solicitud->id }}">No</label>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-success">Confirmar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     @endforeach
  
     @include('GestionSolicitudes.precio.create')

@@ -8,8 +8,12 @@ return [
         ],
         'aprobar' => [
             'condiciones' => [
-                'rol:Vendedor Comercial' => ['rol:Auxiliar de Venta'],
                 'default' => ['creador'],
+            ]
+        ],
+        'confirmar' => [
+            'condiciones' => [
+                'rol:Vendedor Comercial' => ['rol:Auxiliar de Venta'],
             ]
         ],
         'ejecutar' => [
@@ -66,10 +70,13 @@ return [
 
     'Muestra de Mercaderia' => [
         'crear' => [
-            'destinatarios' => ['permiso:Muestra_aprobar'],
+            'condiciones' => [
+                'rol:Vendedor Comercial' => ['permiso:Muestra_aprobar'],
+                'default' => ['encargado_almacen'],
+            ],
         ],
         'aprobar' => [
-            'destinatarios' => ['permiso:Muestra_ejecutar'],
+            'destinatarios' => ['permiso:Muestra_ejecutar', 'encargado_almacen'],
         ],
         'reprobar' => [
             'condiciones' => [

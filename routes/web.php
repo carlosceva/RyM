@@ -76,6 +76,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/PrecioEspecial/{id}/descargar/pdf', [PrecioEspecialController::class, 'descargarPDF'])->name('precioEspecial.descargar.pdf');
     Route::get('/PrecioEspecial/{id}/descargar/excel', [PrecioEspecialController::class, 'descargarExcel'])->name('precioEspecial.descargar.excel');
     Route::post('/PrecioEspecial/{id}/ejecutar', [PrecioEspecialController::class, 'ejecutar'])->name('precioEspecial.ejecutar');
+    Route::post('/PrecioEspecial/{id}/confirmar', [PrecioEspecialController::class, 'confirmarVenta'])->name('venta.confirmar');
 
     Route::get('/general', [SolicitudController::class, 'index'])->name('general.index')->middleware('admin');
     Route::post('general/aprobar_o_rechazar', [SolicitudController::class, 'aprobar_o_rechazar'])->name('general.aprobar_o_rechazar');

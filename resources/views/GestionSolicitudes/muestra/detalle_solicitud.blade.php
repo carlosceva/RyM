@@ -37,10 +37,20 @@
                         <p class="mb-1"><strong>Solicitante:</strong> {{ $solicitud->usuario->name ?? 'N/D' }}</p>
                     </div>
                 </div>
-                
-                <div class="row  p-2 ">
-                    <div class="col-12 col-md-6">
-                        <p class="mb-1"><strong>Cliente:</strong> {{ $solicitud->muestraMercaderia->cliente ?? 'Sin cliente' }}</p>
+
+                <div class="row p-2">
+                    <div class="col-12 col-md-6 d-flex align-items-center mb-2 mb-md-0">
+                        <strong class="me-2" >Cliente:</strong>
+                        <div class="border p-2 rounded bg-light small flex-grow-1">
+                            {{ $solicitud->muestraMercaderia->cliente ?? 'Sin cliente' }}
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-6 d-flex align-items-center">
+                        <strong class="me-2" >Almacen:</strong>
+                        <div class="border p-2 rounded bg-light small flex-grow-1">
+                            {{ $solicitud->muestraMercaderia->almacen->nombre ?? 'N/A' }}
+                        </div>
                     </div>
                 </div>
 

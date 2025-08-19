@@ -49,6 +49,10 @@ class NotificacionLocal extends Model
                         "Nro solicitud: {$this->params[1]} – Fecha: {$this->params[2]} \n" .
                         "Puede continuar con la ejecucion";
 
+            case 'solicitud_confirmar_venta':
+                return "Se ha confirmado una venta de tipo Precio Especial y requiere su ejecucion.\n" .
+                        "Nro solicitud: {$this->params[0]} – Fecha: {$this->params[1]} – Vendedor: {$this->params[2]}"; 
+
             case 'sobregiro_confirmar':
                 return "Se ha confirmado una solicitud de Sobregiro de Venta y esta esperando su ejecucion. \n" .
                         "Nro solicitud: {$this->params[0]} – Fecha: {$this->params[1]} – Por: {$this->params[2]} - COD: {$this->params[3]}";

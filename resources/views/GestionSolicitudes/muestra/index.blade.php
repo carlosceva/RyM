@@ -45,6 +45,7 @@
                       <th>Fecha</th>
                       <th class="d-none">Solicitante</th>                  <!-- oculto -->
                       <th>Cliente</th>
+                      <th>Almacen</th>
                       <th>Glosa</th>                  <!-- oculto -->
                       <th class="d-none">Productos</th>
                       <th>Estado</th>
@@ -79,6 +80,7 @@
                         <td>{{ \Carbon\Carbon::parse($solicitud->fecha_solicitud)->format('Y-m-d') }}</td>
                         <td class="d-none">{{ $solicitud->usuario->name ?? 'N/D' }}</td>      <!-- oculto -->
                         <td>{{ $solicitud->muestraMercaderia?->cliente ?? 'No asignado' }}</td>
+                        <td>{{ $solicitud->muestraMercaderia->almacen->nombre ?? 'N/A' }}</td>
                         <td>{{ $solicitud->glosa ?? 'Sin glosa' }}</td>      <!-- oculto -->
                         <td class="d-none">{{ $solicitud->muestraMercaderia?->detalle_productos ?? 'Sin detalle de productos' }}</td>
                         <td>{{ ucfirst($estado) }}</td>

@@ -64,6 +64,7 @@
             @if($solicitud->muestraMercaderia)
             <div class="mt-3">
                 <p><strong>Cliente:</strong> {{ $solicitud->muestraMercaderia->cliente ?? 'Sin cliente' }}</p>
+                <p><strong>Almacen:</strong> {{ $solicitud->muestraMercaderia->almacen->nombre ?? 'N/A' }}</p>
                 <table class="table">
                     <thead>
                         <tr>

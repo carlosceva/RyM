@@ -12,7 +12,7 @@ class SolicitudPrecioEspecial extends Model
     protected $table = 'solicitud_precio_especial';
 
     protected $fillable = [
-        'id_solicitud', 'cliente', 'detalle_productos', 'estado'
+        'id_solicitud', 'cliente', 'detalle_productos', 'estado', 'venta_realizada',
     ];
 
     // Relación con la solicitud

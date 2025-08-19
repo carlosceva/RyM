@@ -513,7 +513,7 @@ $(document).ready(function () {
 
   // Inicializar todas las tablas con su configuración
   initDataTable('#solicitud_baja', 'Baja', 'Solicitud de Baja de Mercaderia', [0,1,2,3,4,5,6,7,8,9,10,11,12]);
-  initDataTable('#solicitud_muestra', 'Muestra', 'Solicitud de Muestra de Mercaderia', [0,1,2,3,4,5,6,7,8,9,10,11,12]);
+  initDataTable('#solicitud_muestra', 'Muestra', 'Solicitud de Muestra de Mercaderia', [0,1,2,3,4,5,6,7,8,9,10,11,12,13]);
   initDataTable('#solicitud_sobregiro', 'Sobregiro', 'Solicitud de Sobregiro de Venta', [0,1,2,3,4,5,6,7,8,9,10,11,12]);
   initDataTable('#solicitud_devolucion', 'Devolucion', 'Solicitud de Devolucion de Venta', [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16]);
   initDataTable('#solicitud_anulacion', 'Anulacion', 'Solicitud de Anulacion de Venta', [0,1,2,3,4,5,6,7,8,9,10,11,12]);

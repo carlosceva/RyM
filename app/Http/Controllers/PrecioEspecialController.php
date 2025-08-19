@@ -268,6 +268,30 @@ class PrecioEspecialController extends Controller
         return back()->with('success', 'Solicitud ejecutada exitosamente.');
     }
 
+    public function confirmarVenta(Request $request, $id, NotificadorSolicitudService $notificador)
+    {
+        $solicitudPadre = Solicitud::findOrFail($id);
+
+        $solicitudHija = $solicitudPadre->precioEspecial; 
+
+        if (!$solicitudHija) {
+            return redirect()->back()->with('error', 'No se encontró la solicitud de precio especial.');
+        }
+
+        $request->validate([
+            'venta_realizada' => 'required|in:s,n',
+        ]);
+
+        $solicitudHija->venta_realizada = $request->venta_realizada;
+        $solicitudHija->save();
+
+        if($request->venta_realizada === 's'){
+            $notificador->notificar($solicitudPadre, 'confirmar');
+        }
+
+        return redirect()->back()->with('success', 'Venta confirmada exitosamente');
+    }
+
     public function descargarPDF($id)
     {
         $solicitud = Solicitud::with(['usuario', 'precioEspecial', 'autorizador'])->findOrFail($id);

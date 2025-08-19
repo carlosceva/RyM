@@ -66,17 +66,73 @@ class NotificadorSolicitudService
     protected function resolverDestinatarios(array $config, Solicitud $solicitud)
     {
         $usuarios = collect();
-
+        
         if (isset($config['condiciones'])) {
             $rol = $solicitud->usuario->roles->pluck('name')->first(); // Suponemos que tiene un solo rol principal
             $reglas = $config['condiciones']["rol:$rol"] ?? $config['condiciones']['default'] ?? [];
         } else {
             $reglas = $config['destinatarios'] ?? [];
         }
-
+        
         // ✅ Si solo hay "creador", devolvemos directamente
         if (count($reglas) === 1 && $reglas[0] === 'creador') {
             return collect([$solicitud->usuario]);
+        }
+
+        // ✅ Lógica especial para "Muestra de Mercaderia" en aprobar
+        if ($solicitud->tipo === 'Muestra de Mercaderia' && !empty($reglas)) {
+            // Filtramos los permisos
+            $tiene = collect($reglas)->filter(fn($r) => str_starts_with($r, 'permiso:'))
+                ->map(fn($r) => explode(':', $r)[1])->values();
+            
+            // Filtro de los permisos "no_permiso"
+            $no_tiene = collect($reglas)->filter(fn($r) => str_starts_with($r, 'no_permiso:'))
+                ->map(fn($r) => explode(':', $r)[1])->values();
+
+            $query = User::query();
+
+            foreach ($tiene as $permiso) {
+                $query->whereHas('roles.permissions', fn($q) => $q->where('name', $permiso));
+            }
+
+            foreach ($no_tiene as $permiso) {
+                $query->whereDoesntHave('roles.permissions', fn($q) => $q->where('name', $permiso));
+            }
+
+            $usuariosConPermisos = $query->get();
+
+            // Ahora verificamos que además de tener el permiso, sea encargado del almacén
+            foreach ($usuariosConPermisos as $usuario) {
+                // Verificamos si tiene el permiso "Muestra_aprobar" y si es encargado de un almacén
+                if ($tiene->contains('Muestra_aprobar')) {
+                        $usuarios->push($usuario);
+                }
+            }
+
+            foreach ($reglas as $regla) {
+                if ($regla === 'encargado_almacen') {
+                    // Aquí, si es encargado, se añade a la lista
+                    $almacenId = $solicitud->muestraMercaderia?->almacen?->id;
+
+                    if ($almacenId) {
+                        $almacen = \App\Models\Almacen::find($almacenId);
+                        if ($almacen && $almacen->encargado) {
+                            $usuarios->push($almacen->encargado);
+                        }
+                    }
+                }
+
+                if ($regla === 'creador' && $solicitud->usuario) {
+                    $usuarios->push($solicitud->usuario);
+                }
+
+                if (str_starts_with($regla, 'rol:')) {
+                    $rol = explode(':', $regla)[1];
+                    $usuarios = $usuarios->merge(User::role($rol)->get());
+                }
+            }
+
+            return $usuarios->unique('id');
         }
 
         // ✅ Lógica especial para Anulación de Venta
@@ -381,6 +437,14 @@ class NotificadorSolicitudService
                             $solicitud->bajaMercaderia->fecha_autorizacion->format('d/m/Y H:i'),
                             'autorizado',
                             $solicitud->bajaMercaderia->autorizador->name,
+                        ];
+                            break;
+                        }else if($solicitud->tipo === 'precio_especial'){
+                            $template = 'solicitud_confirmar_venta';
+                            $params = [
+                            $solicitud->id,
+                            now()->format('d/m/Y H:i'),
+                            auth()->user()->name,
                         ];
                             break;
                         }

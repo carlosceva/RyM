@@ -43,6 +43,19 @@
             </div>
           </div>
 
+          <!-- Almacén -->
+          <div class="form-group row mb-3">
+            <label for="id_almacen" class="col-12 col-md-2 col-form-label">Almacén</label>
+            <div class="col-12 col-md-10">
+              <select class="form-control" id="id_almacen" name="id_almacen" required>
+                <option value="">Seleccione un almacén</option>
+                @foreach ($almacenes as $almacen)
+                  <option value="{{ $almacen->id }}">{{ $almacen->nombre }}</option>
+                @endforeach
+              </select>
+            </div>
+          </div>
+
           <!-- Glosa -->
           <div class="form-group row mb-3">
             <label for="glosa" class="col-12 col-md-2 col-form-label">Motivo</label>

@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Auth;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\DB;
 use App\Models\User;
+use App\Models\Almacen;
 use App\Services\WhatsAppService;
 use App\Services\NotificadorSolicitudService;
 use App\Services\Contracts\WhatsAppServiceInterface;
@@ -22,8 +23,10 @@ class MuestraMercaderiaController extends Controller
     public function index()
     {
         $user = Auth::user();
+        $almacenes = Almacen::where('estado', 'a')->get();
 
-        if ($user->hasRole('Administrador') || $user->can('Muestra_aprobar') || $user->can('Muestra_reprobar') || $user->can('Muestra_ejecutar')) {
+        if ($user->hasRole('Administrador') || $user->can('Muestra_aprobar') || $user->can('Muestra_reprobar') ) {
+            // Administrador o usuarios con permisos especiales
             $solicitudes = Solicitud::where('estado', '!=', 'inactivo')
                 ->whereHas('muestraMercaderia', function ($query) {
                     $query->where('estado', '!=', 'inactivo');
@@ -32,8 +35,31 @@ class MuestraMercaderiaController extends Controller
                     $query->where('estado', '!=', 'inactivo');
                 }])
                 ->orderBy('fecha_solicitud', 'desc')
-                ->get();        
+                ->get();
+                
+        } elseif ($user->esEncargadoDeAlmacen()) {
+            // Si es encargado de almacén, solo mostrar las solicitudes relacionadas con sus almacenes
+            $solicitudes = Solicitud::where('estado', '!=', 'inactivo')
+                ->whereHas('muestraMercaderia', function ($query) use ($user) {
+                    // Filtrar por almacenes donde el usuario es encargado
+                    $query->whereHas('almacen', function ($query) use ($user) {
+                        $query->whereHas('encargado', function ($query) use ($user) {
+                            $query->where('id', $user->id);
+                        });
+                    });
+                })
+                ->with(['usuario', 'muestraMercaderia' => function ($query) use ($user) {
+                    // Filtrar también en la carga de la relación bajaMercaderia
+                    $query->whereHas('almacen', function ($query) use ($user) {
+                        $query->whereHas('encargado', function ($query) use ($user) {
+                            $query->where('id', $user->id);
+                        });
+                    });
+                }])
+                ->orderBy('fecha_solicitud', 'desc')
+                ->get();
         } else {
+            // Para otros usuarios, solo mostrar sus propias solicitudes
             $solicitudes = Solicitud::where('estado', '!=', 'inactivo')
                 ->where('id_usuario', $user->id)
                 ->whereHas('muestraMercaderia', function ($query) {
@@ -43,11 +69,12 @@ class MuestraMercaderiaController extends Controller
                     $query->where('estado', '!=', 'inactivo');
                 }])
                 ->orderBy('fecha_solicitud', 'asc')
-                ->get();        
+                ->get();
         }
-        
-        return view('GestionSolicitudes.muestra.index', compact('solicitudes'));
+
+        return view('GestionSolicitudes.muestra.index', compact('solicitudes', 'almacenes'));
     }
+
 
     /**
      * Show the form for creating a new resource.
@@ -83,9 +110,21 @@ class MuestraMercaderiaController extends Controller
                 'cliente' => $request->cliente, 
                 'detalle_productos' => $request->detalle_productos,
                 'cod_sai' => $request->cod_sai,
+                'id_almacen' => $request->id_almacen,
             ]);
 
-            $notificador->notificar($solicitud, 'crear');
+            
+            if (auth()->user()->hasRole('Vendedor Comercial')) {
+                
+                $notificador->notificar($solicitud, 'crear');
+            } else {
+                
+                $solicitud->estado = 'aprobada';
+                $solicitud->id_autorizador = auth()->user()->id;
+                $solicitud->fecha_autorizacion = now();
+                $solicitud->save();
+                $notificador->notificar($solicitud, 'aprobar');
+            }
 
             DB::commit();
 

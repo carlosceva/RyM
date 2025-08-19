@@ -40,6 +40,14 @@ class PrecioEspecialMensaje
                     $solicitud->id,
                 ],
             ],
+            'confirmar' => [
+                'template' => 'solicitud_confirmar_venta',
+                'params' => [
+                    $solicitud->id,
+                    now()->format('d/m/Y H:i'),
+                    auth()->user()->name,
+                ],
+            ],
             'ejecutar' => [
                 'template' => 'solicitud_ejecutar',
                 'params' => [

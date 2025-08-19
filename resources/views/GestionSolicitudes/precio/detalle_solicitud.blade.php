@@ -49,6 +49,11 @@
                     @if($solicitud->precioEspecial)
                     <p class="mb-2"><strong>Cliente:</strong> {{ $solicitud->precioEspecial->cliente ?? 'Sin cliente' }}</p>
 
+                    <p class="mb-2">
+                        <strong>Venta realizada:</strong> 
+                        {{ is_null($solicitud->precioEspecial->venta_realizada) ? 'N/A' : ($solicitud->precioEspecial->venta_realizada === 's' ? 'Si' : 'No') }}
+                    </p>
+
                     <p class="mb-1"><strong>Detalle de productos:</strong></p>
                     <div class="border p-2 rounded bg-light small">
                         <table class="table table-borderless table-sm mb-0">
