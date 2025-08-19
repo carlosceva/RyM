@@ -19,4 +19,6 @@ return [
     'solicitud_reprobar' => 'HX5cf1c0798d51dcdb238221417e2616fd',
 
     'solicitud_reprobada'=> 'HX21d3c9be1fda618aeb673500148f0b01',
+
+    'solicitud_confirmar_venta' => 'HXea5bab5426a606ca45989c410b4153d6',
 ];
