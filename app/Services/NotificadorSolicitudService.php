@@ -10,6 +10,7 @@ use App\Models\Configuracion;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
+use App\Models\NotificacionEnviada;
 
 class NotificadorSolicitudService
 {
@@ -37,6 +38,18 @@ class NotificadorSolicitudService
         foreach ($usuarios as $user) {
             $numero = trim($user->telefono);
 
+            // 🔐 Verifica si ya se envió esta notificación
+            $yaEnviado = NotificacionEnviada::where([
+                'solicitud_id' => $solicitud->id,
+                'etapa' => $etapa,
+                'user_id' => $user->id,
+            ])->exists();
+
+            if ($yaEnviado) {
+                Log::info("⛔ Notificación ya enviada a {$user->name} para etapa '$etapa'. Se omite.");
+                continue;
+            }
+
             if (preg_match('/^\d{8}$/', $numero)) {
                 $telefono = '+591' . $numero;
 
@@ -53,6 +66,14 @@ class NotificadorSolicitudService
                     } else {
                         $this->whatsapp->sendWhatsAppMessage($telefono, $mensaje);
                     }
+
+                    // 📝 Registrar que ya se envió
+                    NotificacionEnviada::create([
+                        'solicitud_id' => $solicitud->id,
+                        'etapa' => $etapa,
+                        'user_id' => $user->id,
+                    ]);
+
                 } else {
                     Log::info("🔕 WhatsApp desactivado. No se envió mensaje a {$user->name} – $telefono");
                 }
