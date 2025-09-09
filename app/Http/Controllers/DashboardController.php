@@ -10,92 +10,100 @@ class DashboardController extends Controller
 {
     public function index()
     {
-        $tipos = [
-            'precio_especial',
-            'Devolucion de Venta',
-            'Anulacion de Venta',
-            'Sobregiro de Venta',
-            'Muestra de Mercaderia',
-            'Baja de Mercaderia'
+// Definir los tipos de solicitud y sus rutas
+        $tiposConRutas = [
+            'Devolucion de Venta' => 'Devolucion.index',
+            'Anulacion de Venta' => 'Anulacion.index',
+            'Sobregiro de Venta' => 'Sobregiro.index',
+            'precio_especial' => 'PrecioEspecial.index',
+            'Muestra de Mercaderia' => 'Muestra.index',
+            'Baja de Mercaderia' => 'Baja.index',
         ];
 
-        $permisosPorTipo = [
-            'precio_especial' => 'Precio_especial_ver',
-            'Devolucion de Venta' => 'Devolucion_ver',
-            'Anulacion de Venta' => 'Anulacion_ver',
-            'Sobregiro de Venta' => 'Sobregiro_ver',
-            'Muestra de Mercaderia' => 'Muestra_ver',
-            'Baja de Mercaderia' => 'Baja_ver',
+        // Mapa de íconos HTML por tipo
+        $iconos = [
+            'Devolucion de Venta' => '<i class="fas fa-undo mr-2"></i>',
+            'Anulacion de Venta' => '<i class="far fa-times-circle mr-2"></i>',
+            'Sobregiro de Venta' => '<i class="far fa-arrow-alt-circle-up mr-2"></i>',
+            'precio_especial' => '<i class="far fa-file-alt mr-2"></i>',
+            'Muestra de Mercaderia' => '<i class="far fa-file-alt mr-2"></i>',
+            'Baja de Mercaderia' => '<i class="far fa-trash-alt mr-2"></i>',
         ];
 
-        $aliasTipos = [
-            'Baja de Mercaderia' => 'Ajuste de Inv.',
-        ];
+        $tarjetas = [];
 
-        $tiposSolicitud = [];
-        $pendientesPorTipo = [];
-        $aprobadasPorTipo = [];
-        $rechazadasPorTipo = [];
-        $ejecutadasPorTipo = [];
+        foreach ($tiposConRutas as $tipo => $ruta) {
+            $pendientes = 0;
+            $porEjecutar = 0;
 
-        $userId = Auth::id();
-        $verTodas = $this->tienePermisoEjecutar();
+            switch ($tipo) {
+                case 'precio_especial':
+                case 'Muestra de Mercaderia':
+                case 'Baja de Mercaderia':
+                    $pendientes = Solicitud::where('tipo', $tipo)
+                        ->where('estado', 'pendiente')
+                        ->count();
 
-        foreach ($tipos as $tipo) {
-            // Verifica si el usuario tiene permiso para ver este tipo
-            $permiso = $permisosPorTipo[$tipo] ?? null;
-            if ($permiso && !Auth::user()->can($permiso)) {
-                continue; // Saltar este tipo si no tiene permiso
+                    $porEjecutar = Solicitud::where('tipo', $tipo)
+                        ->where('estado', 'aprobada')
+                        ->whereDoesntHave('ejecucion') 
+                        ->count();
+                    break;
+                
+                case 'Sobregiro de Venta':
+                    $pendientes = Solicitud::where('tipo', $tipo)
+                        ->where('estado', 'pendiente')
+                        ->count();
+
+                    $porEjecutar = Solicitud::where('tipo', $tipo)
+                        ->where('estado', 'confirmada')
+                        ->whereDoesntHave('ejecucion')
+                        ->count();
+                    break;
+
+                case 'Devolucion de Venta':
+                    $pendientes = Solicitud::where('tipo', $tipo)
+                        ->where('estado', 'pendiente')
+                        ->count();
+
+                    $porEjecutar = Solicitud::where('tipo', $tipo)
+                        ->where('estado', 'aprobada')
+                        ->whereHas('devolucion', function ($query) {
+                            $query->whereNotNull('tiene_pago');
+                        })
+                        ->whereDoesntHave('ejecucion') 
+                        ->count();
+                    break;
+                case 'Anulacion de Venta':
+                     $pendientes = Solicitud::where('tipo', $tipo)
+                        ->where('estado', 'pendiente')
+                        ->count();
+
+                    $porEjecutar = Solicitud::where('tipo', $tipo)
+                        ->where('estado', 'aprobada')
+                        ->whereHas('anulacion', function ($query) {
+                            $query->whereNotNull('tiene_pago');
+                        })
+                        ->whereDoesntHave('ejecucion') 
+                        ->count();
+                    break;
+
+                default:
+                    break;
             }
 
-            // Reemplazar nombre si existe en el alias
-            $nombreAmigable = $aliasTipos[$tipo] ?? ucfirst(str_replace('_', ' ', $tipo));
-            $tiposSolicitud[] = $nombreAmigable;
-
-            // Query base
-            $baseQuery = Solicitud::where('tipo', $tipo);
-            if (!$verTodas) {
-                $baseQuery = $baseQuery->where('id_usuario', $userId);
-            }
-
-            $pendientes = (clone $baseQuery)->where('estado', 'pendiente')->count();
-            $aprobadas = (clone $baseQuery)->where('estado', 'aprobada')->count();
-            $rechazadas = (clone $baseQuery)->where('estado', 'rechazada')->count();
-            $ejecutadas = (clone $baseQuery)->whereHas('ejecucion')->count();
-
-            $pendientesPorTipo[] = $pendientes;
-            $aprobadasPorTipo[] = $aprobadas;
-            $rechazadasPorTipo[] = $rechazadas;
-            $ejecutadasPorTipo[] = $ejecutadas;
+            $tarjetas[] = [
+                'tipo' => $tipo,
+                'titulo' => ucfirst(str_replace('_', ' ', $tipo)),
+                'total' => $pendientes + $porEjecutar,
+                'pendientes' => $pendientes,
+                'por_ejecutar' => $porEjecutar,
+                'ruta' => $ruta,
+                'icono' => $iconos[$tipo] ?? '<i class="far fa-bell mr-2"></i>',
+            ];
         }
 
-        return view('HojaEnBlanco', compact(
-            'tiposSolicitud',
-            'pendientesPorTipo',
-            'aprobadasPorTipo',
-            'rechazadasPorTipo',
-            'ejecutadasPorTipo'
-        ));
-    }
-
-    private function tienePermisoEjecutar(): bool
-    {
-        $permisos = [
-            'Precio_especial_ejecutar',
-            'Devolucion_ejecutar',
-            'Anulacion_ejecutar',
-            'Sobregiro_ejecutar',
-            'Muestra_ejecutar',
-            'Baja_ejecutar',
-        ];
-
-        foreach ($permisos as $permiso) {
-            if (Auth::user()->can($permiso)) {
-                return true;
-            }
-        }
-
-        return false;
+        return view('HojaEnBlanco', compact('tarjetas'));
     }
 
 }

@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Response;
 
 class BackupController extends Controller
 {
@@ -17,39 +16,50 @@ class BackupController extends Controller
 
     public function realizarBackup()
     {
+        // $connection = config('database.default');
+        // dd($connection);
+
         try {
-            $db = config('database.connections.pgsql');
+            $connection = config('database.default');
+            $db = config("database.connections.$connection");
             $usuario = $db['username'];
             $password = $db['password'];
             $host = $db['host'] ?? 'localhost';
-            $puerto = $db['port'] ?? 5432;
+            $puerto = $db['port'] ?? ($connection === 'pgsql' ? 5432 : 3306);
             $base = $db['database'];
 
-            $pgDumpPath = '"C:\\Program Files\\PostgreSQL\\16\\bin\\pg_dump.exe"';
-
             $fecha = now()->format('Y_m_d_H_i_s');
-            $nombreArchivo = "backup_{$fecha}.sql";
+            $nombreArchivo = "backup_{$connection}_{$fecha}.sql";
             $rutaBackup = storage_path("app/backups/{$nombreArchivo}");
 
             if (!file_exists(storage_path('app/backups'))) {
                 mkdir(storage_path('app/backups'), 0777, true);
             }
 
-            putenv("PGPASSWORD=$password");
+            if ($connection === 'pgsql') {
+                // ---------- POSTGRES ----------
+                $pgDumpPath = '"C:\\Program Files\\PostgreSQL\\16\\bin\\pg_dump.exe"';
+                putenv("PGPASSWORD=$password");
 
-            $command = "$pgDumpPath --clean --if-exists -U $usuario -h $host -p $puerto -d $base -F p -f \"$rutaBackup\"";
+                $command = "$pgDumpPath --clean --if-exists -U $usuario -h $host -p $puerto -d $base -F p -f \"$rutaBackup\"";
+            } elseif ($connection === 'mysql') {
+                // ---------- MYSQL ----------
+                $mysqldumpPath = '"C:\\xampp\\mysql\\bin\\mysqldump.exe"'; // cambia ruta según tu instalación
+                $command = "$mysqldumpPath --user=$usuario --password=$password --host=$host --port=$puerto $base > \"$rutaBackup\"";
+            } else {
+                throw new \Exception("Driver de base de datos no soportado: $connection");
+            }
 
             exec($command, $output, $return_var);
 
             if ($return_var !== 0) {
-                throw new \Exception("pg_dump falló. Output: " . implode("\n", $output));
+                throw new \Exception("Backup falló. Output: " . implode("\n", $output));
             }
 
-            // ✅ Forzar descarga del archivo al usuario
             return response()->download($rutaBackup)->deleteFileAfterSend();
 
         } catch (\Exception $e) {
-            \Log::error('Error al generar respaldo: ' . $e->getMessage());
+            Log::error('Error al generar respaldo: ' . $e->getMessage());
             return back()->with('error', 'Error al generar respaldo.');
         }
     }
@@ -61,38 +71,41 @@ class BackupController extends Controller
                 'backup_file' => 'required|file|mimes:sql,txt',
             ]);
 
-            // Guardar archivo subido
             $uploadedFile = $request->file('backup_file');
-
-            // Asegura que la carpeta backups existe
             $backupDir = storage_path('app/backups');
+
             if (!file_exists($backupDir)) {
                 mkdir($backupDir, 0755, true);
             }
 
-            // Guardar con nombre temporal fijo para restaurar
             $uploadedFile->move($backupDir, 'tmp_restore.sql');
-
             $backupFilePath = $backupDir . DIRECTORY_SEPARATOR . 'tmp_restore.sql';
 
-            // Obtener config de base de datos
-            $db = config('database.connections.pgsql');
+            $connection = config('database.default');
+            $db = config("database.connections.$connection");
             $usuario = $db['username'];
             $password = $db['password'];
             $host = $db['host'] ?? 'localhost';
-            $puerto = $db['port'] ?? 5432;
+            $puerto = $db['port'] ?? ($connection === 'pgsql' ? 5432 : 3306);
             $base = $db['database'];
 
-            // Ejecutar comando de restauración con psql
-            putenv("PGPASSWORD=$password");
-            $psqlPath = '"C:\\Program Files\\PostgreSQL\\16\\bin\\psql.exe"';
-
-            $command = "$psqlPath -U $usuario -h $host -p $puerto -d $base -f \"$backupFilePath\"";
+            if ($connection === 'pgsql') {
+                // ---------- POSTGRES ----------
+                putenv("PGPASSWORD=$password");
+                $psqlPath = '"C:\\Program Files\\PostgreSQL\\16\\bin\\psql.exe"';
+                $command = "$psqlPath -U $usuario -h $host -p $puerto -d $base -f \"$backupFilePath\"";
+            } elseif ($connection === 'mysql') {
+                // ---------- MYSQL ----------
+                $mysqlPath = '"C:\\xampp\\mysql\\bin\\mysql.exe"'; // cambia ruta según tu instalación
+                $command = "$mysqlPath --user=$usuario --password=$password --host=$host --port=$puerto $base < \"$backupFilePath\"";
+            } else {
+                throw new \Exception("Driver de base de datos no soportado: $connection");
+            }
 
             exec($command, $output, $return_var);
 
             if ($return_var !== 0) {
-                throw new \Exception("psql falló. Output: " . implode("\n", $output));
+                throw new \Exception("Restauración falló. Output: " . implode("\n", $output));
             }
 
             return back()->with('success', 'Base de datos restaurada correctamente.');
@@ -102,4 +115,3 @@ class BackupController extends Controller
         }
     }
 }
-
