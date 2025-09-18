@@ -65,7 +65,7 @@ class BackupController extends Controller
 
         } catch (\Exception $e) {
             Log::error('Error al generar respaldo: ' . $e->getMessage());
-            return back()->with('error', 'Error al generar respaldo.');
+            return back()->with('error', 'Error al generar respaldo.' . $e->getMessage());
         }
     }
 
