@@ -7,7 +7,7 @@
         <button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
-        <form action="{{ route('Baja.store') }}" method="POST" enctype="multipart/form-data">
+        <form action="{{ route('Baja.store') }}" method="POST" enctype="multipart/form-data" onsubmit="return validarYDeshabilitar(this)">
           @csrf
             <!-- Tipo de Solicitud -->
             <input type="hidden" name="tipo" value="Baja de Mercaderia">
@@ -185,5 +185,14 @@ function validarProductos() {
         return false;
     }
     return true;
+}
+
+function validarYDeshabilitar(formulario) {
+    if (!validarProductos()) {
+        return false; // No enviar ni desactivar el botón
+    }
+
+    formulario.querySelector('button[type=submit]').disabled = true;
+    return true; // Enviar y desactivar botón
 }
 </script>

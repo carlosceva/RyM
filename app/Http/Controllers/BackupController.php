@@ -16,17 +16,22 @@ class BackupController extends Controller
 
     public function realizarBackup()
     {
-        // $connection = config('database.default');
-        // dd($connection);
-
         try {
-            $connection = config('database.default');
-            $db = config("database.connections.$connection");
+            $connection = config('database.default');  // Conexion seleccionada en config/database.php
+            $db = config("database.connections.$connection");  // Obtener la configuración de la conexión seleccionada
+
             $usuario = $db['username'];
             $password = $db['password'];
-            $host = $db['host'] ?? 'localhost';
-            $puerto = $db['port'] ?? ($connection === 'pgsql' ? 5432 : 3306);
+            $host = $db['host'] ?? 'localhost';  // Si no hay host, usar 'localhost' como valor predeterminado
+            $puerto = $db['port'] ?? ($connection === 'pgsql' ? 5432 : 3306);  // Si no hay puerto en la configuración, usar el predeterminado de la base de datos
             $base = $db['database'];
+
+            // Obtener el puerto de la base de datos de forma dinámica
+            if ($connection === 'mysql') {
+                $puerto = config('database.connections.mysql.port');  // Puerto para MySQL
+            } elseif ($connection === 'pgsql') {
+                $puerto = config('database.connections.pgsql.port');  // Puerto para PostgreSQL
+            }
 
             $fecha = now()->format('Y_m_d_H_i_s');
             $nombreArchivo = "backup_{$connection}_{$fecha}.sql";
@@ -37,14 +42,14 @@ class BackupController extends Controller
             }
 
             if ($connection === 'pgsql') {
-                // ---------- POSTGRES ----------
-                $pgDumpPath = '"C:\\Program Files\\PostgreSQL\\16\\bin\\pg_dump.exe"';
+                // ---------- POSTGRES ----------  
+                $pgDumpPath = '"C:\\Program Files\\PostgreSQL\\16\\bin\\pg_dump.exe"';  // Asegúrate de que esta ruta sea correcta en el servidor
                 putenv("PGPASSWORD=$password");
 
                 $command = "$pgDumpPath --clean --if-exists -U $usuario -h $host -p $puerto -d $base -F p -f \"$rutaBackup\"";
             } elseif ($connection === 'mysql') {
                 // ---------- MYSQL ----------
-                $mysqldumpPath = '"C:\\xampp\\mysql\\bin\\mysqldump.exe"'; // cambia ruta según tu instalación
+                $mysqldumpPath = '"C:\\xampp\\mysql\\bin\\mysqldump.exe"';  // Cambia la ruta si es necesario
                 $command = "$mysqldumpPath --user=$usuario --password=$password --host=$host --port=$puerto $base > \"$rutaBackup\"";
             } else {
                 throw new \Exception("Driver de base de datos no soportado: $connection");

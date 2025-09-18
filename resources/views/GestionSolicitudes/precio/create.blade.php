@@ -7,7 +7,7 @@
         <button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
-        <form action="{{ route('PrecioEspecial.store') }}" method="POST" onsubmit="return validarProductos()">
+        <form action="{{ route('PrecioEspecial.store') }}" method="POST" onsubmit="return validarYDeshabilitar(this)">
           @csrf
 
           <input type="hidden" name="tipo" value="precio_especial">
@@ -172,6 +172,15 @@ function validarProductos() {
         return false;
     }
     return true;
+}
+
+function validarYDeshabilitar(formulario) {
+    if (!validarProductos()) {
+        return false; // No enviar ni desactivar el botón
+    }
+
+    formulario.querySelector('button[type=submit]').disabled = true;
+    return true; // Enviar y desactivar botón
 }
 
 </script>

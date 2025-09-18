@@ -7,7 +7,7 @@
                 <button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <form action="{{ route('Devolucion.store') }}" method="POST" onsubmit="this.querySelector('button[type=submit]').disabled = true;">
+                <form action="{{ route('Devolucion.store') }}" method="POST" onsubmit="return validarYDeshabilitar(this)">
                     @csrf
                     <input type="hidden" name="tipo" value="Devolucion de Venta">
                     <input type="hidden" name="id_usuario" value="{{ auth()->id() }}">
@@ -195,5 +195,14 @@ function validarProductos() {
         return false;
     }
     return true;
+}
+
+function validarYDeshabilitar(formulario) {
+    if (!validarProductos()) {
+        return false; // No enviar ni desactivar el botón
+    }
+
+    formulario.querySelector('button[type=submit]').disabled = true;
+    return true; // Enviar y desactivar botón
 }
 </script>
