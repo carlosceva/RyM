@@ -235,6 +235,9 @@
                         @foreach ($agrupados as $modulo => $permisosModulo)
                             @php
                                 $nombreModulo = strtolower($modulo) === 'sistema' ? 'Configuraciones' : ucfirst($modulo);
+                                if (strtolower($modulo) === 'baja') {
+                                    $nombreModulo = 'Ajuste de Inv.';
+                                }
                             @endphp
                             <div class="permiso-box">
                                 <strong class="text-primary text-uppercase d-block mb-2">{{ $nombreModulo }}</strong>
