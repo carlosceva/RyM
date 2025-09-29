@@ -71,9 +71,11 @@ class BackupController extends Controller
                 mkdir($backupDir, 0755, true);
             }
 
-            $uploadedFile->move($backupDir, 'tmp_restore.sql');
+            // Guardar el archivo subido como archivo temporal
             $backupFilePath = $backupDir . DIRECTORY_SEPARATOR . 'tmp_restore.sql';
+            $uploadedFile->move($backupDir, 'tmp_restore.sql');
 
+            // Obtener configuración desde config/database.php
             $connection = config('database.default');
             $db = config("database.connections.$connection");
 
@@ -83,7 +85,16 @@ class BackupController extends Controller
             $puerto = $db['port'] ?? 3306;
             $base = $db['database'];
 
-            $command = "mysql --user={$usuario} --password=\"{$password}\" --host={$host} --port={$puerto} {$base} < \"{$backupFilePath}\"";
+            // Escapar los argumentos para evitar problemas de shell
+            $usuarioArg = '--user=' . escapeshellarg($usuario);
+            $passwordArg = '--password=' . escapeshellarg($password);
+            $hostArg = '--host=' . escapeshellarg($host);
+            $portArg = '--port=' . escapeshellarg($puerto);
+            $baseArg = escapeshellarg($base);
+            $fileArg = escapeshellarg($backupFilePath);
+
+            // Comando para restaurar el backup
+            $command = "mysql {$usuarioArg} {$passwordArg} {$hostArg} {$portArg} {$baseArg} < {$fileArg} 2>&1";
 
             exec($command, $output, $return_var);
 
@@ -91,10 +102,14 @@ class BackupController extends Controller
                 throw new \Exception("Restauración falló. Código de salida: $return_var. Output: " . implode("\n", $output));
             }
 
+            // Eliminar archivo temporal
+            unlink($backupFilePath);
+
             return back()->with('success', 'Base de datos restaurada correctamente.');
         } catch (\Exception $e) {
             Log::error('Error al restaurar respaldo: ' . $e->getMessage());
             return back()->with('error', 'Error al restaurar respaldo: ' . $e->getMessage());
         }
     }
+
 }
