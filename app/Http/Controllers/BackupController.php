@@ -34,8 +34,15 @@ class BackupController extends Controller
                 mkdir(storage_path('app/backups'), 0777, true);
             }
 
-            // Usamos mysqldump sin ruta absoluta
-            $command = "mysqldump --user={$usuario} --password=\"{$password}\" --host={$host} --port={$puerto} {$base} > \"{$rutaBackup}\"";
+            // Escapar los argumentos
+            $usuarioArg = '--user=' . escapeshellarg($usuario);
+            $passwordArg = '--password=' . escapeshellarg($password);
+            $hostArg = '--host=' . escapeshellarg($host);
+            $portArg = '--port=' . escapeshellarg($puerto);
+            $baseArg = escapeshellarg($base);
+            $rutaBackupArg = escapeshellarg($rutaBackup);
+
+            $command = "mysqldump {$usuarioArg} {$passwordArg} {$hostArg} {$portArg} {$baseArg} > {$rutaBackupArg} 2>&1";
 
             exec($command, $output, $return_var);
 
@@ -76,7 +83,6 @@ class BackupController extends Controller
             $puerto = $db['port'] ?? 3306;
             $base = $db['database'];
 
-            // Restaurar usando mysql sin ruta absoluta
             $command = "mysql --user={$usuario} --password=\"{$password}\" --host={$host} --port={$puerto} {$base} < \"{$backupFilePath}\"";
 
             exec($command, $output, $return_var);
