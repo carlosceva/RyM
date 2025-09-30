@@ -42,7 +42,8 @@ class BackupController extends Controller
             $baseArg = escapeshellarg($base);
             $rutaBackupArg = escapeshellarg($rutaBackup);
 
-            $command = "mysqldump {$usuarioArg} {$passwordArg} {$hostArg} {$portArg} {$baseArg} > {$rutaBackupArg} 2>&1";
+            //$command = "mysqldump {$usuarioArg} {$passwordArg} {$hostArg} {$portArg} {$baseArg} > {$rutaBackupArg} 2>&1";
+            $command = "mysqldump {$usuarioArg} {$passwordArg} {$hostArg} {$portArg} {$baseArg} > {$rutaBackupArg} 2>/dev/null";
 
             exec($command, $output, $return_var);
 
@@ -71,11 +72,18 @@ class BackupController extends Controller
                 mkdir($backupDir, 0755, true);
             }
 
-            // Guardar el archivo subido como archivo temporal
+            // Guardar archivo como archivo temporal para restauración
             $backupFilePath = $backupDir . DIRECTORY_SEPARATOR . 'tmp_restore.sql';
             $uploadedFile->move($backupDir, 'tmp_restore.sql');
 
-            // Obtener configuración desde config/database.php
+            // ✅ Validar contenido del archivo antes de restaurar
+            $content = file_get_contents($backupFilePath);
+            if (!str_contains($content, 'CREATE TABLE')) {
+                unlink($backupFilePath); // Eliminar archivo inválido
+                return back()->with('error', 'El archivo de backup no parece ser válido (no contiene CREATE TABLE).');
+            }
+
+            // Obtener datos de conexión desde config/database.php
             $connection = config('database.default');
             $db = config("database.connections.$connection");
 
@@ -85,7 +93,7 @@ class BackupController extends Controller
             $puerto = $db['port'] ?? 3306;
             $base = $db['database'];
 
-            // Escapar los argumentos para evitar problemas de shell
+            // Escapar los argumentos
             $usuarioArg = '--user=' . escapeshellarg($usuario);
             $passwordArg = '--password=' . escapeshellarg($password);
             $hostArg = '--host=' . escapeshellarg($host);
@@ -93,7 +101,7 @@ class BackupController extends Controller
             $baseArg = escapeshellarg($base);
             $fileArg = escapeshellarg($backupFilePath);
 
-            // Comando para restaurar el backup
+            // Comando para restaurar
             $command = "mysql {$usuarioArg} {$passwordArg} {$hostArg} {$portArg} {$baseArg} < {$fileArg} 2>&1";
 
             exec($command, $output, $return_var);
@@ -102,7 +110,7 @@ class BackupController extends Controller
                 throw new \Exception("Restauración falló. Código de salida: $return_var. Output: " . implode("\n", $output));
             }
 
-            // Eliminar archivo temporal
+            // Eliminar el archivo temporal tras restaurar
             unlink($backupFilePath);
 
             return back()->with('success', 'Base de datos restaurada correctamente.');
