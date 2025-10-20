@@ -8,9 +8,11 @@ class SobregiroMensaje
 {
     public static function generar(Solicitud $solicitud, string $etapa): array
     {
+        $link = route('sobregiro.show', ['solicitud' => $solicitud->id]);
+
         return match ($etapa) {
             'crear' => [
-                'template' => 'solicitud_plantilla',
+                'template' => 'enlace_solicitud_plantilla',
                 'params' => [
                     'creado',
                     'Sobregiro de Venta',
@@ -19,10 +21,11 @@ class SobregiroMensaje
                     $solicitud->fecha_solicitud->format('d/m/Y H:i'),
                     'Solicitado',
                     $solicitud->usuario->name,
+                    $link
                 ],
             ],
             'aprobar' => [
-                'template' => 'solicitud_plantilla',
+                'template' => 'enlace_solicitud_plantilla',
                 'params' => [
                     'aprobado',
                     'Sobregiro de Venta',
@@ -31,31 +34,35 @@ class SobregiroMensaje
                     $solicitud->fecha_autorizacion->format('d/m/Y H:i'),
                     'Autorizado',
                     $solicitud->autorizador->name,
+                    $link
                 ],
             ],
             'reprobar' => [
-                'template' => 'solicitud_reprobada',
+                'template' => 'enlace_solicitud_reprobada',
                 'params' => [
                     'Sobregiro de Venta',
                     $solicitud->id,
+                    $link
                 ],
             ],
             'confirmar' => [
-                'template' => 'sobregiro_confirmar',
+                'template' => 'enlace_sobregiro_confirmar',
                 'params' => [
                     $solicitud->id,
                     $solicitud->sobregiro->fecha_confirmacion->format('d/m/Y H:i'),
                     $solicitud->sobregiro->confirmador->name,
-                    $solicitud->sobregiro->cod_sobregiro
+                    $solicitud->sobregiro->cod_sobregiro,
+                    $link
                 ],
             ],
             'ejecutar' => [
-                'template' => 'solicitud_ejecutar',
+                'template' => 'enlace_solicitud_ejecutar',
                 'params' => [
                     'Sobregiro de Venta',
                     $solicitud->id,
                     now()->format('d/m/Y H:i'),
                     auth()->user()->name,
+                    $link
                 ],
             ],
             default => [

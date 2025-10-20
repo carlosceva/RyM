@@ -8,9 +8,11 @@ class MuestraMensaje
 {
     public static function generar(Solicitud $solicitud, string $etapa): array
     {
+        $link = route('muestra.show', ['solicitud' => $solicitud->id]);
+
         return match ($etapa) {
             'crear' => [
-                'template' => 'solicitud_plantilla',
+                'template' => 'enlace_solicitud_plantilla',
                 'params' => [
                     'creado',
                     'Muestra de Mercaderia',
@@ -19,10 +21,11 @@ class MuestraMensaje
                     $solicitud->fecha_solicitud->format('d/m/Y H:i'),
                     'Solicitado',
                     $solicitud->usuario->name,
+                    $link
                 ],
             ],
             'aprobar' => [
-                'template' => 'solicitud_plantilla',
+                'template' => 'enlace_solicitud_plantilla',
                 'params' => [
                     'aprobado',
                     'Muestra de Mercaderia',
@@ -31,22 +34,25 @@ class MuestraMensaje
                     $solicitud->fecha_autorizacion->format('d/m/Y H:i'),
                     'Autorizado',
                     $solicitud->autorizador->name,
+                    $link
                 ],
             ],
             'reprobar' => [
-                'template' => 'solicitud_reprobada',
+                'template' => 'enlace_solicitud_reprobada',
                 'params' => [
                     'Muestra de Mercaderia',
                     $solicitud->id,
+                    $link
                 ],
             ],
             'ejecutar' => [
-                'template' => 'solicitud_ejecutar',
+                'template' => 'enlace_solicitud_ejecutar',
                 'params' => [
                     'Muestra de Mercaderia',
                     $solicitud->id,
                     now()->format('d/m/Y H:i'),
                     auth()->user()->name,
+                    $link
                 ],
             ],
             default => [

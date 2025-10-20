@@ -400,9 +400,16 @@ class DevolucionController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Devolucion $devolucion)
+    public function show(Solicitud $solicitud)
     {
-        //
+        if ($solicitud->tipo !== 'Devolucion de Venta' || $solicitud->estado === 'inactivo') {
+            abort(404);
+        }
+
+        // Cargar la relación si no está cargada
+        $solicitud->load(['usuario', 'autorizador', 'ejecucion', 'devolucion']);
+
+        return view('GestionSolicitudes.devolucion.show', compact('solicitud'));
     }
 
     /**

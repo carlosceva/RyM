@@ -290,9 +290,17 @@ class SobregiroController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Sobregiro $sobregiro)
+    public function show(Solicitud $solicitud)
     {
-        //
+        // Verificar que sea del tipo correcto y esté activo
+        if ($solicitud->tipo !== 'Sobregiro de Venta' || $solicitud->estado === 'inactivo') {
+            abort(404);
+        }
+
+        // Cargar relaciones necesarias
+        $solicitud->load(['usuario', 'autorizador', 'ejecucion', 'sobregiro']);
+
+        return view('GestionSolicitudes.sobregiro.show', compact('solicitud'));
     }
 
     /**

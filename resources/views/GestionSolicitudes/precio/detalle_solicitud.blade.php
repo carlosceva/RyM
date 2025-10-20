@@ -94,8 +94,6 @@
                         </table>
                     </div>
                     @endif
-                
-
             </div>
 
             <!-- Autorización -->
@@ -202,7 +200,56 @@
                             <i class="fa fa-trash"></i> Anular solicitud
                         </button>
                     </form>
+
+                    <!-- BOTONES DE ACCIÓN -->
+                    <div class="d-flex flex-wrap gap-2 my-3">
+
+                        @if($solicitud->estado == 'pendiente')
+                            @can('Precio_especial_aprobar')
+                                <button class="btn btn-success btn-sm"
+                                        data-bs-toggle="modal" data-bs-target="#observacionModal"
+                                        title="Aprobar"
+                                        data-detalle="{{ $solicitud->precioEspecial?->detalle_productos }}"
+                                        data-cliente="{{ $solicitud->precioEspecial?->cliente }}"
+                                        data-glosa="{{ $solicitud->glosa }}"
+                                        onclick="setAccionAndSolicitudId('aprobar', {{ $solicitud->id }}, this)">
+                                    <i class="fa fa-check"></i> Aprobar
+                                </button>
+                            @endcan
+
+                            @can('Precio_especial_reprobar')
+                                <button class="btn btn-danger btn-sm"
+                                        data-bs-toggle="modal" data-bs-target="#observacionModal"
+                                        title="Rechazar"
+                                        data-detalle="{{ $solicitud->precioEspecial?->detalle_productos }}"
+                                        data-cliente="{{ $solicitud->precioEspecial?->cliente }}"
+                                        data-glosa="{{ $solicitud->glosa }}"
+                                        onclick="setAccionAndSolicitudId('rechazar', {{ $solicitud->id }}, this)">
+                                    <i class="fa fa-times"></i> Rechazar
+                                </button>
+                            @endcan
+                        @endif
+
+                        @if ($solicitud->estado === 'aprobada' && !$solicitud->ejecucion)
+                            @if (is_null($solicitud->precioEspecial->venta_realizada))
+                                <button type="button" class="btn btn-success btn-sm"
+                                        data-bs-toggle="modal" data-bs-target="#modalConfirmar{{ $solicitud->id }}">
+                                    Confirmar Venta
+                                </button>
+                            @endif
+                        @endif
+
+                        @can('Precio_especial_ejecutar')
+                            @if ($solicitud->precioEspecial->venta_realizada === 's' && !$solicitud->ejecucion)
+                                <button type="button" class="btn btn-success btn-sm"
+                                        data-bs-toggle="modal" data-bs-target="#modalEjecutar{{ $solicitud->id }}">
+                                    Ejecutar
+                                </button>
+                            @endif
+                        @endcan
+                    </div>
                 </div>
+                
                 @endcan
                 <!-- Columna derecha -->
                 <div class="col-auto ms-auto d-flex align-items-center">
@@ -224,5 +271,6 @@
             Cerrar
         </button>
     </div>
+    
 </div>
                 

@@ -390,9 +390,16 @@ class AnulacionController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Anulacion $anulacion)
+    public function show(Solicitud $solicitud)
     {
-        //
+        if ($solicitud->tipo !== 'Anulacion de Venta' || $solicitud->estado === 'inactivo') {
+            abort(404);
+        }
+
+        // Cargar la relación si no está cargada
+        $solicitud->load(['usuario', 'autorizador', 'ejecucion', 'anulacion']);
+
+        return view('GestionSolicitudes.anulacion.show', compact('solicitud'));
     }
 
     /**

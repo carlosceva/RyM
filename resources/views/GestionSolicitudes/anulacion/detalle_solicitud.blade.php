@@ -204,6 +204,108 @@
                             <i class="fa fa-trash"></i> Anular solicitud
                         </button>
                     </form>
+
+                    <div class="d-flex flex-column flex-sm-row justify-content-center align-items-center">
+                                
+                        @if($solicitud->estado == 'pendiente')
+                                    @can('Anulacion_aprobar')
+                                    <!-- Aprobar con modal -->
+                                    <button class="btn btn-sm btn-success mb-2 mb-sm-0 me-sm-2 d-flex align-items-center justify-content-center"
+                                            style="width: 36px; height: 36px;"
+                                            data-bs-toggle="modal" data-bs-target="#observacionModal"
+                                            title="Aprobar"
+                                            onclick="setAccionAndSolicitudId('aprobar', {{ $solicitud->id }})">
+                                        <i class="fa fa-check"></i>
+                                    </button>
+                                    @endcan
+                                    @can('Anulacion_reprobar')
+                                    <!-- Rechazar con modal -->
+                                    <button class="btn btn-sm btn-danger mb-2 mb-sm-0 me-sm-2 d-flex align-items-center justify-content-center"
+                                            style="width: 36px; height: 36px;"
+                                            data-bs-toggle="modal" data-bs-target="#observacionModal"
+                                            title="Rechazar"
+                                            onclick="setAccionAndSolicitudId('rechazar', {{ $solicitud->id }})">
+                                        <i class="fa fa-times"></i>
+                                    </button>
+                                    @endcan
+                        @endif
+
+                        @if ($solicitud->estado === 'aprobada' && !$solicitud->ejecucion)
+                            @php
+                                $anulacion = $solicitud->anulacion;
+                                $tienePago = $anulacion->tiene_pago;
+                                $tieneEntrega = $anulacion->tiene_entrega;
+                                $entregaFisica = $anulacion->entrega_fisica;
+                            @endphp
+
+                            @if ($tienePago)
+                                @can('Anulacion_ejecutar')
+                                    <!-- Si hay pago, se puede ejecutar directamente como devolución -->
+                                    <button type="button" class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#modalEjecutar{{ $solicitud->id }}">
+                                        Ejecutar
+                                    </button>
+                                    &nbsp;
+                                @endcan
+                            @else
+                                {{-- No hay pago --}}
+                                @if (is_null($tieneEntrega))
+                                    {{-- Aún no se ha verificado entrega --}}
+                                    @can('Anulacion_entrega')
+                                        @can('Anulacion_ejecutar')
+                                            <button class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#modalEntrega{{ $solicitud->id }}">
+                                                Confirmar Despacho
+                                            </button>
+                                            &nbsp;
+                                        @endcan
+                                    @endcan
+                                @elseif($tieneEntrega)
+                                    {{-- Ya se confirmó que sí hubo entrega → ejecutar como devolución --}}
+                                    @can('Anulacion_ejecutar')
+                                        <button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#modalEjecutar{{ $solicitud->id }}">
+                                            Ejecutar
+                                        </button>
+                                        &nbsp;
+                                    @endcan
+                                @else
+                                    {{-- Se indicó que NO hubo entrega --}}
+                                    @if (is_null($entregaFisica))
+                                        {{-- Aún no confirmado por almacén --}}
+                                        @can('Anulacion_entrega')
+                                            @cannot('Anulacion_ejecutar')
+                                                <button class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#modalEntregaF{{ $solicitud->id }}">
+                                                    Registrar Entrega
+                                                </button>
+                                                &nbsp;
+                                            @endcannot
+                                        @endcan
+
+                                        @can('Anulacion_ejecutar')
+                                            <button class="btn btn-outline-secondary btn-sm" disabled style="background-color: white;">
+                                                ⏳ Esperando confirmación
+                                            </button>
+                                            &nbsp;
+                                        @endcan
+                                    @elseif($entregaFisica === false || $entregaFisica === 0)
+                                        {{-- Almacén confirmó que NO hubo entrega → ejecutar como anulación --}}
+                                        @can('Anulacion_ejecutar')
+                                            <button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#modalEjecutar{{ $solicitud->id }}">
+                                                Ejecutar
+                                            </button>
+                                            &nbsp;
+                                        @endcan
+                                    @elseif($entregaFisica === true || $entregaFisica === 1)
+                                        {{-- Almacén corrigió y dijo que SÍ hubo entrega --}}
+                                        @can('Anulacion_ejecutar')
+                                            <button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#modalEjecutar{{ $solicitud->id }}">
+                                                Ejecutar
+                                            </button>
+                                            &nbsp;
+                                        @endcan
+                                    @endif
+                                @endif
+                            @endif
+                        @endif
+                    </div>
                 </div>
                 @endcan
                 <!-- Columna derecha -->

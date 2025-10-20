@@ -137,6 +137,13 @@ Route::middleware('auth')->group(function () {
     Route::get('/configuracion', [ConfiguracionController::class, 'index'])->name('configuracion.index');
     Route::post('/configuracion/twilio', [ConfiguracionController::class, 'actualizarTwilio'])->name('configuracion.twilio');
 
+    Route::get('/PrecioEspecial/solicitud/{solicitud}', [PrecioEspecialController::class, 'show'])->name('PrecioEspecial.show');
+    Route::get('/Sobregiro/solicitud/{solicitud}', [SobregiroController::class, 'show'])->name('sobregiro.show');
+    Route::get('/Baja/solicitud/{solicitud}', [BajaMercaderiaController::class, 'show'])->name('baja.show');
+    Route::get('/Muestra/solicitud/{solicitud}', [MuestraMercaderiaController::class, 'show'])->name('muestra.show');
+    Route::get('/Devolucion/solicitud/{solicitud}', [DevolucionController::class, 'show'])->name('devolucion.show');
+    Route::get('/Anulacion/solicitud/{solicitud}', [AnulacionController::class, 'show'])->name('anulacion.show');
+
 });
 
 Route::middleware(['role:Administrador'])->group(function () {

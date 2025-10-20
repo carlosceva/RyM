@@ -372,7 +372,15 @@ class PrecioEspecialController extends Controller
      */
     public function show(Solicitud $solicitud)
     {
-        //
+        // Asegurarse que esta solicitud es del tipo "precio especial" y está activa
+        if ($solicitud->tipo !== 'precio_especial' || $solicitud->estado === 'inactivo') {
+            abort(404);
+        }
+
+        // Cargar la relación si no está cargada
+        $solicitud->load(['usuario', 'autorizador', 'ejecucion', 'precioEspecial']);
+
+        return view('GestionSolicitudes.precio.show', compact('solicitud'));
     }
 
     /**

@@ -8,9 +8,11 @@ class PrecioEspecialMensaje
 {
     public static function generar(Solicitud $solicitud, string $etapa): array
     {
+        $link = route('PrecioEspecial.show', ['solicitud' => $solicitud->id]);
+
         return match ($etapa) {
             'crear' => [
-                'template' => 'solicitud_plantilla',
+                'template' => 'enlace_solicitud_plantilla',
                 'params' => [
                     'creado',
                     'Precio Especial',
@@ -19,10 +21,11 @@ class PrecioEspecialMensaje
                     $solicitud->fecha_solicitud->format('d/m/Y H:i'),
                     'Solicitado',
                     $solicitud->usuario->name,
+                    $link,
                 ],
             ],
             'aprobar' => [
-                'template' => 'solicitud_plantilla',
+                'template' => 'enlace_solicitud_plantilla',
                 'params' => [
                     'aprobado',
                     'Precio Especial',
@@ -31,30 +34,34 @@ class PrecioEspecialMensaje
                     $solicitud->fecha_autorizacion->format('d/m/Y H:i'),
                     'Autorizado',
                     $solicitud->autorizador->name,
+                    $link,
                 ],
             ],
             'reprobar' => [
-                'template' => 'solicitud_reprobada',
+                'template' => 'enlace_solicitud_reprobada',
                 'params' => [
                     'Precio Especial',
                     $solicitud->id,
+                    $link,
                 ],
             ],
             'confirmar' => [
-                'template' => 'solicitud_confirmar_venta',
+                'template' => 'enlace_solicitud_confirmar_venta',
                 'params' => [
                     $solicitud->id,
                     now()->format('d/m/Y H:i'),
                     auth()->user()->name,
+                    $link,
                 ],
             ],
             'ejecutar' => [
-                'template' => 'solicitud_ejecutar',
+                'template' => 'enlace_solicitud_ejecutar',
                 'params' => [
                     'Precio Especial',
                     $solicitud->id,
                     now()->format('d/m/Y H:i'),
                     auth()->user()->name,
+                    $link,
                 ],
             ],
             default => [

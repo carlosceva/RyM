@@ -229,6 +229,50 @@
                             <i class="fa fa-trash"></i> Anular solicitud
                         </button>
                     </form>
+
+                    <div class="d-flex flex-column flex-sm-row justify-content-center align-items-center">
+                                
+                        @if($solicitud->estado == 'pendiente')
+                            @can('Baja_confirmar')
+                            <!-- Confirmar con modal -->                      
+                            <button type="button" class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#modalConfirmar{{ $solicitud->id }}">
+                                    Confirmar
+                                </button>
+                            @endcan
+                        @endif
+
+                        @if($solicitud->estado == 'confirmada')
+                            @can('Baja_aprobar')
+                            <!-- Aprobar con modal -->
+                            <button class="btn btn-sm btn-success mb-2 mb-sm-0 me-sm-2 d-flex align-items-center justify-content-center"
+                                    style="width: 36px; height: 36px;"
+                                    data-bs-toggle="modal" data-bs-target="#observacionModal"
+                                    title="Aprobar"
+                                    onclick="setAccionAndSolicitudId('aprobar', {{ $solicitud->id }})">
+                                <i class="fa fa-check"></i>
+                            </button>
+                            
+                            <!-- Rechazar con modal -->
+                            <button class="btn btn-sm btn-danger mb-2 mb-sm-0 me-sm-2 d-flex align-items-center justify-content-center"
+                                    style="width: 36px; height: 36px;"
+                                    data-bs-toggle="modal" data-bs-target="#observacionModal"
+                                    title="Rechazar"
+                                    onclick="setAccionAndSolicitudId('rechazar', {{ $solicitud->id }})">
+                                <i class="fa fa-times"></i>
+                            </button>
+                            @endcan
+
+                        @endif
+
+                        @can('Baja_ejecutar')
+                            @if ($solicitud->estado === 'aprobada' && !$solicitud->ejecucion)
+                                <button type="button" class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#modalEjecutar{{ $solicitud->id }}">
+                                    Ejecutar
+                                </button>
+                            @endif
+                        @endcan
+                        
+                    </div>
                 </div>
                 @endcan
                 <!-- Columna derecha -->

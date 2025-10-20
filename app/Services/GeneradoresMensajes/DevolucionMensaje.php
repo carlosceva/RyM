@@ -8,9 +8,11 @@ class DevolucionMensaje
 {
     public static function generar(Solicitud $solicitud, string $etapa): array
     {
+        $link = route('devolucion.show', ['solicitud' => $solicitud->id]);
+
         return match ($etapa) {
             'crear' => [
-                'template' => 'solicitud_plantilla',
+                'template' => 'enlace_solicitud_plantilla',
                 'params' => [
                     'creado',
                     'Devolución',
@@ -19,10 +21,11 @@ class DevolucionMensaje
                     $solicitud->fecha_solicitud->format('d/m/Y H:i'),
                     'Solicitado',
                     $solicitud->usuario->name,
+                    $link
                 ],
             ],
             'crear_anulacion' => [
-                'template' => 'solicitud_plantilla',
+                'template' => 'enlace_solicitud_plantilla',
                 'params' => [
                     'creado',
                     'Anulación',
@@ -31,10 +34,11 @@ class DevolucionMensaje
                     now()->format('d/m/Y H:i'),
                     'Solicitado',
                     $solicitud->usuario->name,
+                    $link
                 ],
             ],
             'aprobar' => [
-                'template' => 'solicitud_plantilla',
+                'template' => 'enlace_solicitud_plantilla',
                 'params' => [
                     'aprobado',
                     'Devolución',
@@ -43,47 +47,53 @@ class DevolucionMensaje
                     $solicitud->fecha_autorizacion->format('d/m/Y H:i'),
                     'Autorizado',
                     $solicitud->autorizador->name,
+                    $link
                 ],
             ],
             'reprobar' => [
-                'template' => 'solicitud_reprobada',
+                'template' => 'enlace_solicitud_reprobada',
                 'params' => [
                     'Devolucion de Venta',
                     $solicitud->id,
+                    $link
                 ],
             ],
             'ejecutar_anulacion' => [
-                'template' => 'solicitud_ejecutar',
+                'template' => 'enlace_solicitud_ejecutar',
                 'params' => [
                     'Anulación',
                     $solicitud->id,
                     now()->format('d/m/Y H:i'),
                     auth()->user()->name,
+                    $link
                 ],
             ],
             'ejecutar_devolucion' => [
-                'template' => 'solicitud_ejecutar',
+                'template' => 'enlace_solicitud_ejecutar',
                 'params' => [
                     'Devolución',
                     $solicitud->id,
                     now()->format('d/m/Y H:i'),
                     auth()->user()->name,
+                    $link
                 ],
             ],
             'verificar_entrega' => [
-                'template' => 'verificar_entrega',
+                'template' => 'enlace_verificar_entrega',
                 'params' => [
                     'Devolución',
                     $solicitud->id,
                     now()->format('d/m/Y H:i'),
+                    $link
                 ],
             ],
             'verificar_entrega_fisica' => [
-                'template' => 'verificar_entrega_fisica',
+                'template' => 'enlace_verificar_entrega_fisica',
                 'params' => [
                     'Devolución',
                     $solicitud->id,
                     now()->format('d/m/Y H:i'),
+                    $link
                 ],
             ],
             default => [

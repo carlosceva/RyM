@@ -16,9 +16,34 @@ return [
     // sobregiro_confirmar 4 variable
     'sobregiro_confirmar'         => 'HX49416032c50783dbe0b4a4d6bcf13c73',
 
+    // solicitud reprobar
     'solicitud_reprobar' => 'HX5cf1c0798d51dcdb238221417e2616fd',
 
     'solicitud_reprobada'=> 'HX21d3c9be1fda618aeb673500148f0b01',
 
+    // solicitud confirmar venta
     'solicitud_confirmar_venta' => 'HXea5bab5426a606ca45989c410b4153d6',
+
+    // ---------------- LINKS ---------------------
+
+    // solicitud_plantilla 7 variables + link
+    'enlace_solicitud_plantilla' => 'HXf340e09b6edc486eaf712481ac805e3d',
+
+    // solicitud_ejecutar 4 variables + link
+    'enlace_solicitud_ejecutar' => 'HX64b6515d9bc4a0d5192cde1f12404b0e',
+
+    // verificar_entrega 3 variables + link
+    'enlace_verificar_entrega' => 'HXef73aab11cc25f59acf29ed1af94453a',
+
+    // verificar_entrega_fisica 3 variables + link
+    'enlace_verificar_entrega_fisica' => 'HXd73b52de0b88088f5ab41d916d5e1dcd',
+
+    // sobregiro_confirmar 4 variable + link
+    'enlace_sobregiro_confirmar' => 'HX43d1d5e1efa50110914b59c1f672334d',
+
+    // solicitud reprobar + link
+    'enlace_solicitud_reprobada' => 'HX9c97b424061835d7b5e99fdba5aff3cb',
+
+    // solicitud confirmar venta + link
+    'enlace_solicitud_confirmar_venta' => 'HXa2320dc8893828bb78e28355b77ac64e',
 ];

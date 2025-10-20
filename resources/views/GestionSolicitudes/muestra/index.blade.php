@@ -162,86 +162,15 @@
     </div>
 
     <!-- Modal para ejecutar solicitud -->
-<div class="modal fade" id="modalEjecutar{{ $solicitud->id }}" tabindex="-1" aria-labelledby="modalLabel{{ $solicitud->id }}" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content">
-      <form action="{{ route('muestra.ejecutar', $solicitud->id) }}" method="POST">
-        @csrf
-        @method('POST')
-        <div class="modal-header">
-          <h5 class="modal-title" id="modalLabel{{ $solicitud->id }}">Confirmar Ejecución</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-        </div>
-        <div class="modal-body">
-          <p>¿Está seguro de registrar esta acción?</p>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-          <button type="submit" class="btn btn-success">Ejecutar</button>
-        </div>
-      </form>
-    </div>
-  </div>
-</div>
+    @include('GestionSolicitudes.muestra.modal_ejecutar', ['solicitud' => $solicitud])
+
     @endforeach
  
     @include('GestionSolicitudes.muestra.create')
 
-<!-- Modal para Agregar Observación -->
-<div class="modal fade" id="observacionModal" tabindex="-1" aria-labelledby="observacionModalLabel" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div id="observacionModalHeader" class="modal-header">
-        <h5 class="modal-title" id="observacionModalLabel">Agregar Observación</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        <form id="formObservacion" action="{{ route('muestra.aprobar_o_rechazar') }}" method="POST">
-          @csrf
-          <!-- Campo oculto para la solicitud_id -->
-          <input type="hidden" name="solicitud_id" id="solicitud_id" value="">
-          <input type="hidden" name="accion" id="accion" value="">
+    <!-- Modal para Agregar Observación -->
+    @include('GestionSolicitudes.muestra.modal_observacion')
 
-          <div class="mb-3">
-            <label for="observacion" class="form-label">Observación</label>
-            <textarea name="observacion" class="form-control" rows="3"></textarea>
-          </div>
-
-          <div class="d-flex justify-content-end">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-            <button type="submit" class="btn btn-primary ms-2">Aceptar</button>
-          </div>
-        </form>
-      </div>
-    </div>
-  </div>
-</div>
-
-
-
-<script>
-    function setAccionAndSolicitudId(accion, solicitudId) {
-        // Asigna la acción al campo oculto 'accion'
-        document.getElementById('accion').value = accion;
-        // Asigna la ID de la solicitud al campo oculto 'solicitud_id'
-        document.getElementById('solicitud_id').value = solicitudId;
-        
-        const header = document.getElementById('observacionModalHeader');
-        const title = document.getElementById('observacionModalLabel');
-
-        // Limpiar clases anteriores
-        header.classList.remove('bg-primary', 'bg-danger', 'text-white');
-
-        if (accion === 'aprobar') {
-            header.classList.add('bg-primary', 'text-white');
-            title.textContent = 'Aprobar Solicitud';
-        } else if (accion === 'rechazar') {
-            header.classList.add('bg-danger', 'text-white');
-            title.textContent = 'Rechazar Solicitud';
-        } else {
-            title.textContent = 'Agregar Observación';
-        }
-    }
-</script>
+    @include('GestionSolicitudes.muestra.script_observacion')
 
 @endsection

@@ -336,9 +336,17 @@ class BajaMercaderiaController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(BajaMercaderia $bajaMercaderia)
+    public function show(Solicitud $solicitud)
     {
-        //
+        // Validar que sea del tipo correcto y que esté activo
+        if ($solicitud->tipo !== 'Baja de Mercaderia' || $solicitud->estado === 'inactivo') {
+            abort(404);
+        }
+
+        // Cargar relaciones necesarias
+        $solicitud->load(['usuario', 'autorizador', 'ejecucion', 'bajaMercaderia']);
+
+        return view('GestionSolicitudes.baja.show', compact('solicitud'));
     }
 
     /**

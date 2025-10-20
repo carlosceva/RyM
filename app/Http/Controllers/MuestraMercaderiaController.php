@@ -292,9 +292,16 @@ class MuestraMercaderiaController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(MuestraMercaderia $muestraMercaderia)
+    public function show(Solicitud $solicitud)
     {
-        //
+        if ($solicitud->tipo !== 'Muestra de Mercaderia' || $solicitud->estado === 'inactivo') {
+            abort(404);
+        }
+
+        // Cargar la relación si no está cargada
+        $solicitud->load(['usuario', 'autorizador', 'ejecucion', 'muestraMercaderia']);
+
+        return view('GestionSolicitudes.muestra.show', compact('solicitud'));
     }
 
     /**

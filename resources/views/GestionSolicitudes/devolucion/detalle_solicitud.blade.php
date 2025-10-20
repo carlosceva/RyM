@@ -277,6 +277,102 @@
                             <i class="fa fa-trash"></i> Anular solicitud
                         </button>
                     </form>
+                    <div class="d-flex flex-column flex-sm-row justify-content-center align-items-center">
+                                
+                        @if($solicitud->estado == 'pendiente')
+                            @can('Devolucion_aprobar')
+                            <!-- Aprobar con modal -->
+                            <button class="btn btn-sm btn-success mb-2 mb-sm-0 me-sm-2 d-flex align-items-center justify-content-center"
+                                    style="width: 36px; height: 36px;"
+                                    data-bs-toggle="modal" data-bs-target="#observacionModal"
+                                    title="Aprobar"
+                                    onclick="setAccionAndSolicitudId('aprobar', {{ $solicitud->id }})">
+                                <i class="fa fa-check"></i>
+                            </button>
+                            @endcan
+                            @can('Devolucion_reprobar')
+                            <!-- Rechazar con modal -->
+                            <button class="btn btn-sm btn-danger mb-2 mb-sm-0 me-sm-2 d-flex align-items-center justify-content-center"
+                                    style="width: 36px; height: 36px;"
+                                    data-bs-toggle="modal" data-bs-target="#observacionModal"
+                                    title="Rechazar"
+                                    onclick="setAccionAndSolicitudId('rechazar', {{ $solicitud->id }})">
+                                <i class="fa fa-times"></i>
+                            </button>
+                            @endcan
+                        @endif
+
+                        @php
+                            $devolucion = $solicitud->devolucion;
+
+                            $tienePago = $devolucion?->tiene_pago;
+                            $tieneEntrega = $devolucion?->tiene_entrega;
+                            $entregaFisica = $devolucion?->entrega_fisica;
+                        @endphp
+
+                        @if ($solicitud->estado === 'aprobada' && !$solicitud->ejecucion && !is_null($tienePago))
+
+                            {{-- Paso 1: Aún no se marcó si hubo entrega --}}
+                            @if (is_null($tieneEntrega))
+                                @can('Devolucion_entrega')
+                                    @can('Devolucion_ejecutar')
+                                        <button type="button" class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#modalEntrega{{ $solicitud->id }}">
+                                            Confirmar Despacho
+                                        </button>
+                                        &nbsp;
+                                    @endcan
+                                @endcan
+
+                            {{-- Paso 2: Sí hubo entrega --}}
+                            @elseif ($tieneEntrega)
+                                @can('Devolucion_ejecutar')
+                                    <button type="button" class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#modalEjecutar{{ $solicitud->id }}">
+                                        Ejecutar
+                                    </button>
+                                    &nbsp;
+                                @endcan
+
+                            {{-- Paso 3: No hubo entrega (sin distinguir si tiene pago o no) --}}
+                            @else
+                                @if (is_null($entregaFisica))
+                                    {{-- Esperando confirmación del almacén --}}
+                                    @can('Devolucion_entrega')
+                                        @cannot('Devolucion_ejecutar')
+                                            <button class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#modalEntregaF{{ $solicitud->id }}">
+                                                Registrar Entrega
+                                            </button>
+                                            &nbsp;
+                                        @endcannot
+                                    @endcan
+
+                                    @can('Devolucion_ejecutar')
+                                        <button class="btn btn-outline-secondary btn-sm" disabled style="background-color: white;">
+                                            ⏳ Esperando confirmación
+                                        </button>
+                                        &nbsp;
+                                    @endcan
+
+                                @elseif($entregaFisica === false)
+                                    {{-- No hubo entrega física → ejecutar como anulación --}}
+                                    @can('Devolucion_ejecutar')
+                                        <button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#modalEjecutar{{ $solicitud->id }}">
+                                            Ejecutar
+                                        </button>
+                                        &nbsp;
+                                    @endcan
+
+                                @elseif($entregaFisica === true)
+                                    {{-- Sí hubo entrega física → ejecutar como devolución --}}
+                                    @can('Devolucion_ejecutar')
+                                        <button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#modalEjecutar{{ $solicitud->id }}">
+                                            Ejecutar
+                                        </button>
+                                        &nbsp;
+                                    @endcan
+                                @endif
+                            @endif
+                        @endif
+                    </div>
                 </div>
                 @endcan
                 <!-- Columna derecha -->
