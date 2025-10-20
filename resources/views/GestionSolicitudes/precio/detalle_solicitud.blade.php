@@ -190,9 +190,9 @@
         <!-- Footer con acciones -->
         <div class="card-footer {{ $clase_color }}">
             <div class="row">
-                @can('Precio_especial_borrar')
                 <!-- Columna izquierda -->
                 <div class="col d-flex align-items-center">
+                @can('Precio_especial_borrar')
                     <form action="{{ route('PrecioEspecial.destroy', $solicitud->id) }}" method="POST" onsubmit="return confirm('¿Estás seguro de que deseas anular esta solicitud?');" class="m-0">
                         @csrf
                         @method('DELETE')
@@ -200,7 +200,7 @@
                             <i class="fa fa-trash"></i> Anular solicitud
                         </button>
                     </form>
-
+                @endcan
                     <!-- BOTONES DE ACCIÓN -->
                     <div class="d-flex flex-wrap gap-2 my-3">
 
@@ -250,7 +250,7 @@
                     </div>
                 </div>
                 
-                @endcan
+                
                 <!-- Columna derecha -->
                 <div class="col-auto ms-auto d-flex align-items-center">
                     <a href="{{ route('precioEspecial.descargar.pdf', $solicitud->id) }}" class="btn btn-sm btn-pdf me-2" target="_blank">

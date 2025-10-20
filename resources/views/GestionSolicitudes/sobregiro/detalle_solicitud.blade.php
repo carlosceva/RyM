@@ -172,9 +172,10 @@
         <!-- Footer con acciones -->
         <div class="card-footer {{ $clase_color }}">
             <div class="row">
-                @can('Sobregiro_borrar')
+                
                 <!-- Columna izquierda -->
                 <div class="col d-flex align-items-center">
+                    @can('Sobregiro_borrar')
                     <form action="{{ route('Sobregiro.destroy', $solicitud->id) }}" method="POST" onsubmit="return confirm('¿Estás seguro de que deseas anular esta solicitud?');" class="m-0">
                         @csrf
                         @method('DELETE')
@@ -182,7 +183,7 @@
                             <i class="fa fa-trash"></i> Anular solicitud
                         </button>
                     </form>
-
+                    @endcan
                     <div class="d-flex flex-column flex-sm-row justify-content-center align-items-center">
                             
                             @if($solicitud->estado == 'pendiente')
@@ -224,7 +225,7 @@
                             &nbsp;
                     </div>
                 </div>
-                @endcan
+                
                 <!-- Columna derecha -->
                 <div class="col-auto ms-auto d-flex align-items-center">
                     <a href="{{ route('sobregiro.descargar.pdf', $solicitud->id) }}" class="btn btn-sm btn-pdf me-2" target="_blank">
