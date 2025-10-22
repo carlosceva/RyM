@@ -12,7 +12,7 @@ class BajaMensaje
         
         return match ($etapa) {
             'crear' => [
-                'template' => 'enlace_solicitud_plantilla',
+                'template' => 'nueva_solicitud_plantilla',
                 'params' => [
                     'creado',
                     'Ajuste de Inventario',
@@ -25,7 +25,7 @@ class BajaMensaje
                 ],
             ],
             'confirmar' => [
-                'template' => 'enlace_solicitud_plantilla',
+                'template' => 'nueva_solicitud_plantilla',
                 'params' => [
                     'confirmado',
                     'Ajuste de Inventario',
@@ -38,7 +38,7 @@ class BajaMensaje
                 ],
             ],
             'aprobar' => [
-                'template' => 'enlace_solicitud_plantilla',
+                'template' => 'nueva_solicitud_plantilla',
                 'params' => [
                     'aprobado',
                     'Ajuste de Inventario',

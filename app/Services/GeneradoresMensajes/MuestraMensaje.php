@@ -12,7 +12,7 @@ class MuestraMensaje
 
         return match ($etapa) {
             'crear' => [
-                'template' => 'enlace_solicitud_plantilla',
+                'template' => 'nueva_solicitud_plantilla',
                 'params' => [
                     'creado',
                     'Muestra de Mercaderia',
@@ -25,7 +25,7 @@ class MuestraMensaje
                 ],
             ],
             'aprobar' => [
-                'template' => 'enlace_solicitud_plantilla',
+                'template' => 'nueva_solicitud_plantilla',
                 'params' => [
                     'aprobado',
                     'Muestra de Mercaderia',

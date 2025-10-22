@@ -27,7 +27,7 @@ return [
     // ---------------- LINKS ---------------------
 
     // solicitud_plantilla 7 variables + link
-    'enlace_solicitud_plantilla' => 'HXf340e09b6edc486eaf712481ac805e3d',
+    'nueva_solicitud_plantilla' => 'HX0d7d5d328ba73e59754795fd4aa70f9b',
 
     // solicitud_ejecutar 4 variables + link
     'enlace_solicitud_ejecutar' => 'HX64b6515d9bc4a0d5192cde1f12404b0e',
@@ -45,5 +45,5 @@ return [
     'enlace_solicitud_reprobada' => 'HX9c97b424061835d7b5e99fdba5aff3cb',
 
     // solicitud confirmar venta + link
-    'enlace_solicitud_confirmar_venta' => 'HXa2320dc8893828bb78e28355b77ac64e',
+    'confirmar_solicitud' => 'HX6cd6cffc02a9839f6c290537a096be1e',
 ];

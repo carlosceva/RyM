@@ -12,7 +12,7 @@ class AnulacionMensaje
 
         return match ($etapa) {
             'crear' => [
-                'template' => 'enlace_solicitud_plantilla',
+                'template' => 'nueva_solicitud_plantilla',
                 'params' => [
                     'creado',
                     'Anulación',
@@ -25,7 +25,7 @@ class AnulacionMensaje
                 ],
             ],
             'crear_devolucion' => [
-                'template' => 'enlace_solicitud_plantilla',
+                'template' => 'nueva_solicitud_plantilla',
                 'params' => [
                     'creado',
                     'Devolución',
@@ -38,7 +38,7 @@ class AnulacionMensaje
                 ],
             ],
             'aprobar' => [
-                'template' => 'enlace_solicitud_plantilla',
+                'template' => 'nueva_solicitud_plantilla',
                 'params' => [
                     'aprobado',
                     'Anulación',

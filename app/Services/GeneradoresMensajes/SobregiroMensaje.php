@@ -12,7 +12,7 @@ class SobregiroMensaje
 
         return match ($etapa) {
             'crear' => [
-                'template' => 'enlace_solicitud_plantilla',
+                'template' => 'nueva_solicitud_plantilla',
                 'params' => [
                     'creado',
                     'Sobregiro de Venta',
@@ -21,11 +21,11 @@ class SobregiroMensaje
                     $solicitud->fecha_solicitud->format('d/m/Y H:i'),
                     'Solicitado',
                     $solicitud->usuario->name,
-                    $link
+                    $link,
                 ],
             ],
             'aprobar' => [
-                'template' => 'enlace_solicitud_plantilla',
+                'template' => 'nueva_solicitud_plantilla',
                 'params' => [
                     'aprobado',
                     'Sobregiro de Venta',

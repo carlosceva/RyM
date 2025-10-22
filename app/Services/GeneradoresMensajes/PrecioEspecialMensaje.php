@@ -12,7 +12,7 @@ class PrecioEspecialMensaje
 
         return match ($etapa) {
             'crear' => [
-                'template' => 'enlace_solicitud_plantilla',
+                'template' => 'nueva_solicitud_plantilla',
                 'params' => [
                     'creado',
                     'Precio Especial',
@@ -25,7 +25,7 @@ class PrecioEspecialMensaje
                 ],
             ],
             'aprobar' => [
-                'template' => 'enlace_solicitud_plantilla',
+                'template' => 'nueva_solicitud_plantilla',
                 'params' => [
                     'aprobado',
                     'Precio Especial',
@@ -46,8 +46,9 @@ class PrecioEspecialMensaje
                 ],
             ],
             'confirmar' => [
-                'template' => 'enlace_solicitud_confirmar_venta',
+                'template' => 'confirmar_solicitud',
                 'params' => [
+                    'Precio Especial',
                     $solicitud->id,
                     now()->format('d/m/Y H:i'),
                     auth()->user()->name,
