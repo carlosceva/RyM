@@ -24,6 +24,9 @@ use App\Services\Contracts\WhatsAppServiceInterface;
 use App\Services\GupshupWhatsAppService;
 use GuzzleHttp\Client;
 use App\Http\Controllers\ConfiguracionController;
+use App\Http\Controllers\ExtrasController;
+use App\Http\Controllers\VacacionesController;
+use App\Http\Controllers\CambioMercaderiaController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -137,12 +140,31 @@ Route::middleware('auth')->group(function () {
     Route::get('/configuracion', [ConfiguracionController::class, 'index'])->name('configuracion.index');
     Route::post('/configuracion/twilio', [ConfiguracionController::class, 'actualizarTwilio'])->name('configuracion.twilio');
 
-    Route::get('/PrecioEspecial/solicitud/{solicitud}', [PrecioEspecialController::class, 'show'])->name('PrecioEspecial.show');
-    Route::get('/Sobregiro/solicitud/{solicitud}', [SobregiroController::class, 'show'])->name('sobregiro.show');
-    Route::get('/Baja/solicitud/{solicitud}', [BajaMercaderiaController::class, 'show'])->name('baja.show');
-    Route::get('/Muestra/solicitud/{solicitud}', [MuestraMercaderiaController::class, 'show'])->name('muestra.show');
-    Route::get('/Devolucion/solicitud/{solicitud}', [DevolucionController::class, 'show'])->name('devolucion.show');
-    Route::get('/Anulacion/solicitud/{solicitud}', [AnulacionController::class, 'show'])->name('anulacion.show');
+    Route::get('/PrecioEspecial/solicitud/{solicitud}', [PrecioEspecialController::class, 'show'])->name('PrecioEspecial.show')->middleware('can:Precio_especial_ver');
+    Route::get('/Sobregiro/solicitud/{solicitud}', [SobregiroController::class, 'show'])->name('sobregiro.show')->middleware('can:Sobregiro_ver');
+    Route::get('/Baja/solicitud/{solicitud}', [BajaMercaderiaController::class, 'show'])->name('baja.show')->middleware('can:Baja_ver');
+    Route::get('/Muestra/solicitud/{solicitud}', [MuestraMercaderiaController::class, 'show'])->name('muestra.show')->middleware('can:Muestra_ver');
+    Route::get('/Devolucion/solicitud/{solicitud}', [DevolucionController::class, 'show'])->name('devolucion.show')->middleware('can:Devolucion_ver');
+    Route::get('/Anulacion/solicitud/{solicitud}', [AnulacionController::class, 'show'])->name('anulacion.show')->middleware('can:Anulacion_ver');
+    Route::get('/CambiosFisicos/solicitud/{solicitud}', [CambioMercaderiaController::class, 'show'])->name('cambio.show')->middleware('can:Cambio_ver');
+    Route::get('/Extras/solicitud/{solicitud}', [ExtrasController::class, 'show'])->name('extra.show')->middleware('can:Extra_ver');
+    Route::get('/Vacaciones/solicitud/{solicitud}', [VacacionesController::class, 'show'])->name('vacacion.show')->middleware('Vacaciones_ver');
+
+    Route::resource('CambiosFisicos', CambioMercaderiaController::class)->middleware('can:Cambio_ver');
+    Route::get('/Cambio/{id}/descargar/pdf', [CambioMercaderiaController::class, 'descargarPDF'])->name('cambio.descargar.pdf');
+    Route::post('Cambio/aprobar_o_rechazar', [CambioMercaderiaController::class, 'aprobar_o_rechazar'])->name('cambio.aprobar_o_rechazar');
+    Route::post('/Cambio/{id}/ejecutar', [CambioMercaderiaController::class, 'ejecutar'])->name('cambio.ejecutar');
+
+    Route::resource('Extras', ExtrasController::class)->middleware('can:Extra_ver');
+    Route::get('/Extras/{id}/descargar/pdf', [ExtrasController::class, 'descargarPDF'])->name('extra.descargar.pdf');
+    Route::post('Extras/aprobar_o_rechazar', [ExtrasController::class, 'aprobar_o_rechazar'])->name('extra.aprobar_o_rechazar');
+    Route::post('/Extras/{id}/ejecutar', [ExtrasController::class, 'ejecutar'])->name('extra.ejecutar');
+    Route::post('/Extras/{id}/confirmar', [ExtrasController::class, 'confirmar'])->name('extra.confirmar');
+
+    Route::resource('Vacaciones', VacacionesController::class)->middleware('can:Vacaciones_ver');
+    Route::get('/Vacaciones/{id}/descargar/pdf', [VacacionesController::class, 'descargarPDF'])->name('vacacion.descargar.pdf');
+    Route::post('Vacaciones/aprobar_o_rechazar', [VacacionesController::class, 'aprobar_o_rechazar'])->name('vacacion.aprobar_o_rechazar');
+    Route::post('/Vacaciones/{id}/ejecutar', [VacacionesController::class, 'ejecutar'])->name('vacacion.ejecutar');
 
 });
 

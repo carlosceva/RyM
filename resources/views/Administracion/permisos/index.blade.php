@@ -41,7 +41,7 @@
             </thead>
             <tbody>
                 @php
-                    $solicitudes = ['Anulacion', 'Devolucion', 'Precio_especial', 'Sobregiro', 'Baja', 'Muestra'];
+                    $solicitudes = ['Anulacion', 'Devolucion', 'Precio_especial', 'Sobregiro', 'Baja', 'Muestra', 'Cambio', 'Vacaciones', 'Extra'];
                     $acciones = ['ver', 'crear', 'borrar', 'aprobar', 'reprobar', 'ejecutar', 'entrega', 'pago'];
                 @endphp
 
@@ -222,7 +222,7 @@
                 </div>
                 <div class="modal-body scrollable-body">
                     @php
-                        $solicitudes = ['Anulacion', 'Devolucion', 'Precio_especial', 'Sobregiro', 'Baja', 'Muestra'];
+                        $solicitudes = ['Anulacion', 'Devolucion', 'Precio_especial', 'Sobregiro', 'Baja', 'Muestra', 'Cambio', 'Vacaciones', 'Extra'];
                         $acciones = ['ver', 'crear', 'editar', 'borrar', 'aprobar', 'reprobar', 'ejecutar', 'entrega', 'pago'];
                         $excluir = collect($solicitudes)->flatMap(fn($s) => collect($acciones)->map(fn($a) => strtolower("{$s}_{$a}")));
                         $otrosPermisos = $permissions->reject(fn ($permiso) => $excluir->contains(strtolower($permiso->name)));
@@ -249,8 +249,23 @@
                                                     id="permiso_{{ $permiso->id }}"
                                                     name="permisos[]" value="{{ $permiso->id }}"
                                                     {{ $role->hasPermissionTo($permiso->name) ? 'checked' : '' }}>
+
+                                                @php
+                                                    // Obtener nombre del permiso (ejemplo: Extra_confirmar → confirmar)
+                                                    $nombre = Str::after($permiso->name, $modulo . '_');
+                                                    $nombre = str_replace('_', ' ', $nombre);
+
+                                                    // ✔ SOLO si modulo = Extra y permiso = confirmar → registrar
+                                                    if (strtolower($modulo) === 'extra' && strtolower($nombre) === 'confirmar') {
+                                                        $nombre = 'registrar';
+                                                    }
+
+                                                    // Formato final para mostrar
+                                                    $nombre = ucwords($nombre);
+                                                @endphp
+
                                                 <label class="form-check-label small" for="permiso_{{ $permiso->id }}">
-                                                    {{ ucwords(str_replace('_', ' ', Str::after($permiso->name, $modulo . '_'))) }}
+                                                    {{ $nombre }}
                                                 </label>
                                             </div>
                                         </div>
@@ -258,7 +273,6 @@
                                 </div>
                             </div>
                         @endforeach
-
                     @endif
                 </div>
                 <div class="modal-footer">

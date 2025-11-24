@@ -26,7 +26,7 @@ class NotificadorSolicitudService
         $tipo = $solicitud->tipo;
         
         $config = config("notificaciones_solicitudes.$tipo.$etapa");
-
+        
         if (!$config) return;
 
         $usuarios = $this->resolverDestinatarios($config, $solicitud);
@@ -294,6 +294,49 @@ class NotificadorSolicitudService
             return $usuarios->unique('id');
         }
 
+        if ($solicitud->tipo === 'Cambio fisico en Mercaderia' && !empty($reglas)) {
+
+            $hayReglaEncargado = in_array('encargado_almacen', $reglas);
+            $usuariosEncargado = collect();
+
+            foreach ($reglas as $regla) {
+                
+                // 👉 Buscar encargado del almacén asignado a este cambio
+                if ($regla === 'encargado_almacen') {
+                    $almacenId = $solicitud->cambioMercaderia?->id_almacen;
+                    if ($almacenId) {
+                        $almacen = \App\Models\Almacen::find($almacenId);
+                        if ($almacen && $almacen->encargado) {
+                            $usuariosEncargado->push($almacen->encargado);
+                        }
+                    }
+                }
+
+                if (str_starts_with($regla, 'permiso:')) {
+                    $permiso = explode(':', $regla)[1];
+                    $usuarios = $usuarios->merge(User::whereHas('roles.permissions', function ($q) use ($permiso) {
+                        $q->where('name', $permiso);
+                    })->get());
+                }
+
+                if ($regla === 'creador' && $solicitud->usuario) {
+                    $usuarios->push($solicitud->usuario);
+                }
+
+                if (str_starts_with($regla, 'rol:')) {
+                    $rol = explode(':', $regla)[1];
+                    $usuarios = $usuarios->merge(User::role($rol)->get());
+                }
+                
+            }
+
+            if ($hayReglaEncargado && $usuariosEncargado->isNotEmpty()) {
+                return $usuariosEncargado->unique('id');
+            }
+            
+            return $usuarios->unique('id');
+        }
+        
         // Lógica por defecto para otros tipos
         foreach ($reglas as $regla) {
             if (str_starts_with($regla, 'permiso:')) {
@@ -332,6 +375,9 @@ class NotificadorSolicitudService
             'Sobregiro de Venta' => \App\Services\GeneradoresMensajes\SobregiroMensaje::class,
             'Devolucion de Venta' => \App\Services\GeneradoresMensajes\DevolucionMensaje::class,
             'Baja de Mercaderia' => \App\Services\GeneradoresMensajes\BajaMensaje::class,
+            'Cambio fisico en Mercaderia' => \App\Services\GeneradoresMensajes\CambioMensaje::class,
+            'Vacacion' => \App\Services\GeneradoresMensajes\VacacionMensaje::class,
+            'Extras' => \App\Services\GeneradoresMensajes\ExtraMensaje::class,
             // 'otro_tipo' => \App\Services\GeneradoresMensajes\OtroTipoMensaje::class,
             default => null,
         };
@@ -466,6 +512,14 @@ class NotificadorSolicitudService
                             $solicitud->id,
                             now()->format('d/m/Y H:i'),
                             auth()->user()->name,
+                        ];
+                            break;
+                        }else if($solicitud->tipo === 'Extras'){
+                            $template = 'extra_registrar';
+                            $params = [
+                            $solicitud->id,
+                            $solicitud->extra->fecha_confirmacion->format('d/m/Y H:i'),
+                            $solicitud->extra->confirmador->name,
                         ];
                             break;
                         }

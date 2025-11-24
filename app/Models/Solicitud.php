@@ -83,4 +83,19 @@ class Solicitud extends Model
                     ->whereDoesntHave('ejecucion');
     }
 
+    public function cambioMercaderia()
+    {
+        return $this->hasOne(Cambio::class, 'id_solicitud');
+    }
+
+    public function extra()
+    {
+        return $this->hasOne(Extras::class, 'id_solicitud');
+    }
+
+    public function vacacion()
+    {
+        return $this->hasOne(Vacaciones::class, 'id_solicitud');
+    }
+
 }

@@ -21,7 +21,7 @@
         : 'bg-warning text-dark';
 
     $tipo = Str::lower(trim($solicitud->tipo));
-    $col = in_array($tipo, ['devolucion de venta', 'anulacion de venta', 'baja de mercaderia', 'sobregiro de venta']) ? 'col-md-3' : 'col-md-4';
+    $col = in_array($tipo, ['devolucion de venta', 'anulacion de venta', 'baja de mercaderia', 'sobregiro de venta', 'extras']) ? 'col-md-3' : 'col-md-4';
 @endphp
 
 <div class="container-fluid">
@@ -71,7 +71,12 @@
                                 <p>Rechazada</p>
                                 <p>{{ $solicitud->fecha_autorizacion ?? '---' }}</p>
                             @elseif($estado === 'confirmada')
-                                <p class="mb-0">Pendiente</p>
+                                @if($tipo === 'extras')
+                                    <p>{{ optional($solicitud->autorizador)->name ?? '---' }}</p>
+                                    <p>{{ $solicitud->fecha_autorizacion ?? '---' }}</p>
+                                @else
+                                    <p class="mb-0">Pendiente</p>
+                                @endif
                             @endif
                         @else
                             <p>{{ optional($solicitud->autorizador)->name ?? '---' }}</p>
@@ -152,6 +157,25 @@
                         @elseif(in_array($estado, ['confirmada', 'ejecutada']))
                             <p>{{ $solicitud->sobregiro->confirmador->name ?? '---' }}</p>
                             <p>{{ $solicitud->sobregiro->fecha_confirmacion ?? 'N/D' }}</p>
+                        @else
+                            <p>{{ ucfirst($estado) }}</p>
+                            <p>{{ $solicitud->fecha_autorizacion ?? '---' }}</p>
+                        @endif
+                    </div>
+                </div>
+            </div>
+        @endif
+
+        @if($tipo === 'extras')
+            <div class="{{ $col }} mb-3">
+                <h6 class="text-center mb-1"><strong>Registro</strong></h6>
+                <div class="card {{ $aprobacionClass }} shadow border-0">
+                    <div class="card-body text-center">
+                        @if(in_array($estado, ['pendiente', 'aprobada']))
+                            <p class="mb-0">Pendiente</p>
+                        @elseif(in_array($estado, ['confirmada', 'ejecutada']))
+                            <p>{{ $solicitud->extra->confirmador->name ?? '---' }}</p>
+                            <p>{{ $solicitud->extra->fecha_confirmacion ?? 'N/D' }}</p>
                         @else
                             <p>{{ ucfirst($estado) }}</p>
                             <p>{{ $solicitud->fecha_autorizacion ?? '---' }}</p>

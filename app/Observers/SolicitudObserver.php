@@ -23,6 +23,9 @@ class SolicitudObserver
             'Baja de Mercaderia' => 'Baja',
             'Muestra de Mercaderia' => 'Muestra',
             'Sobregiro de Venta' => 'Sobregiro',
+            'Cambio fisico en Mercaderia' => 'Cambio',
+            'Extras' => 'Extra',
+            'Vacacion' => 'Vacaciones',
         ];
 
         $tipo = $solicitud->tipo;

@@ -193,7 +193,7 @@
             </ul>
           </li>
           @endif
-          @if (auth()->user()->can('Precio_especial_ver') || auth()->user()->can('Muestra_ver') || auth()->user()->can('Devolucion_ver') || auth()->user()->can('Anulacion_ver') || auth()->user()->can('Sobregiro_ver') || auth()->user()->can('Baja_ver')) 
+          @if (auth()->user()->can('Precio_especial_ver') || auth()->user()->can('Muestra_ver') || auth()->user()->can('Devolucion_ver') || auth()->user()->can('Anulacion_ver') || auth()->user()->can('Sobregiro_ver') || auth()->user()->can('Baja_ver') || auth()->user()->can('Cambio_ver') || auth()->user()->can('Vacaciones_ver') || auth()->user()->can('Extra_ver')) 
           <li class="nav-item menu-is-opening menu-open">  
             <a href="#" class="nav-link">
               <i class="nav-icon fas fa-copy" style="color: orange"></i>
@@ -248,7 +248,7 @@
               @can('Muestra_ver')
               <li class="nav-item">
                 <a href="{{route('Muestra.index')}}" class="nav-link {{ request()->routeIs('Muestra.index') ? 'active' : '' }}">
-                  <i class="nav-icon far fa-file-alt"></i>
+                  <i class="nav-icon fa fa-archive"></i>
                   <p>Muestra de mercadería</p>
                 </a>
               </li>
@@ -258,6 +258,30 @@
                 <a href="{{route('Baja.index')}}" class="nav-link {{ request()->routeIs('Baja.index') ? 'active' : '' }}">
                   <i class="nav-icon far fa-trash-alt"></i>
                   <p>Ajuste de inventario</p>
+                </a>
+              </li>
+              @endcan
+              @can('Cambio_ver')
+              <li class="nav-item">
+                <a href="{{route('CambiosFisicos.index')}}" class="nav-link {{ request()->routeIs('CambiosFisicos.index') ? 'active' : '' }}">
+                  <i class="nav-icon fa fa-box"></i>
+                  <p>Cambios fisicos</p>
+                </a>
+              </li>
+              @endcan
+              @can('Vacaciones_ver')
+              <li class="nav-item">
+                <a href="{{route('Vacaciones.index')}}" class="nav-link {{ request()->routeIs('Vacaciones.index') ? 'active' : '' }}">
+                  <i class="nav-icon fa fa-plane"></i>
+                  <p>Permisos/vacaciones</p>
+                </a>
+              </li>
+              @endcan
+              @can('Extra_ver')
+              <li class="nav-item">
+                <a href="{{route('Extras.index')}}" class="nav-link {{ request()->routeIs('Extras.index') ? 'active' : '' }}">
+                  <i class="nav-icon fas fa-utensils"></i>
+                  <p>Extras</p>
                 </a>
               </li>
               @endcan
@@ -518,6 +542,9 @@ $(document).ready(function () {
   initDataTable('#solicitud_devolucion', 'Devolucion', 'Solicitud de Devolucion de Venta', [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16]);
   initDataTable('#solicitud_anulacion', 'Anulacion', 'Solicitud de Anulacion de Venta', [0,1,2,3,4,5,6,7,8,9,10,11,12]);
   initDataTable('#solicitud_precio', 'Precio_Especial', 'Solicitud de Precio Especial de Venta', [0,1,2,3,4,5,6,7,8,9,10]);
+  initDataTable('#solicitud_cambio', 'Cambio', 'Solicitud de Cambio Fisico de Mercaderia', [0,1,2,3,4,5,6,7,8,9,10,11,12,13]);
+  initDataTable('#solicitud_extra', 'Extra', 'Solicitudes Extras', [0,1,2,3,4,5,6,7,8,9,10,11]);
+  initDataTable('#solicitud_vacacion', 'Vacacion', 'Solicitud de Permisos/Vacaciones', [0,1,2,3,4,5,6,7,8,9,10,11,12]);
 });
 </script>
 

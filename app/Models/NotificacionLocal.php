@@ -56,6 +56,10 @@ class NotificacionLocal extends Model
             case 'sobregiro_confirmar':
                 return "Se ha confirmado una solicitud de Sobregiro de Venta y esta esperando su ejecucion. \n" .
                         "Nro solicitud: {$this->params[0]} – Fecha: {$this->params[1]} – Por: {$this->params[2]} - COD: {$this->params[3]}";
+            
+            case 'extra_registrar':
+                return "Se ha registrado una Solicitud de Extras y esta esperando su ejecucion. \n" .
+                        "Nro solicitud: {$this->params[0]} – Fecha: {$this->params[1]} – Por: {$this->params[2]}";
 
             default:
                 return "Nueva notificación";

@@ -46,4 +46,7 @@ return [
 
     // solicitud confirmar venta + link
     'confirmar_solicitud' => 'HX6cd6cffc02a9839f6c290537a096be1e',
+
+    // solicitud registrar extra + link
+    'enlace_extras_registrar' => 'HX3eb7c5dd6aff891820e99140c57a009d',
 ];

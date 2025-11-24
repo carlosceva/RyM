@@ -167,5 +167,60 @@ return [
         ],
     ],
 
+    'Cambio fisico en Mercaderia' => [
+        'crear' => [
+            'destinatarios' => ['permiso:Cambio_aprobar'],
+        ],
+        'aprobar' => [
+            'destinatarios' => ['permiso:Cambio_ejecutar', 'encargado_almacen'],
+        ],
+        'reprobar' => [
+            'condiciones' => [
+                'default' => ['creador'],
+            ]
+        ],
+        'ejecutar' => [
+            'destinatarios' => ['creador'],
+        ],
+    ],
+
+    'Vacacion' => [
+        'crear' => [
+            'destinatarios' => ['permiso:Vacaciones_aprobar'],
+        ],
+        'aprobar' => [
+            'destinatarios' => ['permiso:Vacaciones_ejecutar'],
+        ],
+        'reprobar' => [
+            'condiciones' => [
+                'default' => ['creador'],
+            ]
+        ],
+        'ejecutar' => [
+            'destinatarios' => ['creador'],
+        ],
+    ],
+
+    'Extras' => [
+        'crear' => [
+            'destinatarios' => ['permiso:Extra_aprobar'],
+        ],
+        'aprobar' => [
+            'destinatarios' => ['permiso:Extra_confirmar'],
+        ],
+        'confirmar' => [
+            'destinatarios' => ['permiso:Extra_ejecutar'],
+        ],
+        'reprobar' => [
+            'condiciones' => [
+                'default' => ['creador'],
+            ]
+        ],
+        'ejecutar' => [
+            'destinatarios' => ['creador'],
+        ],
+    ],
+
+
     // Agregaremos más tipos aquí después
 ];
