@@ -544,7 +544,7 @@ $(document).ready(function () {
   initDataTable('#solicitud_precio', 'Precio_Especial', 'Solicitud de Precio Especial de Venta', [0,1,2,3,4,5,6,7,8,9,10]);
   initDataTable('#solicitud_cambio', 'Cambio', 'Solicitud de Cambio Fisico de Mercaderia', [0,1,2,3,4,5,6,7,8,9,10,11,12,13]);
   initDataTable('#solicitud_extra', 'Extra', 'Solicitudes Extras', [0,1,2,3,4,5,6,7,8,9,10,11]);
-  initDataTable('#solicitud_vacacion', 'Vacacion', 'Solicitud de Permisos/Vacaciones', [0,1,2,3,4,5,6,7,8,9,10,11,12]);
+  initDataTable('#solicitud_vacacion', 'Vacacion', 'Solicitud de Permisos/Vacaciones', [0,1,2,3,4,5,6,7,8,9,10,11,12,13]);
 });
 </script>
 

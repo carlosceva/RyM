@@ -103,7 +103,7 @@
                     <div class="d-flex align-items-center mb-2">
                         <strong class="me-2">Motivo:</strong>
                         <div class="border p-2 rounded bg-light small flex-fill">
-                            {{ $solicitud->glosa ?? 'Sin glosa' }}
+                            {{ $solicitud->cambioMercaderia?->motivo ?? 'Sin glosa' }}
                         </div>
                     </div>
 

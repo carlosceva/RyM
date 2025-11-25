@@ -434,6 +434,17 @@ class NotificadorSolicitudService
                                 'Autorizado',
                                 $solicitud->autorizador->name,
                             ];
+                        }else if($solicitud->tipo === 'Extras'){
+                            $template = 'solicitud_plantilla';
+                            $params =  [
+                                'aprobado',
+                                'Extras',
+                                'Registro',
+                                $solicitud->id,
+                                $solicitud->fecha_autorizacion->format('d/m/Y H:i'),
+                                'Autorizado',
+                                $solicitud->autorizador->name,
+                            ];
                         }else{
                             $template = 'solicitud_plantilla';
                             $params =  [

@@ -26,6 +26,18 @@
             </div>
           </div>
 
+          <!-- Tipo Permiso -->
+          <div class="mb-3 row">
+            <label class="col-sm-2 col-form-label">Tipo de solicitud</label>
+            <div class="col-sm-10">
+              <select name="tipo_permiso" class="form-select" required>
+                <option value="">-- Seleccione un tipo --</option>
+                  <option value="Permiso">Permiso </option>
+                  <option value="Vacacion">Vacacion </option>
+              </select>
+            </div>
+          </div>
+
           <!-- Fecha inicial -->
             <div class="mb-3 row">
                 <label class="col-sm-2 col-form-label">Fecha Inicial</label>

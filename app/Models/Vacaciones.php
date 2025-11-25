@@ -12,7 +12,7 @@ class Vacaciones extends Model
     protected $table = 'solicitud_vacaciones';
 
     protected $fillable = [
-        'id_solicitud', 'fecha_inicial', 'fecha_fin', 'estado',
+        'id_solicitud', 'fecha_inicial', 'fecha_fin', 'estado', 'tipo_permiso'
     ];
 
     public function solicitud()

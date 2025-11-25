@@ -18,6 +18,9 @@ class DashboardController extends Controller
             'precio_especial' => 'PrecioEspecial.index',
             'Muestra de Mercaderia' => 'Muestra.index',
             'Baja de Mercaderia' => 'Baja.index',
+            'Cambio fisico en Mercaderia' => 'CambiosFisicos.index',
+            'Extras' => 'Extras.index',
+            'Vacacion' => 'Vacaciones.index',
         ];
 
         // Mapa de íconos HTML por tipo
@@ -28,6 +31,9 @@ class DashboardController extends Controller
             'precio_especial' => '<i class="far fa-file-alt mr-2"></i>',
             'Muestra de Mercaderia' => '<i class="far fa-file-alt mr-2"></i>',
             'Baja de Mercaderia' => '<i class="far fa-trash-alt mr-2"></i>',
+            'Cambio fisico en Mercaderia' => '<i class="fa fa-box mr-2"></i>',
+            'Extras' => '<i class="fa fa-plane mr-2"></i>',
+            'Vacacion' => '<i class="fas fa-utensils mr-2"></i>',
         ];
 
         $tarjetas = [];
@@ -40,6 +46,8 @@ class DashboardController extends Controller
                 case 'precio_especial':
                 case 'Muestra de Mercaderia':
                 case 'Baja de Mercaderia':
+                case 'Cambio fisico en Mercaderia':
+                case 'Vacacion':
                     $pendientes = Solicitud::where('tipo', $tipo)
                         ->where('estado', 'pendiente')
                         ->count();
@@ -51,6 +59,17 @@ class DashboardController extends Controller
                     break;
                 
                 case 'Sobregiro de Venta':
+                    $pendientes = Solicitud::where('tipo', $tipo)
+                        ->where('estado', 'pendiente')
+                        ->count();
+
+                    $porEjecutar = Solicitud::where('tipo', $tipo)
+                        ->where('estado', 'confirmada')
+                        ->whereDoesntHave('ejecucion')
+                        ->count();
+                    break;
+                
+                case 'Extras':
                     $pendientes = Solicitud::where('tipo', $tipo)
                         ->where('estado', 'pendiente')
                         ->count();

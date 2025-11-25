@@ -62,7 +62,7 @@
 
             <p class="mb-1"><strong>Motivo:</strong></p>
             <div class="border p-2 rounded bg-light small">
-                {{ $solicitud->glosa ?? 'Sin glosa' }}
+                {{ $solicitud->cambioMercaderia?->motivo ?? 'Sin glosa' }}
             </div>
 
             @if($solicitud->cambioMercaderia)

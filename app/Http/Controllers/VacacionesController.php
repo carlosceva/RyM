@@ -65,6 +65,7 @@ class VacacionesController extends Controller
             'fecha_inicial' => 'required|date',
             'fecha_fin'     => 'required|date|after_or_equal:fecha_inicial',
             'glosa' => 'nullable|string',
+            'tipo_permiso' => 'required|string',
         ]);
 
         //dd($request->all());
@@ -88,6 +89,7 @@ class VacacionesController extends Controller
                 'fecha_inicial' => $request->fecha_inicial,
                 'fecha_fin' => $request->fecha_fin,
                 'fecha_solicitud' => now(),
+                'tipo_permiso' => $request->tipo_permiso,
             ]);
 
             // Notificación

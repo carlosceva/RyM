@@ -44,7 +44,8 @@
                       <th>#</th>
                       <th class="d-none">Tipo</th>                  <!-- oculto -->
                       <th class="d-none">Fecha</th>                 <!-- oculto -->
-                      <th>Solicitante</th>             
+                      <th>Solicitante</th>
+                      <th>Tipo</th>             
                       <th>Fecha Inicial</th> 
                       <th>Fecha Final</th> 
                       <th>Glosa</th>                
@@ -79,7 +80,8 @@
                         <td>{{ $solicitud->id }}</td>
                         <td class="d-none">{{ ucfirst($solicitud->tipo) }}</td>      <!-- oculto -->
                         <td class="d-none">{{ \Carbon\Carbon::parse($solicitud->fecha_solicitud)->format('Y-m-d') }}</td> <!-- oculto -->
-                        <td >{{ $solicitud->usuario->name ?? 'N/D' }}</td>      
+                        <td >{{ $solicitud->usuario->name ?? 'N/D' }}</td>
+                        <td>{{ $solicitud->vacacion?->tipo_permiso ?? 'N/D'}}</td>      
                         <td>{{ $solicitud->vacacion?->fecha_inicial }}</td>
                         <td>{{ $solicitud->vacacion?->fecha_fin }}</td>
                         <td>{{ $solicitud->glosa ?? 'S/NN' }}</td>      

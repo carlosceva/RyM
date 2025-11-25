@@ -96,6 +96,8 @@
                 
                     <p class="mb-2"><strong>Solicitante:</strong> {{ $solicitud->usuario->name ?? 'N/D' }}</p>
 
+                    <p class="mb-2"><strong>Tipo de solicitud:</strong> {{ $solicitud->vacacion->tipo_permiso ?? 'N/D' }}</p>
+
                     <p><strong>Fecha Inicial:</strong> {{ $solicitud->vacacion->fecha_inicial ?? 'N/D' }}</p>
 
                      <p><strong>Fecha Final:</strong> {{ $solicitud->vacacion->fecha_fin ?? 'N/D' }}</p>
