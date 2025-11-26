@@ -148,7 +148,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/Anulacion/solicitud/{solicitud}', [AnulacionController::class, 'show'])->name('anulacion.show')->middleware('can:Anulacion_ver');
     Route::get('/CambiosFisicos/solicitud/{solicitud}', [CambioMercaderiaController::class, 'show'])->name('cambio.show')->middleware('can:Cambio_ver');
     Route::get('/Extras/solicitud/{solicitud}', [ExtrasController::class, 'show'])->name('extra.show')->middleware('can:Extra_ver');
-    Route::get('/Vacaciones/solicitud/{solicitud}', [VacacionesController::class, 'show'])->name('vacacion.show')->middleware('Vacaciones_ver');
+    Route::get('/Vacaciones/solicitud/{solicitud}', [VacacionesController::class, 'show'])->name('vacacion.show')->middleware('can:Vacaciones_ver');
 
     Route::resource('CambiosFisicos', CambioMercaderiaController::class)->middleware('can:Cambio_ver');
     Route::get('/Cambio/{id}/descargar/pdf', [CambioMercaderiaController::class, 'descargarPDF'])->name('cambio.descargar.pdf');
