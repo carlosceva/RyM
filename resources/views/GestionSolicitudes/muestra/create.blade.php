@@ -83,7 +83,7 @@
                   <input type="number" id="cantidad" class="form-control" placeholder="Cantidad">
                 </div>
                 <div class="col-12 col-md-3 mb-2 mb-md-0">
-                  <input type="text" id="medida" class="form-control" placeholder="U/M">
+                  <input type="text" id="medida" class="form-control" placeholder="U/M" oninput="this.value = this.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, '')">
                 </div>
               </div>
             </div>
@@ -203,4 +203,9 @@ function validarYDeshabilitar(formulario) {
     formulario.querySelector('button[type=submit]').disabled = true;
     return true; // Enviar y desactivar botón
 }
+</script>
+<script>
+document.getElementById('medida').addEventListener('input', function () {
+    this.value = this.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, '');
+});
 </script>

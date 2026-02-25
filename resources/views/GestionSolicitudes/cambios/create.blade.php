@@ -66,7 +66,7 @@
               <input type="number" id="cantidad" class="form-control" placeholder="Cantidad">
             </div>
             <div class="col-md-3">
-              <input type="text" id="medida" class="form-control" placeholder="U/M">
+              <input type="text" id="medida" class="form-control" placeholder="U/M" oninput="this.value = this.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, '')">
             </div>
             <div class="col-md-1">
               <button type="button" class="btn btn-primary w-100" onclick="agregarProducto()">
@@ -170,4 +170,9 @@ function validarYDeshabilitar(form) {
     form.querySelector('button[type=submit]').disabled = true;
     return true;
 }
+</script>
+<script>
+document.getElementById('medida').addEventListener('input', function () {
+    this.value = this.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, '');
+});
 </script>

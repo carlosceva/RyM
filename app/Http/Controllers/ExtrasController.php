@@ -20,7 +20,6 @@ class ExtrasController extends Controller
     {
         $user = Auth::user();
 
-        // Condición: permisos que permiten ver todas las solicitudes
         $permisosGerenciales = [
             'Extra_aprobar',
             'Extra_reprobar',
@@ -28,24 +27,45 @@ class ExtrasController extends Controller
             'Extra_ejecutar'
         ];
 
-        $tienePermisoCompleto = 
+        $tienePermisoCompleto =
             $user->hasRole('Administrador') ||
             $user->hasAnyPermission($permisosGerenciales);
 
+        $query = Solicitud::where('estado', '!=', 'inactivo')
+            ->whereHas('extra')
+            ->with(['usuario', 'extra'])
+            ->orderBy('fecha_solicitud', 'desc');
+
         if ($tienePermisoCompleto) {
-            // Puede ver todo
-            $solicitudes = Solicitud::where('estado', '!=', 'inactivo')
-                ->whereHas('extra')
-                ->with(['usuario', 'extra'])
-                ->orderBy('fecha_solicitud', 'desc')
-                ->get();
+
+            // 👑 Administrador → todo
+            if ($user->hasRole('Administrador')) {
+                $solicitudes = $query->get();
+            }
+
+            // 🧾 Aux Contable → solo Personal de apoyo
+            elseif ($user->hasRole('Auxiliar contable')) {
+                $solicitudes = $query
+                    ->whereHas('extra', function ($q) {
+                        $q->where('tipo_extra', 'Personal de apoyo');
+                    })
+                    ->get();
+            }
+
+            // 🏢 Gerencia y Cajero → todo menos Personal de apoyo
+            else {
+                $solicitudes = $query
+                    ->whereHas('extra', function ($q) {
+                        $q->where('tipo_extra', '!=', 'Personal de apoyo');
+                    })
+                    ->get();
+            }
+
         } else {
-            // Solo ve lo que él haya creado
-            $solicitudes = Solicitud::where('estado', '!=', 'inactivo')
+
+            // 👤 Usuario normal → solo lo que creó
+            $solicitudes = $query
                 ->where('id_usuario', $user->id)
-                ->whereHas('extra')
-                ->with(['usuario', 'extra'])
-                ->orderBy('fecha_solicitud', 'desc')
                 ->get();
         }
 
@@ -78,13 +98,17 @@ class ExtrasController extends Controller
 
         try {
 
+            $esPersonalApoyo = $request->tipo_extra === 'Personal de apoyo';
+
             // Crear la solicitud
             $solicitud = Solicitud::create([
                 'id_usuario' => auth()->user()->id,
                 'tipo' => $request->tipo,
                 'fecha_solicitud' => now(),
-                'estado' => 'pendiente',
+                'estado' => $esPersonalApoyo ? 'confirmada' : 'pendiente',
                 'glosa' => $request->glosa,
+                'fecha_autorizacion' => $esPersonalApoyo ? now() : null,
+                'id_autorizador' => $esPersonalApoyo ? Auth::id() : null,
             ]);
 
             // Insertar en solicitud_cambios_mercaderia
@@ -94,8 +118,18 @@ class ExtrasController extends Controller
                 'fecha_solicitud' => now(),
             ]);
 
-            // Notificación
-            $notificador->notificar($solicitud, 'crear');
+            // después de crear Extras
+            if ($solicitud->extra->tipo_extra === 'Personal de apoyo') {
+                // flujo: Contabilidad -> Cajero
+
+                $etapa_inicial = 'aprobar';
+            } else {
+                // flujo: Gerencia -> Cajero
+                $etapa_inicial = 'crear';
+            }
+
+            // enviar notificación usando la etapa correspondiente
+            $notificador->notificar($solicitud, $etapa_inicial);
 
             DB::commit();
 
@@ -125,9 +159,13 @@ class ExtrasController extends Controller
     
         // Actualizamos el estado dependiendo de la acción
         if ($request->accion === 'aprobar') {
-            $solicitud->estado = 'aprobada';
+            $solicitud->estado = 'confirmada';
 
-            $notificador->notificar(solicitud: $solicitud, etapa: 'aprobar');
+            $solicitud->extra->id_confirmador = Auth::id();
+            $solicitud->extra->fecha_confirmacion = now();
+            $solicitud->extra->save();
+
+            $notificador->notificar(solicitud: $solicitud, etapa: 'confirmar');
 
         } elseif ($request->accion === 'rechazar') {
             $solicitud->estado = 'rechazada';
@@ -151,6 +189,8 @@ class ExtrasController extends Controller
     {
         
         $solicitud = Solicitud::findOrFail($id);
+
+        $esPersonalApoyo = $solicitud->extra->tipo_extra === 'Personal de apoyo';
     
         // Solo puede ejecutarse si está aprobada y aún no ha sido ejecutada
         if ($solicitud->estado !== 'confirmada') {
@@ -160,7 +200,15 @@ class ExtrasController extends Controller
         if ($solicitud->ejecucion) {
             return back()->with('error', 'Esta solicitud ya fue ejecutada.');
         }
-    
+
+        if ($esPersonalApoyo) {
+            $solicitud->id_autorizador = Auth::id();
+            $solicitud->fecha_autorizacion = now();
+            $solicitud->extra->id_confirmador = Auth::id();
+            $solicitud->extra->fecha_confirmacion = now();
+            $solicitud->extra->save();
+        }
+
         // Registrar ejecución
         SolicitudEjecutada::create([
             'solicitud_id' => $solicitud->id,

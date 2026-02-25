@@ -31,7 +31,7 @@ return [
 
     'Anulacion de Venta' => [
         'crear' => [
-            'destinatarios' => ['permiso:Anulacion_aprobar', 'encargado_almacen'],
+            'destinatarios' => ['permiso:Anulacion_aprobar'],
         ],
         'crear_devolucion' => [
             'destinatarios' => ['permiso:Devolucion_aprobar'],
@@ -110,7 +110,7 @@ return [
 
     'Devolucion de Venta' => [
         'crear' => [
-            'destinatarios' => ['permiso:Devolucion_aprobar', 'encargado_almacen'],
+            'destinatarios' => ['permiso:Devolucion_aprobar'],
         ],
         'crear_anulacion' => [
             'destinatarios' => ['permiso:Anulacion_aprobar'],
