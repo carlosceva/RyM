@@ -28,7 +28,7 @@
     <div class="row">
         {{-- Bloque 1: Solicitud --}}
         <div class="{{ $col }} mb-3">
-            <h6 class="text-center mb-1"><strong>Solicitud #{{ $solicitud->id }}</strong></h6>
+            <h6 class="text-center mb-1"><strong>Solicitud #{{ $solicitud->id_visible }}</strong></h6>
             <div class="card {{ $solicitudClass }} shadow border-0">
                 <div class="card-body text-center">
                     <p>{{ $solicitud->usuario->name ?? '---' }}</p>

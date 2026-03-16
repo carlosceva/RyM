@@ -17,7 +17,7 @@ class AnulacionMensaje
                     'creado',
                     'Anulación',
                     'aprobación',
-                    $solicitud->id,
+                    $solicitud->id_visible,
                     $solicitud->fecha_solicitud->format('d/m/Y H:i'),
                     'Solicitado',
                     $solicitud->usuario->name,
@@ -30,7 +30,7 @@ class AnulacionMensaje
                     'creado',
                     'Devolución',
                     'aprobación',
-                    $solicitud->id,
+                    $solicitud->id_visible,
                     now()->format('d/m/Y H:i'),
                     'Solicitado',
                     $solicitud->usuario->name,
@@ -43,7 +43,7 @@ class AnulacionMensaje
                     'aprobado',
                     'Anulación',
                     'confirmación',
-                    $solicitud->id,
+                    $solicitud->id_visible,
                     $solicitud->fecha_autorizacion->format('d/m/Y H:i'),
                     'Autorizado',
                     $solicitud->autorizador->name,
@@ -54,7 +54,7 @@ class AnulacionMensaje
                 'template' => 'enlace_solicitud_reprobada',
                 'params' => [
                     'Anulacion de Venta',
-                    $solicitud->id,
+                    $solicitud->id_visible,
                     $link
                 ],
             ],
@@ -62,7 +62,7 @@ class AnulacionMensaje
                 'template' => 'enlace_solicitud_ejecutar',
                 'params' => [
                     'Anulación',
-                    $solicitud->id,
+                    $solicitud->id_visible,
                     now()->format('d/m/Y H:i'),
                     auth()->user()->name,
                     $link
@@ -72,7 +72,7 @@ class AnulacionMensaje
                 'template' => 'enlace_solicitud_ejecutar',
                 'params' => [
                     'Devolucion',
-                    $solicitud->id,
+                    $solicitud->id_visible,
                     now()->format('d/m/Y H:i'),
                     auth()->user()->name,
                     $link
@@ -82,7 +82,7 @@ class AnulacionMensaje
                 'template' => 'enlace_verificar_entrega',
                 'params' => [
                     'Anulación',
-                    $solicitud->id,
+                    $solicitud->id_visible,
                     now()->format('d/m/Y H:i'),
                     $link
                 ],
@@ -91,7 +91,7 @@ class AnulacionMensaje
                 'template' => 'enlace_verificar_entrega_fisica',
                 'params' => [
                     'Anulación',
-                    $solicitud->id,
+                    $solicitud->id_visible,
                     now()->format('d/m/Y H:i'),
                     $link
                 ],

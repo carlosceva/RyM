@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Ticket Solicitud #{{ $solicitud->id }}</title>
+    <title>Ticket Solicitud #{{ $solicitud->id_visible }}</title>
     <style>
         body { font-family: DejaVu Sans, sans-serif; font-size: 12px; margin: 0; padding: 20px; }
         .card { border: 1px solid #ccc; border-radius: 5px; margin-bottom: 20px; }
@@ -57,7 +57,7 @@
         @endphp
         <div class="card-header {{ $clase_color }}">
             <div style="display: flex; justify-content: space-between;">
-                <span>#{{ $solicitud->id }}</span>
+                <span>#{{ $solicitud->id_visible }}</span>
                 <span>{{ $solicitud->fecha_solicitud }}</span>
             </div>
             <div class="text-center mt-1">

@@ -1,9 +1,9 @@
 @extends('dashboard')
 
-@section('title', 'Detalle de Solicitud #'.$solicitud->id)
+@section('title', 'Detalle de Solicitud #'.$solicitud->id_visible)
 
 @section('content_header')
-    <h1>Detalle de Solicitud #{{ $solicitud->id }}</h1>
+    <h1>Detalle de Solicitud #{{ $solicitud->id_visible }}</h1>
 @stop
 
 @section('content')

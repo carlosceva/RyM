@@ -98,4 +98,27 @@ class Solicitud extends Model
         return $this->hasOne(Vacaciones::class, 'id_solicitud');
     }
 
+    protected $appends = ['id_visible'];
+    
+    public function getIdVisibleAttribute()
+    {
+        $map = [
+            'precio_especial'       => 'precioEspecial',
+            'Muestra de Mercaderia' => 'muestraMercaderia',
+            'Baja de Mercaderia'    => 'bajaMercaderia',
+            'Sobregiro de Venta'    => 'sobregiro',
+            'Anulacion de Venta'    => 'anulacion',
+            'Devolucion de Venta'   => 'devolucion',
+            'Cambio fisico en Mercaderia'  => 'cambioMercaderia',
+            'Extras'                => 'extra',
+            'Vacacion'              => 'vacacion',
+        ];
+
+        $relation = $map[$this->tipo] ?? null;
+
+        return ($relation && $this->$relation)
+            ? $this->$relation->id
+            : $this->id;
+    }
+
 }

@@ -328,7 +328,7 @@ class DevolucionController extends Controller
         // Retorna el mismo contenido que ves en la tarjeta, pero en una vista PDF
         $pdf = Pdf::loadView('GestionSolicitudes.devolucion.pdf-ticket', compact('solicitud'));
 
-        return $pdf->download("ticket_devolucion_{$solicitud->id}.pdf");
+        return $pdf->download("ticket_devolucion_{$solicitud->id_visible}.pdf");
     }
 
     public function descargarExcel($id)

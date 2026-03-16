@@ -407,7 +407,7 @@ class NotificadorSolicitudService
                                 'aprobado',
                                 'Sobregiro de Venta',
                                 'confirmación',
-                                $solicitud->id,
+                                $solicitud->id_visible,
                                 $solicitud->fecha_autorizacion->format('d/m/Y H:i'),
                                 'Autorizado',
                                 $solicitud->autorizador->name,
@@ -418,7 +418,7 @@ class NotificadorSolicitudService
                                 'aprobado',
                                 'Devolución de Venta',
                                 'confirmación',
-                                $solicitud->id,
+                                $solicitud->id_visible,
                                 $solicitud->fecha_autorizacion->format('d/m/Y H:i'),
                                 'Autorizado',
                                 $solicitud->autorizador->name,
@@ -429,7 +429,7 @@ class NotificadorSolicitudService
                                 'aprobado',
                                 'Anulación de Venta',
                                 'confirmación',
-                                $solicitud->id,
+                                $solicitud->id_visible,
                                 $solicitud->fecha_autorizacion->format('d/m/Y H:i'),
                                 'Autorizado',
                                 $solicitud->autorizador->name,
@@ -440,7 +440,7 @@ class NotificadorSolicitudService
                                 'aprobado',
                                 'Extras',
                                 'Registro',
-                                $solicitud->id,
+                                $solicitud->id_visible,
                                 $solicitud->fecha_autorizacion->format('d/m/Y H:i'),
                                 'Autorizado',
                                 $solicitud->autorizador->name,
@@ -451,7 +451,7 @@ class NotificadorSolicitudService
                                 'aprobado',
                                 Str::replace('Baja de Mercaderia', 'Ajuste de Inv.', $solicitud->tipo),
                                 'ejecucion',
-                                $solicitud->id,
+                                $solicitud->id_visible,
                                 $solicitud->fecha_autorizacion->format('d/m/Y H:i'),
                                 'Autorizado',
                                 $solicitud->autorizador->name,
@@ -463,7 +463,7 @@ class NotificadorSolicitudService
                         $template = 'solicitud_reprobar';
                         $params = [
                             Str::replace('Baja de Mercaderia', 'Ajuste de Inv.', $solicitud->tipo),
-                            $solicitud->id,
+                            $solicitud->id_visible,
                         ];
                         break;
 
@@ -471,7 +471,7 @@ class NotificadorSolicitudService
                         $template = 'solicitud_ejecutar';
                         $params = [
                             Str::replace('Baja de Mercaderia', 'Ajuste de Inv.', $solicitud->tipo),
-                            $solicitud->id,
+                            $solicitud->id_visible,
                             now()->format('d/m/Y H:i'),
                             auth()->user()->name,
                         ];
@@ -481,7 +481,7 @@ class NotificadorSolicitudService
                         $template = 'verificar_entrega';
                         $params = [
                             $solicitud->tipo,
-                            $solicitud->id,
+                            $solicitud->id_visible,
                             now()->format('d/m/Y H:i'),
                         ];
                         break;
@@ -490,7 +490,7 @@ class NotificadorSolicitudService
                         $template = 'verificar_entrega_fisica';
                         $params = [
                             $solicitud->tipo,
-                            $solicitud->id,
+                            $solicitud->id_visible,
                             now()->format('d/m/Y H:i'),
                         ];
                         break;
@@ -499,7 +499,7 @@ class NotificadorSolicitudService
                         if ($solicitud->tipo === 'Sobregiro de Venta') {
                             $template = 'sobregiro_confirmar';
                             $params = [
-                                $solicitud->id,
+                                $solicitud->id_visible,
                                 $solicitud->sobregiro->fecha_confirmacion->format('d/m/Y H:i'),
                                 $solicitud->sobregiro->confirmador->name,
                                 $solicitud->sobregiro->cod_sobregiro
@@ -511,8 +511,8 @@ class NotificadorSolicitudService
                             'confirmado',
                             'Ajuste de Inv.',
                             'aprobacion',
-                            $solicitud->id,
-                            $solicitud->bajaMercaderia->fecha_autorizacion->format('d/m/Y H:i'),
+                            $solicitud->id_visible,
+                            \Carbon\Carbon::parse($solicitud->bajaMercaderia->fecha_autorizacion)->format('d/m/Y H:i'),
                             'autorizado',
                             $solicitud->bajaMercaderia->autorizador->name,
                         ];
@@ -520,7 +520,7 @@ class NotificadorSolicitudService
                         }else if($solicitud->tipo === 'precio_especial'){
                             $template = 'solicitud_confirmar_venta';
                             $params = [
-                            $solicitud->id,
+                            $solicitud->id_visible,
                             now()->format('d/m/Y H:i'),
                             auth()->user()->name,
                         ];
@@ -528,7 +528,7 @@ class NotificadorSolicitudService
                         }else if($solicitud->tipo === 'Extras'){
                             $template = 'extra_registrar';
                             $params = [
-                            $solicitud->id,
+                            $solicitud->id_visible,
                             $solicitud->extra->fecha_confirmacion->format('d/m/Y H:i'),
                             $solicitud->extra->confirmador->name,
                         ];
@@ -539,7 +539,7 @@ class NotificadorSolicitudService
                         $template = 'solicitud_ejecutar';
                         $params = [
                             'anulacion',
-                            $solicitud->id,
+                            $solicitud->id_visible,
                             now()->format('d/m/Y H:i'),
                             auth()->user()->name,
                         ];
@@ -549,7 +549,7 @@ class NotificadorSolicitudService
                         $template = 'solicitud_ejecutar';
                         $params = [
                             'devolucion',
-                            $solicitud->id,
+                            $solicitud->id_visible,
                             now()->format('d/m/Y H:i'),
                             auth()->user()->name,
                         ];
@@ -561,7 +561,7 @@ class NotificadorSolicitudService
                             'creado',
                             Str::replace('Baja de Mercaderia', 'Ajuste de Inv.', $solicitud->tipo),
                             'aprobacion',
-                            $solicitud->id,
+                            $solicitud->id_visible,
                             $solicitud->fecha_solicitud->format('d/m/Y H:i'),
                             'Solicitado',
                             $solicitud->usuario->name,

@@ -221,7 +221,7 @@ class MuestraMercaderiaController extends Controller
         // Retorna el mismo contenido que ves en la tarjeta, pero en una vista PDF
         $pdf = Pdf::loadView('GestionSolicitudes.muestra.pdf-ticket', compact('solicitud'));
 
-        return $pdf->download("ticket_solicitud_{$solicitud->id}.pdf");
+        return $pdf->download("ticket_solicitud_{$solicitud->id_visible}.pdf");
     }
 
     public function descargarExcel($id)

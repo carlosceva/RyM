@@ -17,7 +17,7 @@ class CambioMensaje
                     'creado',
                     'Cambio Fisico de Mercaderia',
                     'aprobación',
-                    $solicitud->id,
+                    $solicitud->id_visible,
                     $solicitud->fecha_solicitud->format('d/m/Y H:i'),
                     'Solicitado',
                     $solicitud->usuario->name,
@@ -30,7 +30,7 @@ class CambioMensaje
                     'aprobado',
                     'Cambio Fisico de Mercaderia',
                     'ejecución',
-                    $solicitud->id,
+                    $solicitud->id_visible,
                     $solicitud->fecha_autorizacion->format('d/m/Y H:i'),
                     'Autorizado',
                     $solicitud->autorizador->name,
@@ -41,7 +41,7 @@ class CambioMensaje
                 'template' => 'enlace_solicitud_reprobada',
                 'params' => [
                     'Cambio Fisico de Mercaderia',
-                    $solicitud->id,
+                    $solicitud->id_visible,
                     $link
                 ],
             ],
@@ -49,7 +49,7 @@ class CambioMensaje
                 'template' => 'enlace_solicitud_ejecutar',
                 'params' => [
                     'Cambio Fisico de Mercaderia',
-                    $solicitud->id,
+                    $solicitud->id_visible,
                     now()->format('d/m/Y H:i'),
                     auth()->user()->name,
                     $link

@@ -20,7 +20,7 @@
         <div class="card-header {{ $clase_color }}">
             <!-- Fila 1: ID y Fecha -->
             <div class="d-flex justify-content-between">
-                <span>#{{ $solicitud->id }}</span>
+                <span>#{{ $solicitud->id_visible }}</span>
                 <span>{{ $solicitud->fecha_solicitud }}</span>
             </div>
             <!-- Fila 2: Tipo de solicitud centrado -->

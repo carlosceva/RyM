@@ -17,7 +17,7 @@ class DevolucionMensaje
                     'creado',
                     'Devolución',
                     'aprobación',
-                    $solicitud->id,
+                    $solicitud->id_visible,
                     $solicitud->fecha_solicitud->format('d/m/Y H:i'),
                     'Solicitado',
                     $solicitud->usuario->name,
@@ -30,7 +30,7 @@ class DevolucionMensaje
                     'creado',
                     'Anulación',
                     'aprobación',
-                    $solicitud->id,
+                    $solicitud->id_visible,
                     now()->format('d/m/Y H:i'),
                     'Solicitado',
                     $solicitud->usuario->name,
@@ -43,7 +43,7 @@ class DevolucionMensaje
                     'aprobado',
                     'Devolución',
                     'confirmación',
-                    $solicitud->id,
+                    $solicitud->id_visible,
                     $solicitud->fecha_autorizacion->format('d/m/Y H:i'),
                     'Autorizado',
                     $solicitud->autorizador->name,
@@ -54,7 +54,7 @@ class DevolucionMensaje
                 'template' => 'enlace_solicitud_reprobada',
                 'params' => [
                     'Devolucion de Venta',
-                    $solicitud->id,
+                    $solicitud->id_visible,
                     $link
                 ],
             ],
@@ -62,7 +62,7 @@ class DevolucionMensaje
                 'template' => 'enlace_solicitud_ejecutar',
                 'params' => [
                     'Anulación',
-                    $solicitud->id,
+                    $solicitud->id_visible,
                     now()->format('d/m/Y H:i'),
                     auth()->user()->name,
                     $link
@@ -72,7 +72,7 @@ class DevolucionMensaje
                 'template' => 'enlace_solicitud_ejecutar',
                 'params' => [
                     'Devolución',
-                    $solicitud->id,
+                    $solicitud->id_visible,
                     now()->format('d/m/Y H:i'),
                     auth()->user()->name,
                     $link
@@ -82,7 +82,7 @@ class DevolucionMensaje
                 'template' => 'enlace_verificar_entrega',
                 'params' => [
                     'Devolución',
-                    $solicitud->id,
+                    $solicitud->id_visible,
                     now()->format('d/m/Y H:i'),
                     $link
                 ],
@@ -91,7 +91,7 @@ class DevolucionMensaje
                 'template' => 'enlace_verificar_entrega_fisica',
                 'params' => [
                     'Devolución',
-                    $solicitud->id,
+                    $solicitud->id_visible,
                     now()->format('d/m/Y H:i'),
                     $link
                 ],

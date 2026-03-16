@@ -17,7 +17,7 @@ class BajaMensaje
                     'creado',
                     'Ajuste de Inventario',
                     'aprobación',
-                    $solicitud->id,
+                    $solicitud->id_visible,
                     $solicitud->fecha_solicitud->format('d/m/Y H:i'),
                     'Solicitado',
                     $solicitud->usuario->name,
@@ -30,8 +30,8 @@ class BajaMensaje
                     'confirmado',
                     'Ajuste de Inventario',
                     'aprobación',
-                    $solicitud->id,
-                    $solicitud->bajaMercaderia->fecha_autorizacion->format('d/m/Y H:i'),
+                    $solicitud->id_visible,
+                    \Carbon\Carbon::parse($solicitud->bajaMercaderia->fecha_autorizacion)->format('d/m/Y H:i'),
                     'Autorizado',
                     $solicitud->bajaMercaderia->autorizador->name,
                     $link
@@ -43,7 +43,7 @@ class BajaMensaje
                     'aprobado',
                     'Ajuste de Inventario',
                     'ejecución',
-                    $solicitud->id,
+                    $solicitud->id_visible,
                     $solicitud->fecha_autorizacion->format('d/m/Y H:i'),
                     'Autorizado',
                     $solicitud->autorizador->name,
@@ -54,7 +54,7 @@ class BajaMensaje
                 'template' => 'enlace_solicitud_reprobada',
                 'params' => [
                     'Ajuste de Inventario',
-                    $solicitud->id,
+                    $solicitud->id_visible,
                     $link
                 ],
             ],
@@ -62,7 +62,7 @@ class BajaMensaje
                 'template' => 'enlace_solicitud_ejecutar',
                 'params' => [
                     'Ajuste de Inventario',
-                    $solicitud->id,
+                    $solicitud->id_visible,
                     now()->format('d/m/Y H:i'),
                     auth()->user()->name,
                     $link

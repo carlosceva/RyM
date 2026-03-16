@@ -17,7 +17,7 @@ class ExtraMensaje
                     'creado',
                     'Extras',
                     'aprobación',
-                    $solicitud->id,
+                    $solicitud->id_visible,
                     $solicitud->fecha_solicitud->format('d/m/Y H:i'),
                     'Solicitado',
                     $solicitud->usuario->name,
@@ -30,7 +30,7 @@ class ExtraMensaje
                     'aprobado',
                     'Extras',
                     'Registracion',
-                    $solicitud->id,
+                    $solicitud->id_visible,
                     $solicitud->fecha_autorizacion->format('d/m/Y H:i'),
                     'Autorizado',
                     $solicitud->autorizador->name,
@@ -41,14 +41,14 @@ class ExtraMensaje
                 'template' => 'enlace_solicitud_reprobada',
                 'params' => [
                     'Extras',
-                    $solicitud->id,
+                    $solicitud->id_visible,
                     $link
                 ],
             ],
             'confirmar' => [
                 'template' => 'enlace_extras_registrar',
                 'params' => [
-                    $solicitud->id,
+                    $solicitud->id_visible,
                     $solicitud->extra->fecha_confirmacion->format('d/m/Y H:i'),
                     $solicitud->extra->confirmador->name,
                     $link
@@ -58,7 +58,7 @@ class ExtraMensaje
                 'template' => 'enlace_solicitud_ejecutar',
                 'params' => [
                     'Extras',
-                    $solicitud->id,
+                    $solicitud->id_visible,
                     now()->format('d/m/Y H:i'),
                     auth()->user()->name,
                     $link

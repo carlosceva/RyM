@@ -17,7 +17,7 @@ class VacacionMensaje
                     'creado',
                     'Permiso/Vacacion',
                     'aprobación',
-                    $solicitud->id,
+                    $solicitud->id_visible,
                     $solicitud->fecha_solicitud->format('d/m/Y H:i'),
                     'Solicitado',
                     $solicitud->usuario->name,
@@ -30,7 +30,7 @@ class VacacionMensaje
                     'aprobado',
                     'Permiso/Vacacion',
                     'ejecución',
-                    $solicitud->id,
+                    $solicitud->id_visible,
                     $solicitud->fecha_autorizacion->format('d/m/Y H:i'),
                     'Autorizado',
                     $solicitud->autorizador->name,
@@ -41,7 +41,7 @@ class VacacionMensaje
                 'template' => 'enlace_solicitud_reprobada',
                 'params' => [
                     'Permiso/Vacacion',
-                    $solicitud->id,
+                    $solicitud->id_visible,
                     $link
                 ],
             ],
@@ -49,7 +49,7 @@ class VacacionMensaje
                 'template' => 'enlace_solicitud_ejecutar',
                 'params' => [
                     'Permiso/Vacacion',
-                    $solicitud->id,
+                    $solicitud->id_visible,
                     now()->format('d/m/Y H:i'),
                     auth()->user()->name,
                     $link

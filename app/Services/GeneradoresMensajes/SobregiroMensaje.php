@@ -17,7 +17,7 @@ class SobregiroMensaje
                     'creado',
                     'Sobregiro de Venta',
                     'aprobación',
-                    $solicitud->id,
+                    $solicitud->id_visible,
                     $solicitud->fecha_solicitud->format('d/m/Y H:i'),
                     'Solicitado',
                     $solicitud->usuario->name,
@@ -30,7 +30,7 @@ class SobregiroMensaje
                     'aprobado',
                     'Sobregiro de Venta',
                     'confirmación',
-                    $solicitud->id,
+                    $solicitud->id_visible,
                     $solicitud->fecha_autorizacion->format('d/m/Y H:i'),
                     'Autorizado',
                     $solicitud->autorizador->name,
@@ -41,14 +41,14 @@ class SobregiroMensaje
                 'template' => 'enlace_solicitud_reprobada',
                 'params' => [
                     'Sobregiro de Venta',
-                    $solicitud->id,
+                    $solicitud->id_visible,
                     $link
                 ],
             ],
             'confirmar' => [
                 'template' => 'enlace_sobregiro_confirmar',
                 'params' => [
-                    $solicitud->id,
+                    $solicitud->id_visible,
                     $solicitud->sobregiro->fecha_confirmacion->format('d/m/Y H:i'),
                     $solicitud->sobregiro->confirmador->name,
                     $solicitud->sobregiro->cod_sobregiro,
@@ -59,7 +59,7 @@ class SobregiroMensaje
                 'template' => 'enlace_solicitud_ejecutar',
                 'params' => [
                     'Sobregiro de Venta',
-                    $solicitud->id,
+                    $solicitud->id_visible,
                     now()->format('d/m/Y H:i'),
                     auth()->user()->name,
                     $link

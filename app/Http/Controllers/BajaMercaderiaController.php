@@ -87,63 +87,84 @@ class BajaMercaderiaController extends Controller
      */
     public function store(Request $request, NotificadorSolicitudService $notificador)
     {
-
         // Validación de los campos
         $request->validate([
             'tipo' => 'required|string',
             'glosa' => 'nullable|string',
-            //'archivo' => 'nullable|file|mimes:xlsx,xls,csv,pdf,docx,jpg,png|max:2048', // Validación del archivo
         ]);
 
         DB::beginTransaction();
 
         try {
+
+            $user = auth()->user();
+
+            // Verificar si es almacenero
+            if ($user->hasRole('Almacenero')) {
+                $estado = 'confirmada';
+                $accionNotificacion = 'confirmar';
+            } else {
+                $estado = 'pendiente';
+                $accionNotificacion = 'crear';
+            }
+
             // Crear la solicitud
             $solicitud = Solicitud::create([
-                'id_usuario' => auth()->user()->id,
+                'id_usuario' => $user->id,
                 'tipo' => $request->tipo,
                 'fecha_solicitud' => now(),
-                'estado' => 'pendiente',
+                'estado' => $estado,
                 'glosa' => $request->glosa,
             ]);
-        
-            // Si hay un archivo adjunto, procesarlo
+
+            // Si hay archivo adjunto
             if ($request->hasFile('archivo')) {
-                // Obtener el archivo
+
                 $archivo = $request->file('archivo');
-        
-                // Generar un nombre único para el archivo
                 $nombreArchivo = time() . '_' . $archivo->getClientOriginalName();
-        
-                // Guardar el archivo en el almacenamiento público
+
                 $path = $archivo->storeAs('adjuntos', $nombreArchivo, 'public');
-        
-                // Guardar el registro en la tabla 'adjuntos'
+
                 Adjuntos::create([
                     'id_solicitud' => $solicitud->id,
-                    'archivo' => $path,  // Guardar la ruta del archivo en la base de datos
+                    'archivo' => $path,
                 ]);
             }
-            //dd($request);
+
             // Crear la baja de mercadería
             $solicitudBajaMercaderia = BajaMercaderia::create([
                 'id_solicitud' => $solicitud->id,
                 'id_almacen' => $request->almacen,
-                'almacen' =>  $request->almacen,
+                'almacen' => $request->almacen,
                 'detalle_productos' => $request->detalle_productos,
                 'motivo' => $request->motivo,
                 'tipo' => $request->tipo_ajuste,
             ]);
-            
-            $notificador->notificar($solicitud, 'crear');
+
+            // Si es almacenero registrar confirmación automática
+            if ($user->hasRole('Almacenero')) {
+
+                $solicitudBajaMercaderia->id_autorizador = $user->id;
+                $solicitudBajaMercaderia->fecha_autorizacion = now();
+                $solicitudBajaMercaderia->save();
+            }
+
+            // Notificación según flujo
+            $notificador->notificar($solicitud, $accionNotificacion);
 
             DB::commit();
 
-            return redirect()->route('Baja.index')->with('success', 'Solicitud de Ajuste de inventario creada.');
+            return redirect()
+                ->route('Baja.index')
+                ->with('success', 'Solicitud de Ajuste de inventario creada.');
 
         } catch (\Exception $e) {
+
             DB::rollBack();
-            return redirect()->route('Baja.index')->with('error', 'Hubo un problema al crear la solicitud de Ajuste de inventario: ' . $e->getMessage());
+
+            return redirect()
+                ->route('Baja.index')
+                ->with('error', 'Hubo un problema al crear la solicitud de Ajuste de inventario: ' . $e->getMessage());
         }
     }
     
@@ -253,7 +274,7 @@ class BajaMercaderiaController extends Controller
         // Retorna el mismo contenido que ves en la tarjeta, pero en una vista PDF
         $pdf = Pdf::loadView('GestionSolicitudes.baja.pdf-ticket', compact('solicitud'));
 
-        return $pdf->download("ticket_solicitud_{$solicitud->id}.pdf");
+        return $pdf->download("ticket_solicitud_{$solicitud->id_visible}.pdf");
     }
 
     public function descargarExcel($id)
