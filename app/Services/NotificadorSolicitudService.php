@@ -29,7 +29,7 @@ class NotificadorSolicitudService
         
         if (!$config) return;
 
-        $usuarios = $this->resolverDestinatarios($config, $solicitud);
+        $usuarios = $this->resolverDestinatarios($config, $solicitud)->where('estado', 'a');
         
         Log::info('👥 Usuarios destinatarios:', $usuarios->pluck('id', 'name')->toArray());
 
