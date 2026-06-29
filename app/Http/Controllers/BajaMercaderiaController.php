@@ -319,20 +319,27 @@ class BajaMercaderiaController extends Controller
                 fputcsv($output, []);
 
                 // Encabezados de la tabla de productos
-                fputcsv($output, ['#', 'Producto', 'Cantidad']);
+                fputcsv($output, ['#', 'Producto', 'Cantidad', 'U/M']);
 
                 if (!empty($solicitud->bajaMercaderia->detalle_productos)) {
                     $productos = explode(',', $solicitud->bajaMercaderia->detalle_productos);
                     foreach ($productos as $index => $item) {
-                        [$producto, $cantidad] = explode('-', $item) + [null, null];
+                        // El producto puede contener guiones.
+                        // Por eso tomamos desde el final: U/M, Cantidad y el resto queda como Producto.
+                        $partes = explode('-', $item);
+                        $medida = trim(array_pop($partes) ?? '');
+                        $cantidad = trim(array_pop($partes) ?? '');
+                        $producto = trim(implode(' - ', $partes));
+
                         fputcsv($output, [
                             $index + 1,
-                            trim($producto),
-                            trim($cantidad)
+                            $producto,
+                            $cantidad,
+                            $medida
                         ]);
                     }
                 } else {
-                    fputcsv($output, ['-', 'No hay productos registrados', '-']);
+                    fputcsv($output, ['-', 'No hay productos registrados', '-', '-']);
                 }
             }
 

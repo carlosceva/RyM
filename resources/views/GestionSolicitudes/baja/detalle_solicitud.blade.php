@@ -126,9 +126,10 @@
                                     @foreach($productos as $index => $item)
                                         @php
                                             $partes = explode('-', $item);
-                                            $producto = trim($partes[0] ?? '');
-                                            $cantidad = trim($partes[1] ?? '');
-                                            $medida = trim($partes[2] ?? '');
+
+                                            $medida = trim(array_pop($partes) ?? '');
+                                            $cantidad = trim(array_pop($partes) ?? '');
+                                            $producto = trim(implode(' - ', $partes));
                                         @endphp
                                         <tr>
                                             <td>{{ $index + 1 }}</td>
