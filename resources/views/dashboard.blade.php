@@ -346,6 +346,8 @@
 </div>
 <!-- ./wrapper -->
 
+@include('partials.datatables_estado_filter')
+
 <!-- jQuery -->
 <script src="{{asset('plugins/jquery/jquery.min.js') }}"></script>
 <!-- jQuery UI 1.11.4 -->
@@ -383,20 +385,204 @@
 <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js" integrity="sha384-IQsoLXl5PILFhosVNubq5LC7Qb9DXgDA9i+tQ8Zj3iwWAwPtgFTxbJ8NT4GN1R8p" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.min.js" integrity="sha384-cVKIPhGWiC2Al4u+LWgxfKTRIcfu0JTxR+EQDz/bgldoEyl4H0zUF0QKbrJ0EcQF" crossorigin="anonymous"></script>
 
-<script src="{{asset('dist/js/pages/dashboard.js')}}"></script>
+
+<!-- DataTables base -->
 <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap5.min.js"></script>
-    
+
+<!-- DataTables Buttons: debe cargarse ANTES de inicializar las tablas -->
+<script src="https://cdn.datatables.net/buttons/2.4.1/js/dataTables.buttons.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.html5.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.print.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.68/pdfmake.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.68/vfs_fonts.js"></script>
+
 <script>
-  $('#usuario').DataTable();
-  $('#roles').DataTable();
-  $('#clientes').DataTable();
-  $('#solicitud').DataTable();
+  function initSimpleDataTable(selector) {
+    if ($(selector).length && !$.fn.DataTable.isDataTable(selector)) {
+      $(selector).DataTable();
+    }
+  }
+
+  initSimpleDataTable('#usuario');
+  initSimpleDataTable('#roles');
+  initSimpleDataTable('#clientes');
+  initSimpleDataTable('#solicitud');
 
 $(document).ready(function () {
   const urlParams = new URLSearchParams(window.location.search);
   const estadoFilter = urlParams.get('estado') || '';
-  const filtroId = urlParams.get('filtro_id') || '';
+
+  let tablaEstadoActiva = null;
+  let columnaEstadoActiva = null;
+  let tableIdEstadoActivo = null;
+
+  function limpiarTextoDT(value) {
+    return $('<div>').html(value ?? '').text().replace(/\s+/g, ' ').trim();
+  }
+
+  function normalizarTextoDT(value) {
+    return limpiarTextoDT(value).toLowerCase();
+  }
+
+  function obtenerIndiceColumnaPorTitulo(tableId, tituloBuscado) {
+    let indice = -1;
+
+    $(`${tableId} thead th`).each(function (i) {
+      const titulo = normalizarTextoDT($(this).text());
+
+      if (titulo === tituloBuscado.toLowerCase()) {
+        indice = i;
+        return false;
+      }
+    });
+
+    return indice;
+  }
+
+  function obtenerEstadosUnicos(table, columnaEstado) {
+    const estados = [];
+
+    table.column(columnaEstado).data().each(function (valor) {
+      const estado = limpiarTextoDT(valor);
+
+      if (estado && !estados.some(item => normalizarTextoDT(item) === normalizarTextoDT(estado))) {
+        estados.push(estado);
+      }
+    });
+
+    return estados.sort((a, b) => a.localeCompare(b, 'es', { sensitivity: 'base' }));
+  }
+
+  function actualizarIndicadorEstado(table, tableId, columnaEstado) {
+    const settings = table.settings()[0];
+    const seleccionados = settings._estadoFilters?.[columnaEstado] || [];
+    const $th = $(`${tableId} thead th`).eq(columnaEstado);
+
+    $th.toggleClass('dt-estado-filter-active', seleccionados.length > 0);
+  }
+
+  function cerrarPopupEstado() {
+    $('#dtEstadoFilterPopup').addClass('d-none');
+    tablaEstadoActiva = null;
+    columnaEstadoActiva = null;
+    tableIdEstadoActivo = null;
+  }
+
+  function abrirPopupEstado(table, tableId, columnaEstado, $header) {
+    tablaEstadoActiva = table;
+    columnaEstadoActiva = columnaEstado;
+    tableIdEstadoActivo = tableId;
+
+    const settings = table.settings()[0];
+    const seleccionados = settings._estadoFilters?.[columnaEstado] || [];
+    const estados = obtenerEstadosUnicos(table, columnaEstado);
+    const $popup = $('#dtEstadoFilterPopup');
+    const $options = $('#dtEstadoFilterOptions');
+
+    $options.empty();
+
+    if (!estados.length) {
+      $options.append('<div class="text-muted small">No hay estados para filtrar.</div>');
+    }
+
+    estados.forEach(function (estado, index) {
+      const id = `dt_estado_${columnaEstado}_${index}_${Date.now()}`;
+      const checked = seleccionados.some(item => normalizarTextoDT(item) === normalizarTextoDT(estado));
+
+      const $item = $('<div>', { class: 'form-check mb-1' });
+      const $input = $('<input>', {
+        class: 'form-check-input dt-estado-filter-check',
+        type: 'checkbox',
+        id: id,
+        value: estado
+      }).prop('checked', checked);
+      const $label = $('<label>', {
+        class: 'form-check-label',
+        for: id
+      }).text(estado);
+
+      $item.append($input, $label);
+      $options.append($item);
+    });
+
+    $popup.removeClass('d-none').css({ visibility: 'hidden' });
+
+    const offset = $header.offset();
+    const popupWidth = $popup.outerWidth();
+    const windowWidth = $(window).width();
+    const left = Math.min(offset.left, windowWidth - popupWidth - 12);
+
+    $popup.css({
+      top: offset.top + $header.outerHeight() + 6,
+      left: Math.max(left, 12),
+      visibility: 'visible'
+    });
+  }
+
+  function prepararFiltroEstado(table, tableId, columnaEstado) {
+    if (columnaEstado < 0) return;
+
+    const $th = $(`${tableId} thead th`).eq(columnaEstado);
+
+    $th.addClass('dt-estado-filter-header')
+       .attr('title', 'Clic para filtrar por estado');
+
+    if (!$th.find('.dt-estado-filter-icon').length) {
+      $th.append(' <i class="fas fa-filter dt-estado-filter-icon"></i>');
+    }
+
+    $th.off('click.dtEstadoFilter').on('click.dtEstadoFilter', function (event) {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      abrirPopupEstado(table, tableId, columnaEstado, $(this));
+    });
+
+    actualizarIndicadorEstado(table, tableId, columnaEstado);
+  }
+
+  $('#dtEstadoFilterApply').on('click', function () {
+    if (!tablaEstadoActiva || columnaEstadoActiva === null) return;
+
+    const seleccionados = $('#dtEstadoFilterOptions .dt-estado-filter-check:checked')
+      .map(function () {
+        return $(this).val();
+      })
+      .get();
+
+    const settings = tablaEstadoActiva.settings()[0];
+    settings._estadoFilters = settings._estadoFilters || {};
+    settings._estadoFilters[columnaEstadoActiva] = seleccionados;
+
+    tablaEstadoActiva.draw();
+    actualizarIndicadorEstado(tablaEstadoActiva, tableIdEstadoActivo, columnaEstadoActiva);
+    cerrarPopupEstado();
+  });
+
+  $('#dtEstadoFilterClear').on('click', function () {
+    if (!tablaEstadoActiva || columnaEstadoActiva === null) return;
+
+    const settings = tablaEstadoActiva.settings()[0];
+    settings._estadoFilters = settings._estadoFilters || {};
+    settings._estadoFilters[columnaEstadoActiva] = [];
+
+    tablaEstadoActiva.draw();
+    actualizarIndicadorEstado(tablaEstadoActiva, tableIdEstadoActivo, columnaEstadoActiva);
+    cerrarPopupEstado();
+  });
+
+  $('#dtEstadoFilterClose').on('click', cerrarPopupEstado);
+
+  $(document).on('click', function (event) {
+    if (!$(event.target).closest('#dtEstadoFilterPopup, .dt-estado-filter-header').length) {
+      cerrarPopupEstado();
+    }
+  });
+
+  $(window).on('resize scroll', function () {
+    cerrarPopupEstado();
+  });
 
   // Filtro por fecha (columna 2 asumida como fecha)
   $.fn.dataTable.ext.search.push(function (settings, data, dataIndex) {
@@ -421,6 +607,24 @@ $(document).ready(function () {
     const fechaData = new Date(fecha);
     if (min && new Date(min) > fechaData) return false;
     if (max && new Date(max) < fechaData) return false;
+
+    return true;
+  });
+
+  // Filtro por checkboxes de la columna Estado
+  $.fn.dataTable.ext.search.push(function (settings, data, dataIndex) {
+    const filtrosEstado = settings._estadoFilters || {};
+
+    for (const columna in filtrosEstado) {
+      const seleccionados = filtrosEstado[columna] || [];
+
+      if (!seleccionados.length) continue;
+
+      const valorCelda = normalizarTextoDT(data[columna]);
+      const coincide = seleccionados.some(estado => normalizarTextoDT(estado) === valorCelda);
+
+      if (!coincide) return false;
+    }
 
     return true;
   });
@@ -452,8 +656,15 @@ $(document).ready(function () {
   `;
 
   function initDataTable(tableId, exportPrefix, pdfTitle, exportCols) {
+    if (!$(tableId).length) return null;
+
+    const columnaEstado = obtenerIndiceColumnaPorTitulo(tableId, 'Estado');
+
     const table = $(tableId).DataTable({
       dom: customDom,
+      columnDefs: columnaEstado >= 0 ? [
+        { targets: columnaEstado, orderable: false }
+      ] : [],
       buttons: [
         {
           extend: 'excelHtml5',
@@ -518,13 +729,17 @@ $(document).ready(function () {
       lengthChange: true,
       initComplete: function () {
         $('.dt-custom-toolbar').prepend(filtrosFechas);
+
         if (estadoFilter !== '') {
           this.api().search(estadoFilter).draw();
         }
+
         const filtroId = urlParams.get('filtro_id');
         if (filtroId) {
           this.api().column(0).search(filtroId).draw();
         }
+
+        prepararFiltroEstado(this.api(), tableId, columnaEstado);
       }
     });
 
@@ -551,21 +766,6 @@ $(document).ready(function () {
 @stack('scripts')
 
 @livewireScripts
-<!-- jQuery -->
-<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-
-<!-- DataTables -->
-<script src="https://cdn.datatables.net/1.13.5/js/jquery.dataTables.min.js"></script>
-<link rel="stylesheet" href="https://cdn.datatables.net/1.13.5/css/jquery.dataTables.min.css">
-
-<!-- Buttons -->
-<script src="https://cdn.datatables.net/buttons/2.4.1/js/dataTables.buttons.min.js"></script>
-<script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.html5.min.js"></script>
-<script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.print.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.68/pdfmake.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.68/vfs_fonts.js"></script>
-<link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.dataTables.min.css">
 
 </body>
 </html>
