@@ -372,6 +372,7 @@ class NotificadorSolicitudService
             'precio_especial' => \App\Services\GeneradoresMensajes\PrecioEspecialMensaje::class,
             'Anulacion de Venta' => \App\Services\GeneradoresMensajes\AnulacionMensaje::class,
             'Muestra de Mercaderia' => \App\Services\GeneradoresMensajes\MuestraMensaje::class,
+            'Bonificaciones' => \App\Services\GeneradoresMensajes\BonificacionMensaje::class,
             'Sobregiro de Venta' => \App\Services\GeneradoresMensajes\SobregiroMensaje::class,
             'Devolucion de Venta' => \App\Services\GeneradoresMensajes\DevolucionMensaje::class,
             'Baja de Mercaderia' => \App\Services\GeneradoresMensajes\BajaMensaje::class,

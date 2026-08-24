@@ -88,6 +88,23 @@ return [
         ],
     ],
 
+    'Bonificaciones' => [
+        'crear' => [
+            'destinatarios' => ['permiso:Bonificacion_aprobar'],
+        ],
+        'aprobar' => [
+            'destinatarios' => ['permiso:Bonificacion_ejecutar'],
+        ],
+        'reprobar' => [
+            'condiciones' => [
+                'default' => ['creador'],
+            ]
+        ],
+        'ejecutar' => [
+            'destinatarios' => ['creador'],
+        ],
+    ],
+
     'Sobregiro de Venta' => [
         'crear' => [
             'destinatarios' => ['permiso:Sobregiro_aprobar'],

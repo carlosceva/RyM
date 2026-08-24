@@ -24,7 +24,7 @@ class RolPermisoController extends Controller
         $grupo = $request->input('grupo'); // 'solicitudes' o 'otros'
         $nuevosPermisos = $request->input('permisos', []);
 
-        $solicitudes = ['Anulacion', 'Devolucion', 'Precio_especial', 'Sobregiro', 'Baja', 'Muestra'];
+        $solicitudes = ['Anulacion', 'Devolucion', 'Precio_especial', 'Sobregiro', 'Baja', 'Muestra', 'Bonificacion'];
         $acciones = ['ver', 'crear', 'editar', 'borrar', 'aprobar', 'reprobar', 'ejecutar', 'entrega', 'pago'];
 
         // Obtener todos los permisos del grupo "solicitudes"

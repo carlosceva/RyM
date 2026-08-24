@@ -37,6 +37,11 @@ class Solicitud extends Model
         return $this->hasOne(MuestraMercaderia::class, 'id_solicitud');
     }
 
+    public function bonificacion()
+    {
+        return $this->hasOne(Bonificacion::class, 'id_solicitud');
+    }
+
     public function bajaMercaderia()
     {
         return $this->hasOne(BajaMercaderia::class, 'id_solicitud');
@@ -105,6 +110,7 @@ class Solicitud extends Model
         $map = [
             'precio_especial'       => 'precioEspecial',
             'Muestra de Mercaderia' => 'muestraMercaderia',
+            'Bonificaciones'         => 'bonificacion',
             'Baja de Mercaderia'    => 'bajaMercaderia',
             'Sobregiro de Venta'    => 'sobregiro',
             'Anulacion de Venta'    => 'anulacion',

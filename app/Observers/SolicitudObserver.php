@@ -22,6 +22,7 @@ class SolicitudObserver
             'Devolucion de Venta' => 'Devolucion',
             'Baja de Mercaderia' => 'Baja',
             'Muestra de Mercaderia' => 'Muestra',
+            'Bonificaciones' => 'Bonificacion',
             'Sobregiro de Venta' => 'Sobregiro',
             'Cambio fisico en Mercaderia' => 'Cambio',
             'Extras' => 'Extra',

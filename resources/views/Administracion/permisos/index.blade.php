@@ -41,7 +41,7 @@
             </thead>
             <tbody>
                 @php
-                    $solicitudes = ['Anulacion', 'Devolucion', 'Precio_especial', 'Sobregiro', 'Baja', 'Muestra', 'Cambio', 'Vacaciones', 'Extra'];
+                    $solicitudes = ['Anulacion', 'Devolucion', 'Precio_especial', 'Sobregiro', 'Baja', 'Muestra', 'Bonificacion', 'Cambio', 'Vacaciones', 'Extra'];
                     $acciones = ['ver', 'crear', 'borrar', 'aprobar', 'reprobar', 'ejecutar', 'entrega', 'pago'];
                 @endphp
 
@@ -222,7 +222,7 @@
                 </div>
                 <div class="modal-body scrollable-body">
                     @php
-                        $solicitudes = ['Anulacion', 'Devolucion', 'Precio_especial', 'Sobregiro', 'Baja', 'Muestra', 'Cambio', 'Vacaciones', 'Extra'];
+                        $solicitudes = ['Anulacion', 'Devolucion', 'Precio_especial', 'Sobregiro', 'Baja', 'Muestra', 'Bonificacion', 'Cambio', 'Vacaciones', 'Extra'];
                         $acciones = ['ver', 'crear', 'editar', 'borrar', 'aprobar', 'reprobar', 'ejecutar', 'entrega', 'pago'];
                         $excluir = collect($solicitudes)->flatMap(fn($s) => collect($acciones)->map(fn($a) => strtolower("{$s}_{$a}")));
                         $otrosPermisos = $permissions->reject(fn ($permiso) => $excluir->contains(strtolower($permiso->name)));

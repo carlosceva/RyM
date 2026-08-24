@@ -9,6 +9,7 @@ use App\Http\Controllers\PrecioEspecialController;
 use App\Http\Controllers\SolicitudController;
 use App\Http\Controllers\RolPermisoController;
 use App\Http\Controllers\MuestraMercaderiaController;
+use App\Http\Controllers\BonificacionController;
 use App\Http\Controllers\BajaMercaderiaController;
 use App\Http\Controllers\SobregiroController;
 use App\Http\Controllers\AnulacionController;
@@ -90,6 +91,14 @@ Route::middleware('auth')->group(function () {
     Route::get('/Muestra/{id}/descargar/excel', [MuestraMercaderiaController::class, 'descargarExcel'])->name('muestra.descargar.excel');
     Route::post('/Muestra/{id}/ejecutar', [MuestraMercaderiaController::class, 'ejecutar'])->name('muestra.ejecutar');
 
+    Route::resource('/Bonificaciones', BonificacionController::class)->middleware('can:Bonificacion_ver');
+    Route::get('/Bonificaciones', [BonificacionController::class, 'index'])->name('Bonificaciones.index')->middleware('can:Bonificacion_ver');
+    Route::post('/Bonificaciones', [BonificacionController::class, 'store'])->name('Bonificaciones.store')->middleware('can:Bonificacion_crear');
+    Route::post('/Bonificaciones/aprobar_o_rechazar', [BonificacionController::class, 'aprobar_o_rechazar'])->name('bonificacion.aprobar_o_rechazar')->middleware('can:Bonificacion_ver');
+    Route::get('/Bonificaciones/{id}/descargar/pdf', [BonificacionController::class, 'descargarPDF'])->name('bonificacion.descargar.pdf')->middleware('can:Bonificacion_ver');
+    Route::get('/Bonificaciones/{id}/descargar/excel', [BonificacionController::class, 'descargarExcel'])->name('bonificacion.descargar.excel')->middleware('can:Bonificacion_ver');
+    Route::post('/Bonificaciones/{id}/ejecutar', [BonificacionController::class, 'ejecutar'])->name('bonificacion.ejecutar')->middleware('can:Bonificacion_ejecutar');
+
     Route::resource('Baja', BajaMercaderiaController::class)->middleware('can:Baja_ver');
     Route::post('Baja/aprobar_o_rechazar', [BajaMercaderiaController::class, 'aprobar_o_rechazar'])->name('baja.aprobar_o_rechazar');
     Route::get('/Baja/{id}/descargar/pdf', [BajaMercaderiaController::class, 'descargarPDF'])->name('baja.descargar.pdf');
@@ -144,6 +153,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/Sobregiro/solicitud/{solicitud}', [SobregiroController::class, 'show'])->name('sobregiro.show')->middleware('can:Sobregiro_ver');
     Route::get('/Baja/solicitud/{solicitud}', [BajaMercaderiaController::class, 'show'])->name('baja.show')->middleware('can:Baja_ver');
     Route::get('/Muestra/solicitud/{solicitud}', [MuestraMercaderiaController::class, 'show'])->name('muestra.show')->middleware('can:Muestra_ver');
+    Route::get('/Bonificaciones/solicitud/{solicitud}', [BonificacionController::class, 'show'])->name('bonificacion.show')->middleware('can:Bonificacion_ver');
     Route::get('/Devolucion/solicitud/{solicitud}', [DevolucionController::class, 'show'])->name('devolucion.show')->middleware('can:Devolucion_ver');
     Route::get('/Anulacion/solicitud/{solicitud}', [AnulacionController::class, 'show'])->name('anulacion.show')->middleware('can:Anulacion_ver');
     Route::get('/CambiosFisicos/solicitud/{solicitud}', [CambioMercaderiaController::class, 'show'])->name('cambio.show')->middleware('can:Cambio_ver');

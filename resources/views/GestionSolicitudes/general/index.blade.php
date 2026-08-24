@@ -187,6 +187,14 @@
                                                 </tbody>
                                             </table>
                                         </div>
+                                    @elseif(!empty($solicitud->bonificacion))
+                                        <!-- Si tiene bonificación -->
+                                        <div class="border p-2 rounded bg-light small">
+                                            <p class="mb-1"><strong>Nota de venta:</strong> {{ $solicitud->bonificacion->nota_venta ?? 'N/D' }}</p>
+                                            <p class="mb-1"><strong>Beneficiario:</strong> {{ $solicitud->bonificacion->beneficiario ?? 'Sin beneficiario' }}</p>
+                                            <p class="mb-1"><strong>Teléfono:</strong> {{ $solicitud->bonificacion->telefono ?? 'N/D' }}</p>
+                                            <p class="mb-0"><strong>Monto Bs.:</strong> {{ number_format((float) ($solicitud->bonificacion->monto ?? 0), 2, '.', ',') }}</p>
+                                        </div>
                                     @elseif(!empty($solicitud->bajaMercaderia) && !empty($solicitud->bajaMercaderia->detalle_productos))
                                         <!-- Si tiene baja de mercadería -->
                                         <p class="mb-2"><strong>{{ $solicitud->bajaMercaderia->almacen ?? 'Sin almacen' }}</strong></p>
@@ -239,7 +247,7 @@
                             </div>
 
                             <!-- Ejecución -->
-                             @if(($solicitud->tipo === 'Muestra de Mercaderia' || $solicitud->tipo === 'Baja de Mercaderia' || $solicitud->tipo ==='Sobregiro de Venta' || $solicitud->tipo ==='Anulacion de Venta') && $solicitud->estado !=='rechazada')
+                             @if(($solicitud->tipo === 'Muestra de Mercaderia' || $solicitud->tipo === 'Bonificaciones' || $solicitud->tipo === 'Baja de Mercaderia' || $solicitud->tipo ==='Sobregiro de Venta' || $solicitud->tipo ==='Anulacion de Venta') && $solicitud->estado !=='rechazada')
                             <div class="row mt-2">
                                 <div class="col-12 border-top pt-2">
                                     <div class="d-flex justify-content-between flex-wrap small">

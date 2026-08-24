@@ -193,7 +193,7 @@
             </ul>
           </li>
           @endif
-          @if (auth()->user()->can('Precio_especial_ver') || auth()->user()->can('Muestra_ver') || auth()->user()->can('Devolucion_ver') || auth()->user()->can('Anulacion_ver') || auth()->user()->can('Sobregiro_ver') || auth()->user()->can('Baja_ver') || auth()->user()->can('Cambio_ver') || auth()->user()->can('Vacaciones_ver') || auth()->user()->can('Extra_ver')) 
+          @if (auth()->user()->can('Precio_especial_ver') || auth()->user()->can('Muestra_ver') || auth()->user()->can('Bonificacion_ver') || auth()->user()->can('Devolucion_ver') || auth()->user()->can('Anulacion_ver') || auth()->user()->can('Sobregiro_ver') || auth()->user()->can('Baja_ver') || auth()->user()->can('Cambio_ver') || auth()->user()->can('Vacaciones_ver') || auth()->user()->can('Extra_ver')) 
           <li class="nav-item menu-is-opening menu-open">  
             <a href="#" class="nav-link">
               <i class="nav-icon fas fa-copy" style="color: orange"></i>
@@ -282,6 +282,14 @@
                 <a href="{{route('Extras.index')}}" class="nav-link {{ request()->routeIs('Extras.index') ? 'active' : '' }}">
                   <i class="nav-icon fas fa-utensils"></i>
                   <p>Extras</p>
+                </a>
+              </li>
+              @endcan
+              @can('Bonificacion_ver')
+              <li class="nav-item">
+                <a href="{{route('Bonificaciones.index')}}" class="nav-link {{ request()->routeIs('Bonificaciones.index') ? 'active' : '' }}">
+                  <i class="nav-icon fas fa-gift"></i>
+                  <p>Bonificaciones</p>
                 </a>
               </li>
               @endcan
@@ -753,6 +761,7 @@ $(document).ready(function () {
   // Inicializar todas las tablas con su configuración
   initDataTable('#solicitud_baja', 'Baja', 'Solicitud de Baja de Mercaderia', [0,1,2,3,4,5,6,7,8,9,10,11,12]);
   initDataTable('#solicitud_muestra', 'Muestra', 'Solicitud de Muestra de Mercaderia', [0,1,2,3,4,5,6,7,8,9,10,11,12,13]);
+  initDataTable('#solicitud_bonificacion', 'Bonificacion', 'Solicitud de Bonificaciones', [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14]);
   initDataTable('#solicitud_sobregiro', 'Sobregiro', 'Solicitud de Sobregiro de Venta', [0,1,2,3,4,5,6,7,8,9,10,11,12]);
   initDataTable('#solicitud_devolucion', 'Devolucion', 'Solicitud de Devolucion de Venta', [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16]);
   initDataTable('#solicitud_anulacion', 'Anulacion', 'Solicitud de Anulacion de Venta', [0,1,2,3,4,5,6,7,8,9,10,11,12]);

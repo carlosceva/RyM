@@ -17,6 +17,7 @@ class DashboardController extends Controller
             'Sobregiro de Venta' => 'Sobregiro.index',
             'precio_especial' => 'PrecioEspecial.index',
             'Muestra de Mercaderia' => 'Muestra.index',
+            'Bonificaciones' => 'Bonificaciones.index',
             'Baja de Mercaderia' => 'Baja.index',
             'Cambio fisico en Mercaderia' => 'CambiosFisicos.index',
             'Extras' => 'Extras.index',
@@ -30,6 +31,7 @@ class DashboardController extends Controller
             'Sobregiro de Venta' => '<i class="far fa-arrow-alt-circle-up mr-2"></i>',
             'precio_especial' => '<i class="far fa-file-alt mr-2"></i>',
             'Muestra de Mercaderia' => '<i class="far fa-file-alt mr-2"></i>',
+            'Bonificaciones' => '<i class="fas fa-gift mr-2"></i>',
             'Baja de Mercaderia' => '<i class="far fa-trash-alt mr-2"></i>',
             'Cambio fisico en Mercaderia' => '<i class="fa fa-box mr-2"></i>',
             'Extras' => '<i class="fa fa-plane mr-2"></i>',
@@ -45,6 +47,7 @@ class DashboardController extends Controller
             switch ($tipo) {
                 case 'precio_especial':
                 case 'Muestra de Mercaderia':
+                case 'Bonificaciones':
                 case 'Baja de Mercaderia':
                 case 'Cambio fisico en Mercaderia':
                 case 'Vacacion':

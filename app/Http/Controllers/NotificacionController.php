@@ -64,6 +64,7 @@ class NotificacionController extends Controller
             'Anulacion de Venta' => 'Anulacion.index',
             'Sobregiro de Venta' => 'Sobregiro.index',
             'Muestra de Mercaderia' => 'Muestra.index',
+            'Bonificaciones' => 'Bonificaciones.index',
             'Baja de Mercaderia' => 'Baja.index',
         ];
 

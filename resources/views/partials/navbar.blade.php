@@ -7,6 +7,7 @@
             'Anulacion de Venta' => '<i class="far fa-times-circle mr-2"></i>',
             'Sobregiro de Venta' => '<i class="far fa-arrow-alt-circle-up mr-2"></i>',
             'Muestra de Mercaderia' => '<i class="far fa-file-alt mr-2"></i>',
+            'Bonificaciones' => '<i class="fas fa-gift mr-2"></i>',
             'Baja de Mercaderia' => '<i class="far fa-trash-alt mr-2"></i>',
             default => '<i class="far fa-bell mr-2"></i>',
         };
@@ -18,6 +19,7 @@
         'Devolucion de Venta' => 'Devolucion',
         'Baja de Mercaderia' => 'Baja',
         'Muestra de Mercaderia' => 'Muestra',
+        'Bonificaciones' => 'Bonificacion',
         'Sobregiro de Venta' => 'Sobregiro',
     ];
 

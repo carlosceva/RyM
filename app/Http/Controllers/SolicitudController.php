@@ -19,6 +19,7 @@ class SolicitudController extends Controller
             'autorizador',
             'precioEspecial',
             'muestraMercaderia',
+            'bonificacion',
             'bajaMercaderia',
             'sobregiro',
             'anulacion'

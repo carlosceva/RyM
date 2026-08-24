@@ -52,6 +52,7 @@ class AppServiceProvider extends ServiceProvider
                 'Anulacion de Venta',
                 'Sobregiro de Venta',
                 'Muestra de Mercaderia',
+                'Bonificaciones',
                 'Baja de Mercaderia'
             ];
 
@@ -61,6 +62,7 @@ class AppServiceProvider extends ServiceProvider
                 'Anulacion de Venta' => 'Anulacion.index',
                 'Sobregiro de Venta' => 'Sobregiro.index',
                 'Muestra de Mercaderia' => 'Muestra.index',
+                'Bonificaciones' => 'Bonificaciones.index',
                 'Baja de Mercaderia' => 'Baja.index',
             ];
 

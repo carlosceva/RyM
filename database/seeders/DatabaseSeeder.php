@@ -18,8 +18,9 @@ class DatabaseSeeder extends Seeder
         $this->call([
             //UserSeeder::class,
             //PermisosSeeder::class,
-            NuevasSolicitudes::class,
-            AddExtraConfirmarPermissionSeeder::class,
+            //NuevasSolicitudes::class,
+            //AddExtraConfirmarPermissionSeeder::class,
+            BonificacionPermisosSeeder::class,
         ]);
     }
 }
