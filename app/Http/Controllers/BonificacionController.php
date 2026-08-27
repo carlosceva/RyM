@@ -17,32 +17,55 @@ class BonificacionController extends Controller
     {
         $user = Auth::user();
 
-        $puedeGestionar = $user->hasAnyPermission([
-            'Bonificacion_aprobar',
-            'Bonificacion_reprobar',
-            'Bonificacion_ejecutar',
-        ]);
+        // Administrador o usuarios con permisos de gestión pueden ver todas
+        // las solicitudes de Bonificaciones.
+        if (
+            $user->hasRole('Administrador') ||
+            $user->can('Bonificacion_aprobar') ||
+            $user->can('Bonificacion_reprobar') ||
+            $user->can('Bonificacion_ejecutar')
+        ) {
 
-        $query = Solicitud::where('estado', '!=', 'inactivo')
-            ->whereHas('bonificacion', function ($query) {
-                $query->where('estado', '!=', 'inactivo');
-            })
-            ->with([
-                'usuario',
-                'autorizador',
-                'ejecucion.usuario',
-                'bonificacion',
-            ]);
+            $solicitudes = Solicitud::where('estado', '!=', 'inactivo')
+                ->whereHas('bonificacion', function ($query) {
+                    $query->where('estado', '!=', 'inactivo');
+                })
+                ->with([
+                    'usuario',
+                    'autorizador',
+                    'ejecucion.usuario',
+                    'bonificacion' => function ($query) {
+                        $query->where('estado', '!=', 'inactivo');
+                    },
+                ])
+                ->orderBy('fecha_solicitud', 'desc')
+                ->get();
 
-        if (!$puedeGestionar) {
-            $query->where('id_usuario', $user->id);
+        } else {
+
+            // Para usuarios normales, mostrar únicamente
+            // las solicitudes creadas por ellos mismos.
+            $solicitudes = Solicitud::where('estado', '!=', 'inactivo')
+                ->where('id_usuario', $user->id)
+                ->whereHas('bonificacion', function ($query) {
+                    $query->where('estado', '!=', 'inactivo');
+                })
+                ->with([
+                    'usuario',
+                    'autorizador',
+                    'ejecucion.usuario',
+                    'bonificacion' => function ($query) {
+                        $query->where('estado', '!=', 'inactivo');
+                    },
+                ])
+                ->orderBy('fecha_solicitud', 'desc')
+                ->get();
         }
 
-        $solicitudes = $query
-            ->orderBy('fecha_solicitud', 'desc')
-            ->get();
-
-        return view('GestionSolicitudes.bonificacion.index', compact('solicitudes'));
+        return view(
+            'GestionSolicitudes.bonificacion.index',
+            compact('solicitudes')
+        );
     }
 
     public function store(Request $request, NotificadorSolicitudService $notificador)
