@@ -47,6 +47,15 @@
                     </div>
 
                     <div class="col-12 col-md-6 d-flex align-items-center">
+                        <strong class="me-2" >COD SAI:</strong>
+                        <div class="border p-2 rounded bg-light small flex-grow-1">
+                            {{ $solicitud->muestraMercaderia->cod_sai ?? 'N/A' }}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row p-2">
+                    <div class="col-12 col-md-6 d-flex align-items-center">
                         <strong class="me-2" >Almacen:</strong>
                         <div class="border p-2 rounded bg-light small flex-grow-1">
                             {{ $solicitud->muestraMercaderia->almacen->nombre ?? 'N/A' }}
@@ -84,10 +93,10 @@
                                     @foreach($productos as $index => $item)
                                         @php
                                             $partes = explode('-', $item);
-                                            $codsai = trim($partes[0] ?? '');
-                                            $producto = trim($partes[1] ?? '');
-                                            $cantidad = trim($partes[2] ?? '');
-                                            $medida = trim($partes[3] ?? '');
+                                            $medida = trim(array_pop($partes) ?? '');
+                                            $cantidad = trim(array_pop($partes) ?? '');
+                                            $codsai = trim(array_shift($partes) ?? '');
+                                            $producto = trim(implode('-', $partes));
                                         @endphp
                                         <tr>
                                             <td>{{ $codsai }}</td>
