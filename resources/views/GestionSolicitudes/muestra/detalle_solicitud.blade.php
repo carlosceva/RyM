@@ -235,7 +235,7 @@
                     </form>
                     @endcan
                     @can('Muestra_crear')
-                        <a href="{{ route('muestra.duplicar', $solicitud->id) }}" class="btn btn-sm btn-primary me-2">
+                        <a href="{{ route('muestra.duplicar', $solicitud->id) }}" class="btn btn-sm btn-warning me-2">
                             <i class="fa fa-copy"></i> Duplicar solicitud
                         </a>
                     @endcan
