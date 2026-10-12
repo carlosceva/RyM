@@ -50,7 +50,7 @@
               <select class="form-control" id="id_almacen" name="id_almacen" required>
                 <option value="">Seleccione un almacén</option>
                 @foreach ($almacenes as $almacen)
-                  <option value="{{ $almacen->id }}">{{ $almacen->nombre }}</option>
+                  <option value="{{ $almacen->id }}" {{ (session('duplicarMuestra.id_almacen') == $almacen->id) ? 'selected' : '' }}>{{ $almacen->nombre }}</option>
                 @endforeach
               </select>
             </div>
@@ -60,7 +60,7 @@
           <div class="form-group row mb-3">
             <label for="glosa" class="col-12 col-md-2 col-form-label">Motivo</label>
             <div class="col-12 col-md-10">
-              <textarea class="form-control" id="glosa" name="glosa" rows="4" required></textarea>
+              <textarea class="form-control" id="glosa" name="glosa" rows="4" required>{{ session('duplicarMuestra.glosa') }}</textarea>
             </div>
           </div>
 
@@ -111,6 +111,7 @@
           </div>
 
           <input type="hidden" name="detalle_productos" id="detalle_productos">
+          <input type="hidden" name="duplicada" id="duplicada" value="{{ session()->has('duplicarMuestra') ? '1' : '0' }}">
 
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
@@ -126,7 +127,8 @@
 
 <!-- JavaScript para tabla dinámica -->
 <script>
-let productos = [];
+const datosDuplicados = @json(session('duplicarMuestra'));
+let productos = datosDuplicados ? datosDuplicados.productos : [];
 
 function agregarProducto() {
     const codsai = document.getElementById('codsai').value.trim();
@@ -203,6 +205,36 @@ function validarYDeshabilitar(formulario) {
     formulario.querySelector('button[type=submit]').disabled = true;
     return true; // Enviar y desactivar botón
 }
+
+window.addEventListener('load', function () {
+    if (!window.jQuery) {
+        return;
+    }
+
+    const modalSolicitud = window.jQuery('#modalNuevaSolicitud');
+
+    modalSolicitud.on('show.bs.modal', function (event) {
+        // El formulario se limpia cuando se abre desde el botón normal "Agregar".
+        // La apertura automática del flujo de duplicación no tiene relatedTarget.
+        if (!event.relatedTarget) {
+            return;
+        }
+
+        document.getElementById('cliente').value = '';
+        document.getElementById('cod_sai').value = '';
+        document.getElementById('id_almacen').selectedIndex = 0;
+        document.getElementById('glosa').value = '';
+        document.getElementById('duplicada').value = '0';
+        productos = [];
+        limpiarInputs();
+        actualizarTabla();
+    });
+
+    if (datosDuplicados) {
+        actualizarTabla();
+        modalSolicitud.modal('show');
+    }
+});
 </script>
 <script>
 document.getElementById('medida').addEventListener('input', function () {

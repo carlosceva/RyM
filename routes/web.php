@@ -86,6 +86,7 @@ Route::middleware('auth')->group(function () {
     Route::post('general/aprobar_o_rechazar', [SolicitudController::class, 'aprobar_o_rechazar'])->name('general.aprobar_o_rechazar');
 
     Route::resource('Muestra', MuestraMercaderiaController::class)->middleware('can:ver-muestra')->middleware('can:Muestra_ver');
+    Route::get('/Muestra/{id}/duplicar', [MuestraMercaderiaController::class, 'duplicarSolicitud'])->name('muestra.duplicar')->middleware('can:Muestra_crear');
     Route::post('Muestra/aprobar_o_rechazar', [MuestraMercaderiaController::class, 'aprobar_o_rechazar'])->name('muestra.aprobar_o_rechazar');
     Route::get('/Muestra/{id}/descargar/pdf', [MuestraMercaderiaController::class, 'descargarPDF'])->name('muestra.descargar.pdf');
     Route::get('/Muestra/{id}/descargar/excel', [MuestraMercaderiaController::class, 'descargarExcel'])->name('muestra.descargar.excel');

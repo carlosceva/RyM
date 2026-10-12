@@ -234,6 +234,11 @@
                         </button>
                     </form>
                     @endcan
+                    @can('Muestra_crear')
+                        <a href="{{ route('muestra.duplicar', $solicitud->id) }}" class="btn btn-sm btn-primary me-2">
+                            <i class="fa fa-copy"></i> Duplicar solicitud
+                        </a>
+                    @endcan
                     <div class="d-flex flex-column flex-sm-row justify-content-center align-items-center">
                                 
                         @if($solicitud->estado == 'pendiente')

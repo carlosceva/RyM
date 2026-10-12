@@ -85,6 +85,42 @@ class MuestraMercaderiaController extends Controller
     }
 
     /**
+     * Prepare a new sample request using the selected request as a template.
+     */
+    public function duplicarSolicitud($id)
+    {
+        $solicitud = Solicitud::with('muestraMercaderia')->findOrFail($id);
+
+        if ($solicitud->tipo !== 'Muestra de Mercaderia' || $solicitud->estado === 'inactivo' || !$solicitud->muestraMercaderia) {
+            abort(404);
+        }
+
+        $productos = [];
+        if (!empty($solicitud->muestraMercaderia->detalle_productos)) {
+            foreach (explode(',', $solicitud->muestraMercaderia->detalle_productos) as $item) {
+                $partes = explode('-', $item);
+                $medida = trim(array_pop($partes) ?? '');
+                $cantidad = trim(array_pop($partes) ?? '');
+                $codsai = trim(array_shift($partes) ?? '');
+                $producto = trim(implode('-', $partes));
+
+                $productos[] = [
+                    'codsai' => $codsai,
+                    'producto' => $producto,
+                    'cantidad' => $cantidad,
+                    'medida' => $medida,
+                ];
+            }
+        }
+
+        return redirect()->route('Muestra.index')->with('duplicarMuestra', [
+            'glosa' => $solicitud->glosa,
+            'id_almacen' => $solicitud->muestraMercaderia->id_almacen,
+            'productos' => $productos,
+        ]);
+    }
+
+    /**
      * Store a newly created resource in storage.
      */
     public function store(Request $request, NotificadorSolicitudService $notificador)
@@ -271,11 +307,15 @@ class MuestraMercaderiaController extends Controller
                 if (!empty($solicitud->muestraMercaderia->detalle_productos)) {
                     $productos = explode(',', $solicitud->muestraMercaderia->detalle_productos);
                     foreach ($productos as $index => $item) {
-                        [$producto, $cantidad] = explode('-', $item) + [null, null];
+                        $partes = explode('-', $item);
+                        array_pop($partes); // U/M
+                        $cantidad = trim(array_pop($partes) ?? '');
+                        array_shift($partes); // Cod-SAI
+                        $producto = trim(implode('-', $partes));
                         fputcsv($output, [
                             $index + 1,
-                            trim($producto),
-                            trim($cantidad)
+                            $producto,
+                            $cantidad
                         ]);
                     }
                 } else {
