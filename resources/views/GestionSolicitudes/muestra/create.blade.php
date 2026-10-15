@@ -4,7 +4,7 @@
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title" id="modalCrearSolicitudLabel">Crear Solicitud de Muestra de Mercadería</h5>
-        <button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"></button>
+        <button type="button" class="btn-close" data-dismiss="modal" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
         <form action="{{ route('Muestra.store') }}" method="POST" onsubmit="return validarYDeshabilitar(this)">
@@ -114,7 +114,7 @@
           <input type="hidden" name="duplicada" id="duplicada" value="{{ session()->has('duplicarMuestra') ? '1' : '0' }}">
 
           <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+            <button type="button" class="btn btn-secondary" data-dismiss="modal" data-bs-dismiss="modal">Cancelar</button>
             <button type="submit" class="btn btn-primary">Crear Solicitud</button>
           </div>
         </form>
